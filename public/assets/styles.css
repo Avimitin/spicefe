@@ -4710,3 +4710,308 @@ body {
     width: 100%;
   }
 }
+
+/* Artwork-first saved-server library. */
+
+.server-library-shell {
+  width: min(1120px, 100%);
+}
+
+.server-list {
+  display: block;
+  columns: 4 240px;
+  column-gap: 12px;
+}
+
+.server-card {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  break-inside: avoid-column;
+  align-items: stretch;
+  flex-direction: column;
+  gap: 0;
+  margin: 0 0 12px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(23, 23, 23, 0.14);
+  border-radius: 14px;
+  background: #171717;
+  box-shadow: var(--shadow-sm);
+  vertical-align: top;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.server-card:hover {
+  border-color: rgba(23, 23, 23, 0.24);
+  box-shadow: var(--shadow-lg);
+  transform: none;
+}
+
+.server-card[data-active="true"] {
+  border-color: #b692f6;
+  box-shadow: 0 0 0 3px #f4ebff, var(--shadow-lg);
+}
+
+.server-card-artwork {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #f5f5f5;
+}
+
+.server-card-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.server-card-details {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: #262626;
+  color: #ffffff;
+}
+
+.server-card-details-backdrop {
+  position: absolute;
+  z-index: -1;
+  width: calc(100% + 48px);
+  height: calc(100% + 48px);
+  max-width: none;
+  inset: -24px;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+  transform: scale(1.08);
+  user-select: none;
+}
+
+.server-card-details-surface {
+  position: relative;
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(17, 17, 17, 0.58);
+  backdrop-filter: blur(18px) saturate(0.78);
+  -webkit-backdrop-filter: blur(18px) saturate(0.78);
+}
+
+.server-card-summary {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px;
+}
+
+.server-card .server-identity {
+  display: block;
+  min-width: 0;
+  grid-column: auto;
+  grid-row: auto;
+}
+
+.server-card .server-name {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 17px;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.server-card .server-address {
+  display: block;
+  overflow: hidden;
+  margin-top: 1px;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 11px;
+  line-height: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.server-card .server-reachability {
+  display: flex;
+  min-width: 0;
+  grid-column: auto;
+  grid-row: auto;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 3px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.server-card .server-reachability[data-state="reachable"],
+.server-card .server-reachability[data-state="unreachable"] {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.server-card .server-reachability .status-dot,
+.server-card .connection-status .status-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.54);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.server-card .server-reachability[data-state="checking"] .status-dot,
+.server-card .connection-status[data-state="connecting"] .status-dot {
+  background: #f79009;
+  box-shadow: 0 0 0 2px rgba(247, 144, 9, 0.22);
+}
+
+.server-card .server-reachability[data-state="reachable"] .status-dot,
+.server-card .connection-status[data-state="connected"] .status-dot {
+  background: #47cd89;
+  box-shadow: 0 0 0 2px rgba(71, 205, 137, 0.2);
+}
+
+.server-card .server-reachability[data-state="unreachable"] .status-dot,
+.server-card .connection-status[data-state="error"] .status-dot {
+  background: #f97066;
+  box-shadow: 0 0 0 2px rgba(249, 112, 102, 0.22);
+}
+
+.server-card .server-channel-statuses {
+  display: grid;
+  min-width: 0;
+  grid-column: auto;
+  grid-row: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 9px 0 0;
+}
+
+.server-card .connection-status {
+  min-width: 0;
+  gap: 6px;
+  padding: 4px 7px;
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: none;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.server-card .connection-status[data-state="connecting"] {
+  border-color: rgba(247, 144, 9, 0.32);
+  background: rgba(181, 71, 8, 0.22);
+  color: #ffffff;
+}
+
+.server-card .connection-status[data-state="connected"] {
+  border-color: rgba(71, 205, 137, 0.3);
+  background: rgba(6, 118, 71, 0.22);
+  color: #ffffff;
+}
+
+.server-card .connection-status[data-state="error"] {
+  border-color: rgba(249, 112, 102, 0.32);
+  background: rgba(180, 35, 24, 0.22);
+  color: #ffffff;
+}
+
+.server-card .status-channel {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 11px;
+  text-transform: none;
+}
+
+.server-card .status-value {
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 14px;
+}
+
+.server-card .server-card-actions {
+  display: grid;
+  grid-column: auto;
+  grid-row: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.server-card .server-card-actions button {
+  width: 100%;
+  min-height: 34px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.server-card .server-card-actions .secondary-button {
+  border: 0;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), var(--shadow-xs);
+  color: #ffffff;
+}
+
+.server-card .server-card-actions .secondary-button:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.server-card .server-card-actions .primary-button {
+  border: 0;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.78), var(--shadow-xs-skeuomorphic);
+  color: #262626;
+}
+
+.server-card .server-card-actions .primary-button:hover {
+  background: #ffffff;
+}
+
+.server-card .server-card-diagnostic {
+  grid-column: auto;
+  grid-row: auto;
+  margin: 8px 0 0;
+  padding: 7px 8px;
+  border-color: rgba(254, 223, 137, 0.34);
+  border-radius: 7px;
+  background: rgba(181, 71, 8, 0.22);
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.server-card .server-card-diagnostic[data-state="error"] {
+  border-color: rgba(249, 112, 102, 0.34);
+  background: rgba(180, 35, 24, 0.24);
+}
+
+.server-card .server-card-diagnostic strong {
+  display: block;
+  margin: 0 0 1px;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+@media (max-width: 520px) {
+  .server-list {
+    column-count: 1;
+  }
+
+  .server-card {
+    gap: 0;
+  }
+}

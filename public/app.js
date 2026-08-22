@@ -406,9 +406,13 @@ function createServerCard(profile, snapshot) {
   const presentation = connectionPresentation(cardSnapshot, i18n.locale);
   const availability = reachabilityPresentation(profile);
   const card = document.createElement('article');
+  const artwork = document.createElement('div');
+  const artworkImage = document.createElement('img');
+  const details = document.createElement('div');
+  const detailsBackdrop = document.createElement('img');
+  const detailsSurface = document.createElement('div');
+  const summary = document.createElement('div');
   const identity = document.createElement('div');
-  const icon = document.createElement('img');
-  const identityCopy = document.createElement('div');
   const name = document.createElement('strong');
   const address = document.createElement('span');
   const reachable = document.createElement('span');
@@ -424,12 +428,26 @@ function createServerCard(profile, snapshot) {
   card.dataset.active = String(active);
   card.setAttribute('role', 'listitem');
 
+  artwork.className = 'server-card-artwork';
+  artwork.setAttribute('aria-hidden', 'true');
+  artworkImage.className = 'server-card-image';
+  artworkImage.alt = '';
+  artworkImage.loading = 'lazy';
+  artworkImage.decoding = 'async';
+  setProfileIcon(artworkImage, profile.iconId);
+  artwork.append(artworkImage);
+
+  details.className = 'server-card-details';
+  detailsBackdrop.className = 'server-card-details-backdrop';
+  detailsBackdrop.src = artworkImage.src;
+  detailsBackdrop.alt = '';
+  detailsBackdrop.loading = 'lazy';
+  detailsBackdrop.decoding = 'async';
+  detailsBackdrop.setAttribute('aria-hidden', 'true');
+  detailsSurface.className = 'server-card-details-surface';
+  summary.className = 'server-card-summary';
+
   identity.className = 'server-identity';
-  icon.className = 'profile-icon';
-  icon.alt = '';
-  icon.loading = 'lazy';
-  icon.decoding = 'async';
-  setProfileIcon(icon, profile.iconId);
   name.className = 'server-name';
   name.textContent = profile.name;
   address.className = 'server-address';
@@ -437,8 +455,7 @@ function createServerCard(profile, snapshot) {
     host: profile.host,
     port: profile.apiPort,
   });
-  identityCopy.append(name, address);
-  identity.append(icon, identityCopy);
+  identity.append(name, address);
 
   reachable.className = 'server-reachability';
   reachable.dataset.state = availability.state;
@@ -476,7 +493,8 @@ function createServerCard(profile, snapshot) {
     connectSelected();
   });
   actions.append(editButton, connectionButton);
-  card.append(identity, reachable, statuses, actions);
+  summary.append(identity, reachable);
+  detailsSurface.append(summary, statuses, actions);
 
   if (active && presentation.streamMessage) {
     const diagnostic = document.createElement('p');
@@ -485,8 +503,10 @@ function createServerCard(profile, snapshot) {
     diagnostic.dataset.state = presentation.streamMessage.state;
     diagnosticTitle.textContent = presentation.streamMessage.title;
     diagnostic.append(diagnosticTitle, presentation.streamMessage.copy);
-    card.append(diagnostic);
+    detailsSurface.append(diagnostic);
   }
+  details.append(detailsBackdrop, detailsSurface);
+  card.append(artwork, details);
   return card;
 }
 
