@@ -1,5 +1,5 @@
-import { compatibilityUrl, isPrivateLanName, likelyNeedsHttpMode } from './lib/endpoints.js';
-import { GAME_ICON_GROUPS, GAME_ICONS, gameIconById } from './lib/game-icons.js';
+import { compatibilityUrl, likelyNeedsHttpMode } from './lib/endpoints.js';
+import { GAME_ICON_GROUPS, gameIconById } from './lib/game-icons.js';
 import { connectionPresentation } from './lib/connection-status.js';
 import { createI18n, localizeError } from './lib/i18n.js';
 import { configuredProfiles, mainView } from './lib/main-view.js';
@@ -31,10 +31,11 @@ const settingsDialog = element('settings-dialog');
 const iconDialog = element('icon-dialog');
 const deleteDialog = element('delete-dialog');
 const form = element('profile-form');
+const streamSettings = element('stream-settings');
 const profilePicker = element('profile-picker');
 const iconGroups = element('game-icon-groups');
-const iconSearch = element('game-icon-search');
 const connectButton = element('connect-button');
+const connectButtonLabel = element('connect-button-label');
 const emptyState = element('empty-state');
 const serverLibrary = element('server-library');
 const serverList = element('server-list');
@@ -52,6 +53,7 @@ const touchMarker = element('touch-marker');
 const compatBanner = element('compat-banner');
 const toast = element('toast');
 const languageSelect = element('language-select');
+const languagePicker = element('language-picker');
 
 let toastTimer = null;
 let currentMetric = null;
@@ -162,20 +164,9 @@ function createIconOption(icon, selectedId) {
   return button;
 }
 
-function renderIconGroups(query = '') {
+function renderIconGroups() {
   const selectedId = element('game-icon-id').value;
-  const needle = query.trim().toLocaleLowerCase();
-  const matchingGroups = GAME_ICON_GROUPS.map((group) => ({
-    group,
-    groupLabel: t(`icon.group.${group.id}`),
-    icons: group.icons.filter((icon) => !needle
-      || group.label.toLocaleLowerCase().includes(needle)
-      || t(`icon.group.${group.id}`).toLocaleLowerCase().includes(needle)
-      || icon.label.toLocaleLowerCase().includes(needle)
-      || icon.id.toLocaleLowerCase().includes(needle)),
-  })).filter(({ icons }) => icons.length > 0);
-
-  const sections = matchingGroups.map(({ group, groupLabel, icons }) => {
+  const sections = GAME_ICON_GROUPS.map((group) => {
     const section = document.createElement('section');
     const heading = document.createElement('h3');
     const grid = document.createElement('div');
@@ -185,30 +176,13 @@ function renderIconGroups(query = '') {
     section.setAttribute('role', 'group');
     section.setAttribute('aria-labelledby', headingId);
     heading.id = headingId;
-    heading.textContent = groupLabel;
+    heading.textContent = t(`icon.group.${group.id}`);
     grid.className = 'icon-category-grid';
-    grid.append(...icons.map((icon) => createIconOption(icon, selectedId)));
+    grid.append(...group.icons.map((icon) => createIconOption(icon, selectedId)));
     section.append(heading, grid);
     return section;
   });
-
-  if (sections.length === 0) {
-    const empty = document.createElement('p');
-    empty.className = 'icon-empty';
-    empty.textContent = t('icon.empty');
-    sections.push(empty);
-  }
-
   iconGroups.replaceChildren(...sections);
-
-  const matchingCount = matchingGroups.reduce((count, { icons }) => count + icons.length, 0);
-  const scope = matchingCount === GAME_ICONS.length
-    ? t('icon.scopeAll', {
-      count: matchingCount,
-      categories: GAME_ICON_GROUPS.length,
-    })
-    : t('icon.scopeMatch', { count: matchingCount, total: GAME_ICONS.length });
-  element('game-icon-results').textContent = scope;
 }
 
 function renderProfileLists() {
@@ -288,7 +262,6 @@ function selectProfile(id) {
   fillForm(profile);
   renderSnapshot(session.snapshot, false);
   renderCompatibility();
-  renderTransportNote();
 }
 
 const session = new SpiceSession(canvas, video, image);
@@ -523,6 +496,7 @@ function renderMainView(snapshot) {
   const streaming = view === 'stream';
   activeServer.hidden = !streaming;
   connectionStatuses.hidden = !streaming;
+  languagePicker.hidden = streaming;
   connectButton.hidden = !streaming;
   if (streaming && snapshot.profile) {
     setProfileIcon(element('active-server-icon'), snapshot.profile.iconId);
@@ -536,13 +510,12 @@ function renderMainView(snapshot) {
 
 function renderConnectionButton() {
   const selected = store.selected();
-  if (!session?.wanted) {
-    connectButton.textContent = t('button.connect');
-    return;
-  }
-  connectButton.textContent = t(
-    session.profile?.id === selected.id ? 'button.disconnect' : 'button.switch',
-  );
+  const label = !session?.wanted
+    ? t('button.connect')
+    : t(session.profile?.id === selected.id ? 'button.disconnect' : 'button.switch');
+  connectButtonLabel.textContent = label;
+  connectButton.setAttribute('aria-label', label);
+  connectButton.title = label;
 }
 
 function renderSnapshot(snapshot, announce = true) {
@@ -625,6 +598,7 @@ function openSettings() {
   profilePicker.value = store.selectedId;
   element('save-status').textContent = '';
   if (!settingsDialog.open) {
+    streamSettings.open = false;
     settingsDialog.showModal();
   }
 }
@@ -658,7 +632,6 @@ function renderCompatibility(force = false) {
   const wasForcedBack = isHttps && new URLSearchParams(location.search).has('compat');
   const recommended = isHttps && likelyNeedsHttpMode();
   compatBanner.hidden = bannerDismissed || (!force && !recommended && !wasForcedBack);
-  element('dialog-compat-button').hidden = !isHttps;
   if (wasForcedBack) {
     element('compat-title').textContent = t('compat.forcedTitle');
     element('compat-copy').textContent = t('compat.forcedCopy');
@@ -666,14 +639,6 @@ function renderCompatibility(force = false) {
     element('compat-title').textContent = t('compat.title');
     element('compat-copy').textContent = t('compat.copy');
   }
-}
-
-function renderTransportNote() {
-  const host = store.selected().host || '192.168.0.1';
-  const publicLooking = location.protocol === 'https:' && !isPrivateLanName(host);
-  element('transport-copy').textContent = t(
-    publicLooking ? 'settings.directCopyPublic' : 'settings.directCopy',
-  );
 }
 
 function reachabilitySignature(profile) {
@@ -855,14 +820,14 @@ element('show-password').addEventListener('click', () => {
 });
 
 element('game-icon-button').addEventListener('click', () => {
-  iconSearch.value = '';
   renderIconGroups();
   iconDialog.showModal();
-  iconSearch.focus();
 });
 
-iconSearch.addEventListener('input', () => {
-  renderIconGroups(iconSearch.value);
+streamSettings.addEventListener('toggle', () => {
+  if (streamSettings.open) {
+    requestAnimationFrame(() => streamSettings.scrollIntoView({ block: 'nearest' }));
+  }
 });
 
 element('view-mode').addEventListener('change', () => {
@@ -919,7 +884,6 @@ if (!fullscreen || navigator.standalone) {
 }
 
 element('compat-button').addEventListener('click', openCompatibilityMode);
-element('dialog-compat-button').addEventListener('click', openCompatibilityMode);
 element('compat-dismiss').addEventListener('click', () => {
   bannerDismissed = true;
   compatBanner.hidden = true;
@@ -929,7 +893,6 @@ function renderLocalizedUi() {
   applyDocumentTranslations();
   renderConnectionButton();
   renderCompatibility();
-  renderTransportNote();
   renderSnapshot(session.snapshot, false);
   element('view-mode-button').textContent = t(`display.${stage.dataset.viewMode || 'contain'}`);
   element('show-password').textContent = t(
@@ -939,7 +902,7 @@ function renderLocalizedUi() {
     element('save-status').textContent = t('settings.saved');
   }
   if (iconDialog.open) {
-    renderIconGroups(iconSearch.value);
+    renderIconGroups();
   }
 }
 
@@ -977,5 +940,4 @@ applyDocumentTranslations();
 renderProfileLists();
 fillForm(store.selected());
 renderCompatibility();
-renderTransportNote();
 renderSnapshot(session.snapshot);

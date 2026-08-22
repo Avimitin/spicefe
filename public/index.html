@@ -17,7 +17,7 @@
   <div id="app">
     <header class="topbar">
       <div class="brand" aria-label="spicefe">
-        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <img class="brand-icon" src="./assets/spice2x.ico" alt="" aria-hidden="true">
         <span>spice<span>fe</span></span>
       </div>
 
@@ -48,7 +48,7 @@
 
       <span class="topbar-spacer"></span>
 
-      <label class="language-picker">
+      <label id="language-picker" class="language-picker">
         <span class="sr-only" data-i18n="language.label">Language</span>
         <select id="language-select" aria-label="Language" data-i18n-aria-label="language.label">
           <option value="en">EN</option>
@@ -64,7 +64,10 @@
         <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 15h16M8 17.5h8"/></svg>
       </button>
 
-      <button id="connect-button" class="primary-button" type="button" hidden data-i18n="button.connect">Connect</button>
+      <button id="connect-button" class="primary-button topbar-connect-button" type="button" hidden aria-label="Connect" title="Connect">
+        <svg class="topbar-connect-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M2 8.8a15 15 0 0 1 3.5-2.1M10.7 5.1A15.4 15.4 0 0 1 22 8.8M5 12.9A10 10 0 0 1 7.9 11M12.4 9a10 10 0 0 1 6.6 3.9M8.5 16.4a5 5 0 0 1 4.9-1.1M12 20h.01M3 3l18 18"/></svg>
+        <span id="connect-button-label" data-i18n="button.connect">Connect</span>
+      </button>
 
       <button id="fullscreen-button" class="icon-button" type="button" aria-label="Toggle fullscreen" title="Fullscreen" data-i18n-aria-label="nav.fullscreen" data-i18n-title="nav.fullscreenTitle">
         <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
@@ -87,18 +90,30 @@
       <img id="mjpeg-view" class="stream-view" alt="Spice subscreen stream" hidden data-i18n-alt="stream.aria">
 
       <section id="empty-state" class="empty-state">
-        <div class="empty-symbol" aria-hidden="true">
-          <span></span><span></span><span></span>
-        </div>
+        <img class="empty-symbol" src="./assets/spice2x.ico" alt="" aria-hidden="true">
         <p class="eyebrow" data-i18n="home.eyebrow">LAN SUBSCREEN CLIENT</p>
         <h1><span data-i18n="home.titleFirst">Put the game’s second screen</span><br><span data-i18n="home.titleSecond">in your hands.</span></h1>
         <p data-i18n="home.copy">Connect directly to spice2x. Video and touch stay between this device and your gaming PC.</p>
-        <section class="version-note welcome-version" aria-labelledby="version-note-title">
-          <div>
-            <strong id="version-note-title" data-i18n="version.title">Recent spice2x required</strong>
-            <p data-i18n="version.copy">Subscreen streaming requires spice2x-26-08-20 or newer.</p>
-          </div>
-          <a class="version-link" href="https://github.com/spice2x/spice2x.github.io/releases" target="_blank" rel="noopener noreferrer" data-i18n="version.download">Download latest spice2x</a>
+        <section class="setup-notice" aria-labelledby="setup-notice-title">
+          <header class="setup-notice-header">
+            <strong id="setup-notice-title" class="setup-notice-title" data-i18n="setup.title">Before you connect</strong>
+            <a class="repository-link" href="https://github.com/Avimitin/spicefe" target="_blank" rel="noopener noreferrer">github.com/Avimitin/spicefe <span aria-hidden="true">↗</span></a>
+          </header>
+          <ul class="setup-list">
+            <li>
+              <div>
+                <strong data-i18n="version.title">Recent spice2x required</strong>
+                <p data-i18n="version.copy">Subscreen streaming requires spice2x-26-08-20 or newer.</p>
+              </div>
+              <a class="version-link" href="https://github.com/spice2x/spice2x.github.io/releases" target="_blank" rel="noopener noreferrer" data-i18n="version.download">Download latest spice2x</a>
+            </li>
+            <li>
+              <div>
+                <strong data-i18n="setup.directTitle">Direct connection</strong>
+                <p data-i18n="setup.directCopy">No relay is used. Allow local-network access when your browser asks, and allow spice2x through Windows Firewall.</p>
+              </div>
+            </li>
+          </ul>
         </section>
         <button id="empty-configure" class="primary-button large" type="button" data-i18n="home.configure">Set up a connection</button>
       </section>
@@ -206,7 +221,7 @@
         <label class="field host-field">
           <span data-i18n="settings.host">Host PC address</span>
           <input id="host" name="host" type="text" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" required placeholder="192.168.1.100">
-          <small data-i18n="settings.hostHelp">Use a private IP address or a .local name.</small>
+          <small data-i18n="settings.hostHelp">On Windows, open Command Prompt, run ipconfig, and use the IPv4 Address for your active network adapter.</small>
         </label>
 
         <label class="field port-field">
@@ -220,12 +235,11 @@
             <input id="password" name="password" type="password" autocomplete="off" placeholder="Optional API password" data-i18n-placeholder="settings.passwordPlaceholder">
             <button id="show-password" class="inline-button" type="button" data-i18n="button.show">Show</button>
           </span>
-          <small data-i18n="settings.passwordHelp">Saved as plain text in this browser’s local storage. The video endpoint itself is not authenticated.</small>
         </label>
       </div>
 
-      <fieldset>
-        <legend data-i18n="settings.stream">Stream</legend>
+      <details id="stream-settings" class="stream-settings">
+        <summary data-i18n="settings.stream">Stream quality</summary>
         <div class="stream-options">
           <label class="field">
             <span data-i18n="settings.format">Format</span>
@@ -262,13 +276,7 @@
             </select>
           </label>
         </div>
-      </fieldset>
-
-      <section id="transport-note" class="transport-note">
-        <strong data-i18n="settings.direct">Direct connection</strong>
-        <p id="transport-copy" data-i18n="settings.directCopy">No relay is used. Allow local-network access when your browser asks, and allow spice2x through Windows Firewall.</p>
-        <button id="dialog-compat-button" class="text-button" type="button" hidden data-i18n="button.openHttpLong">Open this app in HTTP compatibility mode</button>
-      </section>
+      </details>
 
       <footer class="dialog-footer">
         <span id="save-status" aria-live="polite"></span>
@@ -289,11 +297,6 @@
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></svg>
         </button>
       </header>
-      <label class="icon-search">
-        <span class="sr-only" data-i18n="icon.searchLabel">Search game icons</span>
-        <input id="game-icon-search" type="search" autocomplete="off" placeholder="Search IIDX, GITADORA, SDVX, pop'n…" data-i18n-placeholder="icon.searchPlaceholder">
-      </label>
-      <p id="game-icon-results" class="icon-results" aria-live="polite"></p>
       <div id="game-icon-groups" class="icon-groups" role="listbox" aria-label="Supported game icons by series" data-i18n-aria-label="icon.groupsAria"></div>
     </form>
   </dialog>
