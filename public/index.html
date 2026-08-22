@@ -6,7 +6,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0b0d12">
+  <meta name="theme-color" content="#ffffff">
   <meta name="referrer" content="no-referrer">
   <title>spicefe</title>
   <link rel="manifest" href="./site.webmanifest">
@@ -16,22 +16,20 @@
 <body>
   <div id="app">
     <header class="topbar">
-      <button id="settings-button" class="icon-button" type="button" aria-label="Open connection settings" title="Connection settings" data-i18n-aria-label="nav.openSettings" data-i18n-title="nav.settings">
-        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"/></svg>
-      </button>
-
       <div class="brand" aria-label="spicefe">
         <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
         <span>spice<span>fe</span></span>
       </div>
 
-      <label class="quick-profile">
-        <span class="sr-only" data-i18n="nav.profile">Connection profile</span>
-        <img id="quick-profile-icon" class="profile-icon" alt="">
-        <select id="quick-profile" aria-label="Connection profile" data-i18n-aria-label="nav.profile"></select>
-      </label>
+      <div id="active-server" class="active-server" hidden>
+        <img id="active-server-icon" class="profile-icon" alt="">
+        <span class="active-server-copy">
+          <span data-i18n="nav.currentServer">Current server</span>
+          <strong id="active-server-name"></strong>
+        </span>
+      </div>
 
-      <div id="connection-statuses" class="connection-statuses" aria-label="Connection status" aria-live="polite" data-i18n-aria-label="nav.status">
+      <div id="connection-statuses" class="connection-statuses" hidden aria-label="Connection status" aria-live="polite" data-i18n-aria-label="nav.status">
         <span id="api-status" class="connection-status" data-state="idle">
           <span class="status-dot" aria-hidden="true"></span>
           <span class="status-copy">
@@ -48,11 +46,25 @@
         </span>
       </div>
 
+      <span class="topbar-spacer"></span>
+
+      <label class="language-picker">
+        <span class="sr-only" data-i18n="language.label">Language</span>
+        <select id="language-select" aria-label="Language" data-i18n-aria-label="language.label">
+          <option value="en">EN</option>
+          <option value="zh-CN">中文</option>
+        </select>
+      </label>
+
+      <button id="settings-button" class="icon-button" type="button" aria-label="Open connection settings" title="Connection settings" data-i18n-aria-label="nav.openSettings" data-i18n-title="nav.settings">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"/></svg>
+      </button>
+
       <button id="hud-show-button" class="icon-button" type="button" hidden aria-controls="stage-hud" aria-label="Show screen controls" title="Show screen controls" data-i18n-aria-label="hud.show" data-i18n-title="hud.show">
         <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 15h16M8 17.5h8"/></svg>
       </button>
 
-      <button id="connect-button" class="primary-button" type="button" data-i18n="button.connect">Connect</button>
+      <button id="connect-button" class="primary-button" type="button" hidden data-i18n="button.connect">Connect</button>
 
       <button id="fullscreen-button" class="icon-button" type="button" aria-label="Toggle fullscreen" title="Fullscreen" data-i18n-aria-label="nav.fullscreen" data-i18n-title="nav.fullscreenTitle">
         <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
@@ -81,7 +93,28 @@
         <p class="eyebrow" data-i18n="home.eyebrow">LAN SUBSCREEN CLIENT</p>
         <h1><span data-i18n="home.titleFirst">Put the game’s second screen</span><br><span data-i18n="home.titleSecond">in your hands.</span></h1>
         <p data-i18n="home.copy">Connect directly to spice2x. Video and touch stay between this device and your gaming PC.</p>
+        <section class="version-note welcome-version" aria-labelledby="version-note-title">
+          <div>
+            <strong id="version-note-title" data-i18n="version.title">Recent spice2x required</strong>
+            <p data-i18n="version.copy">Subscreen streaming requires spice2x-26-08-20 or newer.</p>
+          </div>
+          <a class="version-link" href="https://github.com/spice2x/spice2x.github.io/releases" target="_blank" rel="noopener noreferrer" data-i18n="version.download">Download latest spice2x</a>
+        </section>
         <button id="empty-configure" class="primary-button large" type="button" data-i18n="home.configure">Set up a connection</button>
+      </section>
+
+      <section id="server-library" class="server-library" hidden aria-labelledby="server-library-title">
+        <div class="server-library-shell">
+          <header class="server-library-header">
+            <div>
+              <p class="eyebrow" data-i18n="library.eyebrow">SAVED SERVERS</p>
+              <h1 id="server-library-title" data-i18n="library.title">Choose a gaming PC</h1>
+              <p data-i18n="library.copy">Connect to a saved spice2x instance or edit its settings.</p>
+            </div>
+            <button id="add-server" class="primary-button" type="button" data-i18n="library.add">Add server</button>
+          </header>
+          <div id="server-list" class="server-list" role="list" aria-label="Saved spice2x servers" data-i18n-aria-label="library.listAria"></div>
+        </div>
       </section>
 
       <div id="stream-message" class="stream-message" hidden aria-live="polite">
@@ -135,13 +168,6 @@
           <h2 data-i18n="settings.title">Spice instances</h2>
         </div>
         <div class="dialog-header-actions">
-          <label class="language-picker">
-            <span class="sr-only" data-i18n="language.label">Language</span>
-            <select id="language-select" aria-label="Language" data-i18n-aria-label="language.label">
-              <option value="en">EN</option>
-              <option value="zh-CN">中文</option>
-            </select>
-          </label>
           <button id="close-settings" class="icon-button" type="button" aria-label="Close settings" data-i18n-aria-label="button.closeSettings">
             <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></svg>
           </button>
@@ -159,14 +185,6 @@
         <button id="new-profile" class="secondary-button" type="button" data-i18n="button.new">New</button>
         <button id="delete-profile" class="danger-button" type="button" data-i18n="button.delete">Delete</button>
       </div>
-
-      <section class="version-note" aria-labelledby="version-note-title">
-        <div>
-          <strong id="version-note-title" data-i18n="version.title">Recent spice2x required</strong>
-          <p data-i18n="version.copy">Subscreen streaming requires spice2x-26-08-20 or newer.</p>
-        </div>
-        <a class="version-link" href="https://github.com/spice2x/spice2x.github.io/releases" target="_blank" rel="noopener noreferrer" data-i18n="version.download">Download latest spice2x</a>
-      </section>
 
       <div class="form-grid">
         <label class="field span-two">
@@ -194,7 +212,6 @@
         <label class="field port-field">
           <span data-i18n="settings.apiPort">API port</span>
           <input id="api-port" name="api-port" type="number" inputmode="numeric" min="1" max="65533" required value="1337">
-          <small data-i18n="settings.videoPortHelp">Video uses port +2.</small>
         </label>
 
         <label class="field span-two">
@@ -249,7 +266,7 @@
 
       <section id="transport-note" class="transport-note">
         <strong data-i18n="settings.direct">Direct connection</strong>
-        <p id="transport-copy" data-i18n="settings.directCopy">No relay is used. Allow local-network access when your browser asks, and permit the WebSocket and stream ports (API port +1 and +2) through Windows Firewall.</p>
+        <p id="transport-copy" data-i18n="settings.directCopy">No relay is used. Allow local-network access when your browser asks, and allow spice2x through Windows Firewall.</p>
         <button id="dialog-compat-button" class="text-button" type="button" hidden data-i18n="button.openHttpLong">Open this app in HTTP compatibility mode</button>
       </section>
 

@@ -25,16 +25,16 @@ test('shows API and video as independent channels', () => {
   assert.deepEqual(result.api, {
     state: 'connected',
     label: 'Connected',
-    detail: 'Control API connected on port 1338',
+    detail: 'Control API connected',
   });
   assert.deepEqual(result.video, {
     state: 'error',
     label: 'Failed',
-    detail: 'Video failed on port 1339: No video frames arrived',
+    detail: 'Video stream failed: No video frames arrived',
   });
   assert.equal(result.streamMessage.title, 'Video stream failed');
-  assert.match(result.streamMessage.copy, /API connected on port 1338/);
-  assert.match(result.streamMessage.copy, /video endpoint is port 1339/);
+  assert.match(result.streamMessage.copy, /Control API is connected/);
+  assert.doesNotMatch(result.streamMessage.copy, /port/i);
 });
 
 test('keeps live video visible while reporting a failed control API', () => {
@@ -49,7 +49,7 @@ test('keeps live video visible while reporting a failed control API', () => {
   assert.equal(result.video.label, 'Live');
   assert.equal(result.streamMessage, null);
   assert.equal(result.apiWarning.title, 'Video is live; control is unavailable');
-  assert.match(result.apiWarning.copy, /port 1338/);
+  assert.match(result.apiWarning.copy, /Could not reach the input socket/);
   assert.match(result.apiWarning.copy, /Touch and resize are disabled/);
 });
 
@@ -63,7 +63,7 @@ test('identifies an API authentication failure separately', () => {
   assert.equal(result.video.label, 'Opening');
   assert.equal(result.streamMessage.title, 'API connection failed');
   assert.match(result.streamMessage.copy, /Wrong API password/);
-  assert.match(result.streamMessage.copy, /Video is still opening on port 1339/);
+  assert.match(result.streamMessage.copy, /video stream is still opening/i);
 });
 
 test('explains that a bad API password does not affect live video', () => {
@@ -77,7 +77,7 @@ test('explains that a bad API password does not affect live video', () => {
   assert.match(result.apiWarning.copy, /video does not use that password/);
 });
 
-test('reports both failures and their distinct ports', () => {
+test('reports both failures without exposing internal port arithmetic', () => {
   const result = connectionPresentation(snapshot({
     apiState: 'error',
     apiError: { code: 'transport', message: 'WebSocket blocked' },
@@ -86,8 +86,9 @@ test('reports both failures and their distinct ports', () => {
   }));
 
   assert.equal(result.streamMessage.title, 'API and video failed');
-  assert.match(result.streamMessage.copy, /API port 1338: WebSocket blocked/);
-  assert.match(result.streamMessage.copy, /Video port 1339: HTTP 404/);
+  assert.match(result.streamMessage.copy, /Control API: WebSocket blocked/);
+  assert.match(result.streamMessage.copy, /Video stream: HTTP 404/);
+  assert.doesNotMatch(result.streamMessage.copy, /1338|1339/);
 });
 
 test('resets both channels to idle after disconnect', () => {
@@ -113,6 +114,6 @@ test('renders independent connection diagnostics in Simplified Chinese', () => {
   assert.equal(result.api.label, '已连接');
   assert.equal(result.video.label, '失败');
   assert.equal(result.streamMessage.title, '视频流连接失败');
-  assert.match(result.streamMessage.copy, /端口 1338/);
+  assert.match(result.streamMessage.copy, /控制 API 已连接/);
   assert.match(result.streamMessage.copy, /未从该画面收到视频帧/);
 });

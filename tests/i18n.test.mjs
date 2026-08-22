@@ -68,5 +68,8 @@ test('the language choice persists and translations interpolate values', () => {
   i18n.setLocale('en-US');
   assert.equal(i18n.locale, 'en');
   assert.equal(storage.getItem(LOCALE_STORAGE_KEY), 'en');
-  assert.equal(translate('en', 'status.port', { port: 1339 }), 'port 1339');
+  assert.equal(
+    translate('en', 'library.address', { host: 'pc.local', port: 1337 }),
+    'pc.local:1337',
+  );
 });

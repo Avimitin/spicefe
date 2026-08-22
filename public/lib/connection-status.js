@@ -1,16 +1,5 @@
 import { localizeError, translate } from './i18n.js';
 
-function numericPort(profile, offset) {
-  const base = Number(profile?.apiPort);
-  return Number.isInteger(base) ? base + offset : null;
-}
-
-function portLabel(port, locale) {
-  return port === null
-    ? translate(locale, 'status.configuredPort')
-    : translate(locale, 'status.port', { port });
-}
-
 function apiErrorText(error, locale) {
   return localizeError(locale, error, 'status.apiDefaultError');
 }
@@ -19,7 +8,7 @@ function videoErrorText(error, locale) {
   return localizeError(locale, error, 'status.videoDefaultError');
 }
 
-function apiPresentation(snapshot, port, locale) {
+function apiPresentation(snapshot, locale) {
   if (!snapshot.wanted || snapshot.apiState === 'idle') {
     return {
       state: 'idle',
@@ -32,9 +21,7 @@ function apiPresentation(snapshot, port, locale) {
     return {
       state: 'connected',
       label: translate(locale, 'status.connected'),
-      detail: translate(locale, 'status.apiLiveDetail', {
-        port: portLabel(port, locale),
-      }),
+      detail: translate(locale, 'status.apiLiveDetail'),
     };
   }
 
@@ -44,7 +31,6 @@ function apiPresentation(snapshot, port, locale) {
       state: 'error',
       label: translate(locale, password ? 'status.authFailed' : 'status.failed'),
       detail: translate(locale, 'status.apiFailedDetail', {
-        port: portLabel(port, locale),
         error: apiErrorText(snapshot.apiError, locale),
       }),
     };
@@ -56,12 +42,11 @@ function apiPresentation(snapshot, port, locale) {
     label: translate(locale, checking ? 'status.checking' : 'status.connecting'),
     detail: translate(locale, 'status.apiConnectingDetail', {
       action: translate(locale, checking ? 'status.actionChecking' : 'status.actionOpening'),
-      port: portLabel(port, locale),
     }),
   };
 }
 
-function videoPresentation(snapshot, port, locale) {
+function videoPresentation(snapshot, locale) {
   if (!snapshot.wanted || snapshot.videoState === 'idle') {
     return {
       state: 'idle',
@@ -74,9 +59,7 @@ function videoPresentation(snapshot, port, locale) {
     return {
       state: 'connected',
       label: translate(locale, 'status.live'),
-      detail: translate(locale, 'status.videoLiveDetail', {
-        port: portLabel(port, locale),
-      }),
+      detail: translate(locale, 'status.videoLiveDetail'),
     };
   }
 
@@ -85,7 +68,6 @@ function videoPresentation(snapshot, port, locale) {
       state: 'error',
       label: translate(locale, 'status.failed'),
       detail: translate(locale, 'status.videoFailedDetail', {
-        port: portLabel(port, locale),
         error: videoErrorText(snapshot.videoError, locale),
       }),
     };
@@ -94,19 +76,15 @@ function videoPresentation(snapshot, port, locale) {
   return {
     state: 'connecting',
     label: translate(locale, 'status.opening'),
-    detail: translate(locale, 'status.videoOpeningDetail', {
-      port: portLabel(port, locale),
-    }),
+    detail: translate(locale, 'status.videoOpeningDetail'),
   };
 }
 
-function streamMessage(snapshot, apiPort, videoPort, locale) {
+function streamMessage(snapshot, locale) {
   if (!snapshot.wanted || snapshot.videoState === 'live') {
     return null;
   }
 
-  const apiAt = portLabel(apiPort, locale);
-  const videoAt = portLabel(videoPort, locale);
   if (snapshot.videoState === 'error') {
     const videoError = videoErrorText(snapshot.videoError, locale);
     if (snapshot.apiState === 'live') {
@@ -114,9 +92,7 @@ function streamMessage(snapshot, apiPort, videoPort, locale) {
         state: 'error',
         title: translate(locale, 'status.videoFailedTitle'),
         copy: translate(locale, 'status.videoFailedApiLive', {
-          apiPort: apiAt,
           error: videoError,
-          videoPort: videoAt,
         }),
       };
     }
@@ -125,9 +101,7 @@ function streamMessage(snapshot, apiPort, videoPort, locale) {
         state: 'error',
         title: translate(locale, 'status.bothFailedTitle'),
         copy: translate(locale, 'status.bothFailedCopy', {
-          apiPort: apiAt,
           apiError: apiErrorText(snapshot.apiError, locale),
-          videoPort: videoAt,
           videoError,
         }),
       };
@@ -137,8 +111,6 @@ function streamMessage(snapshot, apiPort, videoPort, locale) {
       title: translate(locale, 'status.videoFailedTitle'),
       copy: translate(locale, 'status.videoFailedApiOpening', {
         error: videoError,
-        apiPort: apiAt,
-        videoPort: videoAt,
       }),
     };
   }
@@ -147,10 +119,7 @@ function streamMessage(snapshot, apiPort, videoPort, locale) {
     return {
       state: 'connecting',
       title: translate(locale, 'status.apiConnectedTitle'),
-      copy: translate(locale, 'status.apiConnectedCopy', {
-        apiPort: apiAt,
-        videoPort: videoAt,
-      }),
+      copy: translate(locale, 'status.apiConnectedCopy'),
     };
   }
   if (snapshot.apiState === 'error') {
@@ -159,8 +128,6 @@ function streamMessage(snapshot, apiPort, videoPort, locale) {
       title: translate(locale, 'status.apiFailedTitle'),
       copy: translate(locale, 'status.apiFailedCopy', {
         error: apiErrorText(snapshot.apiError, locale),
-        apiPort: apiAt,
-        videoPort: videoAt,
       }),
     };
   }
@@ -168,23 +135,17 @@ function streamMessage(snapshot, apiPort, videoPort, locale) {
     return {
       state: 'connecting',
       title: translate(locale, 'status.apiCheckingTitle'),
-      copy: translate(locale, 'status.apiCheckingCopy', {
-        apiPort: apiAt,
-        videoPort: videoAt,
-      }),
+      copy: translate(locale, 'status.apiCheckingCopy'),
     };
   }
   return {
     state: 'connecting',
     title: translate(locale, 'status.connectingTitle'),
-    copy: translate(locale, 'status.connectingCopy', {
-      apiPort: apiAt,
-      videoPort: videoAt,
-    }),
+    copy: translate(locale, 'status.connectingCopy'),
   };
 }
 
-function apiWarning(snapshot, apiPort, locale) {
+function apiWarning(snapshot, locale) {
   if (!snapshot.wanted || snapshot.videoState !== 'live' || snapshot.apiState !== 'error') {
     return null;
   }
@@ -193,22 +154,18 @@ function apiWarning(snapshot, apiPort, locale) {
     copy: snapshot.apiError?.code === 'password'
       ? translate(locale, 'status.controlPasswordCopy', {
         error: apiErrorText(snapshot.apiError, locale),
-        apiPort: portLabel(apiPort, locale),
       })
       : translate(locale, 'status.controlFailedCopy', {
         error: apiErrorText(snapshot.apiError, locale),
-        apiPort: portLabel(apiPort, locale),
       }),
   };
 }
 
 export function connectionPresentation(snapshot, locale = 'en') {
-  const apiPort = numericPort(snapshot.profile, 1);
-  const videoPort = numericPort(snapshot.profile, 2);
   return {
-    api: apiPresentation(snapshot, apiPort, locale),
-    video: videoPresentation(snapshot, videoPort, locale),
-    streamMessage: streamMessage(snapshot, apiPort, videoPort, locale),
-    apiWarning: apiWarning(snapshot, apiPort, locale),
+    api: apiPresentation(snapshot, locale),
+    video: videoPresentation(snapshot, locale),
+    streamMessage: streamMessage(snapshot, locale),
+    apiWarning: apiWarning(snapshot, locale),
   };
 }

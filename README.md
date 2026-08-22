@@ -24,8 +24,11 @@ the LAN.
 
 - H.264 video with WebCodecs first and a Media Source Extensions fallback
 - automatic MJPEG fallback when H.264 is unavailable
-- separate control-API and video-stream health indicators with port-specific
-  failure details
+- a first-run welcome/setup flow and a saved-server library on later visits or
+  after disconnecting
+- per-server control-API and video-stream indicators with separate failure
+  details, plus a read-only API reachability check every five minutes while the
+  server library is visible
 - mouse, single-touch, and multi-touch input
 - Fit, Fill, and Stretch display modes with correct touch coordinate mapping
 - spice2x image-resize scene selection (Off and scenes 1–4)
@@ -57,6 +60,12 @@ WebCodecs when available, with bursty decoder output coalesced to the newest
 frame for each display refresh. Otherwise, the pinned pure-JavaScript jMuxer
 package repackages Annex-B into fragmented MP4 in the client for MSE; it does
 not transcode the video.
+
+The saved-server page briefly opens the configured API WebSocket and sends the
+same read-only `info/avs` query used when establishing a full session. It does
+this when the list opens and every five minutes while the list remains visible;
+it never opens a video stream for a reachability check. Any API response proves
+the endpoint is reachable even when its authentication cannot be verified.
 
 ## Gaming PC setup
 

@@ -2,12 +2,17 @@ import { compatibilityUrl, isPrivateLanName, likelyNeedsHttpMode } from './lib/e
 import { GAME_ICON_GROUPS, GAME_ICONS, gameIconById } from './lib/game-icons.js';
 import { connectionPresentation } from './lib/connection-status.js';
 import { createI18n, localizeError } from './lib/i18n.js';
+import { configuredProfiles, mainView } from './lib/main-view.js';
 import {
   decodeProfileTransfer,
   ProfileStore,
   PROFILE_TRANSFER_KEY,
   sanitizeProfile,
 } from './lib/profile-store.js';
+import {
+  probeSpiceApi,
+  REACHABILITY_INTERVAL_MS,
+} from './lib/reachability.js';
 import { SpiceSession } from './lib/spice-session.js';
 import { TouchController } from './lib/touch-controller.js';
 
@@ -26,16 +31,19 @@ const settingsDialog = element('settings-dialog');
 const iconDialog = element('icon-dialog');
 const deleteDialog = element('delete-dialog');
 const form = element('profile-form');
-const quickProfile = element('quick-profile');
 const profilePicker = element('profile-picker');
 const iconGroups = element('game-icon-groups');
 const iconSearch = element('game-icon-search');
 const connectButton = element('connect-button');
 const emptyState = element('empty-state');
+const serverLibrary = element('server-library');
+const serverList = element('server-list');
 const streamMessage = element('stream-message');
 const stageHud = element('stage-hud');
 const hudShowButton = element('hud-show-button');
 const hudCloseButton = element('hud-close-button');
+const activeServer = element('active-server');
+const connectionStatuses = element('connection-statuses');
 const apiStatus = element('api-status');
 const videoStatus = element('video-status');
 const apiWarning = element('api-warning');
@@ -50,6 +58,9 @@ let currentMetric = null;
 let lastMetricPaint = 0;
 let bannerDismissed = false;
 let hudDismissed = false;
+let renderedMainView = null;
+const reachability = new Map();
+const reachabilityInFlight = new Map();
 
 function translationParameters(node) {
   const parameters = {};
@@ -116,7 +127,6 @@ function setProfileIcon(imageElement, iconId) {
 }
 
 function renderSelectedProfileIcons(profile) {
-  setProfileIcon(element('quick-profile-icon'), profile.iconId);
   setProfileIcon(element('profile-picker-icon'), profile.iconId);
 }
 
@@ -203,10 +213,9 @@ function renderIconGroups(query = '') {
 
 function renderProfileLists() {
   const profiles = store.list();
-  setSelectOptions(quickProfile, profiles, store.selectedId);
   setSelectOptions(profilePicker, profiles, store.selectedId);
   renderSelectedProfileIcons(store.selected());
-  renderConnectionButton();
+  renderSnapshot(session.snapshot, false);
 }
 
 function fillForm(profile) {
@@ -275,10 +284,9 @@ function selectProfile(id) {
   if (!profile) {
     return;
   }
-  quickProfile.value = id;
   profilePicker.value = id;
   fillForm(profile);
-  renderConnectionButton();
+  renderSnapshot(session.snapshot, false);
   renderCompatibility();
   renderTransportNote();
 }
@@ -317,6 +325,215 @@ session.onframe = (metric) => {
   element('video-metric').textContent = `${metric.width}×${metric.height}${fps}`;
 };
 
+function renderChannelStatus(node, label, presentation) {
+  node.dataset.state = presentation.state;
+  node.title = presentation.detail;
+  node.setAttribute('aria-label', presentation.detail);
+  label.textContent = presentation.label;
+}
+
+function disconnectedSnapshot(profile) {
+  return {
+    wanted: false,
+    profile,
+    apiState: 'idle',
+    videoState: 'idle',
+    apiError: null,
+    videoError: null,
+  };
+}
+
+function createChannelStatus(channel, presentation) {
+  const node = document.createElement('span');
+  const dot = document.createElement('span');
+  const copy = document.createElement('span');
+  const channelLabel = document.createElement('span');
+  const value = document.createElement('strong');
+
+  node.className = 'connection-status';
+  dot.className = 'status-dot';
+  dot.setAttribute('aria-hidden', 'true');
+  copy.className = 'status-copy';
+  channelLabel.className = 'status-channel';
+  channelLabel.textContent = channel === 'api' ? 'API' : t('nav.video');
+  value.className = 'status-value';
+  copy.append(channelLabel, value);
+  node.append(dot, copy);
+  renderChannelStatus(node, value, presentation);
+  return node;
+}
+
+function checkedTime(timestamp) {
+  return new Intl.DateTimeFormat(i18n.locale, {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(timestamp));
+}
+
+function reachabilityPresentation(profile) {
+  const saved = reachability.get(profile.id);
+  if (!saved || saved.signature !== reachabilitySignature(profile)) {
+    return {
+      state: 'unknown',
+      label: t('reachability.unknown'),
+      detail: t('reachability.unknownDetail'),
+    };
+  }
+  if (saved.state === 'checking') {
+    return {
+      state: 'checking',
+      label: t('reachability.checking'),
+      detail: t('reachability.checkingDetail'),
+    };
+  }
+
+  const time = checkedTime(saved.checkedAt);
+  if (saved.state === 'reachable') {
+    return {
+      state: 'reachable',
+      label: t('reachability.reachable'),
+      detail: t(
+        (saved.reason === 'password' || saved.reason === 'protocol')
+          ? 'reachability.reachableAuthDetail'
+          : 'reachability.reachableDetail',
+        { time },
+      ),
+    };
+  }
+
+  const error = saved.reason === 'timeout'
+    ? t('reachability.timeout')
+    : localizeError(i18n.locale, saved.message, 'status.apiDefaultError');
+  return {
+    state: 'unreachable',
+    label: t('reachability.unreachable'),
+    detail: t('reachability.unreachableDetail', {
+      time,
+      error,
+    }),
+  };
+}
+
+function createServerCard(profile, snapshot) {
+  const active = snapshot.wanted && snapshot.profile?.id === profile.id;
+  const cardSnapshot = active ? snapshot : disconnectedSnapshot(profile);
+  const presentation = connectionPresentation(cardSnapshot, i18n.locale);
+  const availability = reachabilityPresentation(profile);
+  const card = document.createElement('article');
+  const identity = document.createElement('div');
+  const icon = document.createElement('img');
+  const identityCopy = document.createElement('div');
+  const name = document.createElement('strong');
+  const address = document.createElement('span');
+  const reachable = document.createElement('span');
+  const reachableDot = document.createElement('span');
+  const reachableLabel = document.createElement('span');
+  const statuses = document.createElement('div');
+  const actions = document.createElement('div');
+  const editButton = document.createElement('button');
+  const connectionButton = document.createElement('button');
+
+  card.className = 'server-card';
+  card.dataset.profileId = profile.id;
+  card.dataset.active = String(active);
+  card.setAttribute('role', 'listitem');
+
+  identity.className = 'server-identity';
+  icon.className = 'profile-icon';
+  icon.alt = '';
+  icon.loading = 'lazy';
+  icon.decoding = 'async';
+  setProfileIcon(icon, profile.iconId);
+  name.className = 'server-name';
+  name.textContent = profile.name;
+  address.className = 'server-address';
+  address.textContent = t('library.address', {
+    host: profile.host,
+    port: profile.apiPort,
+  });
+  identityCopy.append(name, address);
+  identity.append(icon, identityCopy);
+
+  reachable.className = 'server-reachability';
+  reachable.dataset.state = availability.state;
+  reachable.title = availability.detail;
+  reachable.setAttribute('aria-label', availability.detail);
+  reachableDot.className = 'status-dot';
+  reachableDot.setAttribute('aria-hidden', 'true');
+  reachableLabel.textContent = availability.label;
+  reachable.append(reachableDot, reachableLabel);
+
+  statuses.className = 'server-channel-statuses';
+  statuses.setAttribute('aria-label', t('library.statusFor', { name: profile.name }));
+  statuses.append(
+    createChannelStatus('api', presentation.api),
+    createChannelStatus('video', presentation.video),
+  );
+
+  actions.className = 'server-card-actions';
+  editButton.type = 'button';
+  editButton.className = 'secondary-button';
+  editButton.textContent = t('button.edit');
+  editButton.addEventListener('click', () => {
+    selectProfile(profile.id);
+    openSettings();
+  });
+  connectionButton.type = 'button';
+  connectionButton.className = 'primary-button';
+  connectionButton.textContent = t(
+    active
+      ? 'button.disconnect'
+      : snapshot.wanted ? 'button.switch' : 'button.connect',
+  );
+  connectionButton.addEventListener('click', () => {
+    selectProfile(profile.id);
+    connectSelected();
+  });
+  actions.append(editButton, connectionButton);
+  card.append(identity, reachable, statuses, actions);
+
+  if (active && presentation.streamMessage) {
+    const diagnostic = document.createElement('p');
+    const diagnosticTitle = document.createElement('strong');
+    diagnostic.className = 'server-card-diagnostic';
+    diagnostic.dataset.state = presentation.streamMessage.state;
+    diagnosticTitle.textContent = presentation.streamMessage.title;
+    diagnostic.append(diagnosticTitle, presentation.streamMessage.copy);
+    card.append(diagnostic);
+  }
+  return card;
+}
+
+function renderServerList(snapshot) {
+  const profiles = configuredProfiles(store.list());
+  serverList.replaceChildren(...profiles.map((profile) => createServerCard(profile, snapshot)));
+  serverList.setAttribute('aria-busy', String(
+    profiles.some((profile) => reachability.get(profile.id)?.state === 'checking'),
+  ));
+}
+
+function renderMainView(snapshot) {
+  const view = mainView(store.list(), snapshot);
+  const previousView = renderedMainView;
+  renderedMainView = view;
+  stage.dataset.mainView = view;
+  emptyState.hidden = view !== 'welcome';
+  serverLibrary.hidden = view !== 'servers';
+
+  const streaming = view === 'stream';
+  activeServer.hidden = !streaming;
+  connectionStatuses.hidden = !streaming;
+  connectButton.hidden = !streaming;
+  if (streaming && snapshot.profile) {
+    setProfileIcon(element('active-server-icon'), snapshot.profile.iconId);
+    element('active-server-name').textContent = snapshot.profile.name;
+  }
+  if (view === 'servers' && previousView !== 'servers') {
+    queueMicrotask(() => refreshReachability());
+  }
+  return view;
+}
+
 function renderConnectionButton() {
   const selected = store.selected();
   if (!session?.wanted) {
@@ -328,16 +545,11 @@ function renderConnectionButton() {
   );
 }
 
-function renderChannelStatus(node, label, presentation) {
-  node.dataset.state = presentation.state;
-  node.title = presentation.detail;
-  node.setAttribute('aria-label', presentation.detail);
-  label.textContent = presentation.label;
-}
-
 function renderSnapshot(snapshot, announce = true) {
+  recordSessionReachability(snapshot);
   renderConnectionButton();
-  emptyState.hidden = snapshot.wanted;
+  const view = renderMainView(snapshot);
+  renderServerList(snapshot);
   const hudAvailable = snapshot.videoState === 'live';
   stageHud.hidden = !hudAvailable || hudDismissed;
   hudShowButton.hidden = !hudAvailable || !hudDismissed;
@@ -360,7 +572,7 @@ function renderSnapshot(snapshot, announce = true) {
   renderChannelStatus(videoStatus, element('video-status-label'), presentation.video);
 
   const message = presentation.streamMessage;
-  streamMessage.hidden = !message;
+  streamMessage.hidden = view !== 'stream' || !message;
   if (message) {
     streamMessage.dataset.state = message.state;
     element('stream-message-title').textContent = message.title;
@@ -395,6 +607,7 @@ function connectSelected() {
 
   if (session.wanted && session.profile?.id === profile.id) {
     session.disconnect();
+    refreshReachability();
     return;
   }
 
@@ -463,8 +676,115 @@ function renderTransportNote() {
   );
 }
 
+function reachabilitySignature(profile) {
+  return `${profile.host}\u0000${profile.apiPort}\u0000${profile.password}`;
+}
+
+function recordSessionReachability(snapshot) {
+  const profile = snapshot.profile;
+  if (!snapshot.wanted || !profile?.host) {
+    return;
+  }
+
+  const signature = reachabilitySignature(profile);
+  // The active session is a fresher source than a background probe. Invalidate
+  // the probe token so a late result cannot overwrite live connection state.
+  reachabilityInFlight.delete(profile.id);
+  if (snapshot.apiState === 'connecting' || snapshot.apiState === 'checking') {
+    reachability.set(profile.id, { state: 'checking', signature });
+    return;
+  }
+  if (snapshot.apiState === 'live') {
+    reachability.set(profile.id, {
+      state: 'reachable',
+      signature,
+      checkedAt: Date.now(),
+      reason: null,
+      message: null,
+    });
+    return;
+  }
+  if (snapshot.apiState === 'error') {
+    reachability.set(profile.id, {
+      state: snapshot.apiError?.code === 'password' ? 'reachable' : 'unreachable',
+      signature,
+      checkedAt: Date.now(),
+      reason: snapshot.apiError?.code || null,
+      message: snapshot.apiError?.message || null,
+    });
+  }
+}
+
+async function probeProfileReachability(profile, force = false) {
+  const signature = reachabilitySignature(profile);
+  const running = reachabilityInFlight.get(profile.id);
+  if (running?.signature === signature) {
+    return running.promise;
+  }
+
+  const saved = reachability.get(profile.id);
+  if (!force
+    && saved?.signature === signature
+    && saved.checkedAt
+    && Date.now() - saved.checkedAt < REACHABILITY_INTERVAL_MS) {
+    return null;
+  }
+
+  const token = {};
+  reachability.set(profile.id, { state: 'checking', signature });
+  renderServerList(session.snapshot);
+  const promise = probeSpiceApi(profile).then((probe) => {
+    if (reachabilityInFlight.get(profile.id)?.token !== token) {
+      return probe;
+    }
+    const current = store.get(profile.id);
+    if (current?.host && reachabilitySignature(current) === signature) {
+      reachability.set(profile.id, { ...probe, signature });
+      renderServerList(session.snapshot);
+    }
+    return probe;
+  }).finally(() => {
+    if (reachabilityInFlight.get(profile.id)?.token === token) {
+      reachabilityInFlight.delete(profile.id);
+    }
+  });
+  reachabilityInFlight.set(profile.id, { promise, signature, token });
+  return promise;
+}
+
+function refreshReachability(force = false) {
+  if (document.hidden || mainView(store.list(), session.snapshot) !== 'servers') {
+    return;
+  }
+
+  const profiles = configuredProfiles(store.list());
+  const ids = new Set(profiles.map((profile) => profile.id));
+  for (const id of reachability.keys()) {
+    if (!ids.has(id)) {
+      reachability.delete(id);
+    }
+  }
+  for (const profile of profiles) {
+    if (session.wanted && session.profile?.id === profile.id) {
+      continue;
+    }
+    void probeProfileReachability(profile, force);
+  }
+}
+
+function createProfileAndEdit() {
+  const profile = store.create({
+    name: t('profile.newName', { number: store.list().length + 1 }),
+  });
+  renderProfileLists();
+  selectProfile(profile.id);
+  openSettings();
+  element('profile-name').select();
+}
+
 element('settings-button').addEventListener('click', openSettings);
 element('empty-configure').addEventListener('click', openSettings);
+element('add-server').addEventListener('click', createProfileAndEdit);
 element('close-settings').addEventListener('click', closeSettings);
 connectButton.addEventListener('click', connectSelected);
 
@@ -480,17 +800,9 @@ hudShowButton.addEventListener('click', () => {
   hudCloseButton.focus();
 });
 
-quickProfile.addEventListener('change', () => selectProfile(quickProfile.value));
 profilePicker.addEventListener('change', () => selectProfile(profilePicker.value));
 
-element('new-profile').addEventListener('click', () => {
-  const profile = store.create({
-    name: t('profile.newName', { number: store.list().length + 1 }),
-  });
-  renderProfileLists();
-  selectProfile(profile.id);
-  element('profile-name').select();
-});
+element('new-profile').addEventListener('click', createProfileAndEdit);
 
 element('delete-profile').addEventListener('click', () => {
   const profile = store.selected();
@@ -503,6 +815,8 @@ deleteDialog.addEventListener('close', () => {
     return;
   }
   const deleting = store.selectedId;
+  reachability.delete(deleting);
+  reachabilityInFlight.delete(deleting);
   if (session.wanted && session.profile?.id === deleting) {
     session.disconnect();
   }
@@ -512,7 +826,9 @@ deleteDialog.addEventListener('close', () => {
 });
 
 element('save-profile').addEventListener('click', () => {
-  if (saveForm()) {
+  const profile = saveForm();
+  if (profile) {
+    void probeProfileReachability(profile, true);
     showToast(t('toast.profileSaved'));
   }
 });
@@ -640,16 +956,22 @@ for (const eventName of ['gesturestart', 'gesturechange', 'gestureend']) {
 }
 
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && session.wanted) {
-    session.restartVideo();
+  if (!document.hidden) {
+    refreshReachability();
+    if (session.wanted) {
+      session.restartVideo();
+    }
   }
 });
 
 window.addEventListener('online', () => {
+  refreshReachability(true);
   if (session.wanted && session.videoState === 'error') {
     session.restartVideo();
   }
 });
+
+setInterval(() => refreshReachability(true), REACHABILITY_INTERVAL_MS);
 
 applyDocumentTranslations();
 renderProfileLists();
@@ -657,7 +979,3 @@ fillForm(store.selected());
 renderCompatibility();
 renderTransportNote();
 renderSnapshot(session.snapshot);
-
-if (store.selected().host === '') {
-  openSettings();
-}
