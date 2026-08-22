@@ -4,6 +4,9 @@ export function configuredProfiles(profiles) {
 }
 
 export function browseView(profiles, requestedView) {
+  if (requestedView === 'browser-setup' || requestedView === 'self-host') {
+    return requestedView;
+  }
   if (configuredProfiles(profiles).length === 0) {
     return 'welcome';
   }

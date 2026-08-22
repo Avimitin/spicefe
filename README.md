@@ -3,18 +3,29 @@
 > [!WARNING]
 > **Use only on a trusted LAN.** spice2x sends unauthenticated video over plain
 > HTTP, its optional API password uses legacy RC4, and spicefe stores saved
-> passwords as plain text in browser `localStorage`. HTTP compatibility mode
-> can also be modified in transit. Prefer HTTPS mode when supported and deploy
-> only reviewed artifacts through a static host you trust.
+> passwords as plain text in browser `localStorage`. A copy of spicefe loaded
+> over HTTP can also be modified in transit. Prefer a supported per-site HTTPS
+> exception on desktop, and deploy only reviewed artifacts through a static
+> host you trust.
 
 [简体中文](./README.zh-CN.md)
 
 [![CI](https://github.com/Avimitin/spicefe/actions/workflows/ci.yml/badge.svg)](https://github.com/Avimitin/spicefe/actions/workflows/ci.yml)
 
+## Showcase
+
+| Welcome | Saved server library |
+| :---: | :---: |
+| [![spicefe welcome page](./docs/screenshots/welcome.png)](./docs/screenshots/welcome.png) | [![spicefe library with several saved arcade PCs](./docs/screenshots/server-library.png)](./docs/screenshots/server-library.png) |
+
+**Live GITADORA GALAXY WAVE DELTA subscreen**
+
+[![GITADORA GALAXY WAVE DELTA subscreen streaming through spicefe](./docs/screenshots/gitadora-stream.png)](./docs/screenshots/gitadora-stream.png)
+
 `spicefe` is a globally hostable, static LAN client for the spice2x subscreen
 stream. Open the page on a phone, tablet, or another modern browser, select a
-saved gaming PC, and the browser connects directly to spice2x for video, touch,
-and touch input.
+saved gaming PC, and the browser connects directly to spice2x for video and
+touch input.
 
 There is no relay and no companion web server to run on the gaming PC. The
 static host only delivers this application; stream and input traffic stay on
@@ -38,6 +49,8 @@ the LAN.
 - explicit Connect, Disconnect, and Switch behavior; a reload never reconnects
 - English and Simplified Chinese UI with browser-language detection and a saved
   manual language choice
+- a dedicated browser-setup page with instructions for Safari, Edge, Chrome,
+  and Firefox on iOS, iPadOS, Windows, and Android
 - disconnect immediately clears the final decoded frame and every playback
   backend
 - responsive phone, tablet, and desktop UI
@@ -87,32 +100,46 @@ On the client device, enter the PC's private IPv4 address when possible, such
 as `192.168.1.50`. Both devices must be on the same LAN and client isolation
 must be disabled on the Wi-Fi network.
 
-## Browser connection modes
+## Browser setup
 
 spice2x currently exposes only plain HTTP and WebSocket endpoints. That creates
 an unavoidable browser-security boundary for a globally served page:
 
-| Browser | Recommended page | What to do |
-| --- | --- | --- |
-| Current Chrome or Edge | HTTPS | Allow the Local Network Access prompt |
-| Current Safari and WebKit-based iOS browsers | HTTP compatibility mode | Open HTTPS first, then use **Open HTTP mode** |
-| Current Firefox | HTTP compatibility mode | Open HTTPS first, then use **Open HTTP mode** |
+> [!IMPORTANT]
+> When the instructions below call for the HTTP page, manually enter the whole
+> address: **`http://spicefe.avimit.in/`**. Do not enter only the domain name;
+> browser history and address-bar autocomplete may choose the previously visited
+> HTTPS address instead.
 
-Chrome 142 introduced a secure-context Local Network Access permission that
-can permit plain local requests and relax mixed-content blocking for them.
-Other browser paths use the same static site over HTTP. The app moves the whole
-profile library in a URL fragment between the two scheme-specific storage
-origins and removes that fragment immediately after import. URL fragments are
-not included in HTTP requests.
+| Device and browser | Recommended page | What to do |
+| --- | --- | --- |
+| iPhone or iPad · Safari | HTTP | Open a new tab, enter the complete `http://` address above, and verify the loaded address still begins with `http://`. Use the local-server helper if Safari upgrades it. |
+| Windows · Edge or Chrome | HTTPS | Open this site's permissions, allow **Insecure content**, then allow **Local network access** when offered. |
+| Windows · Firefox | HTTPS | Open the padlock's connection-security panel, select **Disable protection for now**, then allow access to local network devices. |
+| Android · Edge or Chrome | HTTP | Temporarily turn off **Always use secure connections** if enabled, enter the complete `http://` address, then allow local-network access. |
+
+The app includes the same bilingual instructions as a dedicated **Browser
+setup** page, reachable from the top-left page menu. It also provides the exact
+HTTP address for the current deployment and a copy button. If a public domain
+still upgrades to HTTPS because of HSTS, browser policy, or network policy, use
+the bundled Windows local-server helper documented below.
+
+HTTP and HTTPS are separate browser origins, so they have separate
+`localStorage`. Saved profiles are deliberately not placed in a URL or copied
+between them; configure the server again after moving to the HTTP page.
 
 The deployment therefore must serve both HTTP and HTTPS without redirecting
-all HTTP traffic to HTTPS. If a host forces the compatibility URL back to
-HTTPS, the app detects the loop and explains the configuration problem.
+all HTTP traffic to HTTPS if its public HTTP page is intended to work.
 
 Relevant platform references:
 
-- [Chrome Local Network Access permission](https://developer.chrome.com/blog/local-network-access)
-- [Chrome 142 release notes](https://developer.chrome.com/release-notes/142)
+- [Chrome site permissions](https://support.google.com/chrome/answer/114662)
+- [Chrome secure-connection settings on Android](https://support.google.com/chrome/answer/10468685?co=GENIE.Platform%3DAndroid&hl=en)
+- [Edge Local Network Access](https://support.microsoft.com/en-us/edge/control-a-website-s-access-to-the-local-network-in-microsoft-edge)
+- [Edge HTTPS-First mode](https://support.microsoft.com/en-us/edge/secure-your-web-browsing-with-https-first-mode-in-microsoft-edge)
+- [Firefox mixed-content controls](https://support.mozilla.org/en-US/kb/mixed-content-blocking-firefox)
+- [Firefox local-network permissions](https://support.mozilla.org/en-US/kb/control-personal-device-local-network-permissions-firefox)
+- [Safari address-bar instructions](https://support.apple.com/guide/iphone/browse-the-web-iph1fbef4daa/ios)
 - [W3C Mixed Content](https://www.w3.org/TR/mixed-content/)
 - [WebCodecs AVC registration](https://www.w3.org/TR/webcodecs-avc-codec-registration/)
 
@@ -159,8 +186,8 @@ two generated assets instead of creating a duplicate release.
 
 To enable deployment, open **Settings → Pages** in the GitHub repository and
 set **Source** to **GitHub Actions**. Configure a custom domain and leave
-**Enforce HTTPS** disabled so its HTTP URL remains available for compatibility
-mode. The default `github.io` address cannot provide that HTTP endpoint. If the
+**Enforce HTTPS** disabled so its HTTP page remains available. The default
+`github.io` address cannot provide that HTTP endpoint. If the
 domain uses Cloudflare DNS, keep the record **DNS only** and do not enable HSTS
 or an HTTPS redirect elsewhere in front of GitHub Pages.
 
@@ -184,7 +211,8 @@ leave **Force HTTPS** disabled so `http://your-client-domain` remains usable.
 Use no framework and no build command, with `public` as the output directory.
 The included `_headers` file is consumed by Pages. Use a custom domain and
 disable **Always Use HTTPS** for that zone; do not enable HSTS on this client
-hostname. The `pages.dev` hostname is not recommended for compatibility mode.
+hostname. The `pages.dev` hostname cannot provide the required public HTTP
+page.
 
 The deployment details referenced above are documented by
 [GitHub Pages custom workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages),
@@ -194,7 +222,14 @@ The deployment details referenced above are documented by
 [Cloudflare Pages headers](https://developers.cloudflare.com/pages/configuration/headers/),
 and [Cloudflare Always Use HTTPS](https://developers.cloudflare.com/ssl/edge-certificates/additional-options/always-use-https/).
 
-## Windows local HTTP server
+## Local deployment
+
+The in-app **Self-hosting** page in the top-left menu contains the same setup,
+network, update, and troubleshooting guide in English and Simplified Chinese.
+Self-hosting is the most reliable option when a public domain is upgraded to
+HTTPS by HSTS or browser policy.
+
+### Windows release helper
 
 Windows does not include a standalone `cmd.exe` web-server command, and IIS is
 an optional system component that would be excessive for this use. Supported
@@ -213,6 +248,13 @@ To serve spicefe directly from the gaming PC:
    window, such as `http://192.168.1.50:45000/`.
 5. Keep the window open while playing; press **Ctrl+C** to stop the server.
 
+Optionally verify the ZIP from PowerShell and compare the result with the
+downloaded `.sha256` file before extracting it:
+
+```powershell
+Get-FileHash .\spicefe-vX.Y.Z.zip -Algorithm SHA256
+```
+
 Run `serve.bat 8080` from Command Prompt to choose a different port. The helper
 does not install a service, change firewall rules, require administrator
 rights, or download anything. Its execution-policy override applies only to
@@ -222,6 +264,42 @@ server, not an Internet-facing server.
 The implementation relies on the Windows-included
 [Windows PowerShell 5.1](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_windows_powershell_5.1?view=powershell-5.1)
 and [.NET `TcpListener`](https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.tcplistener).
+
+### Nix on Linux or macOS
+
+Use a tagged repository checkout for a reproducible local deployment:
+
+```sh
+git clone https://github.com/Avimitin/spicefe.git
+cd spicefe
+git checkout vX.Y.Z
+nix flake check
+SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
+```
+
+Nix builds the same pinned site used by CI and supplies the Python server; no
+global npm install is needed. `0.0.0.0` exposes the page to the LAN, so restrict
+the machine's firewall to trusted/private networks. Leave the process running
+while playing and press **Ctrl+C** to stop it.
+
+### Opening and maintaining the local page
+
+- Manually enter the complete cyan URL printed by the helper, including
+  `http://` and `:45000`. Do not use `127.0.0.1` on the phone: it points back to
+  the phone itself.
+- If the page does not open, test `127.0.0.1` on the server PC first, then check
+  the LAN address, Private-network firewall access, shared Wi-Fi, and client
+  isolation.
+- If the page opens but streaming fails, the static deployment is working.
+  Recheck the spice2x API stream setting, spice2x version, API port and password,
+  and its separate firewall ports.
+- To update, stop the old server, verify and extract the new release into a new
+  folder, and start it with the same address and page port. The browser retains
+  saved profiles for that origin.
+- Never expose the helper through router port forwarding. Advanced users may
+  serve `result/` or `public/` with another HTTP static server, but must use
+  normal JavaScript and WOFF2 MIME types; opening `index.html` through `file://`
+  is unsupported.
 
 ## Local development
 
@@ -269,8 +347,12 @@ subsets (Regular and Medium) are pinned to IBM's
 [`@ibm/plex-sans@1.1.0`](https://github.com/IBM/plex/releases/tag/%40ibm%2Fplex-sans%401.1.0)
 release and served from the same static origin. CSS tries an installed IBM Plex
 Sans first, so the font files are not downloaded when the device already has
-them. Chinese and other scripts use local system fallbacks, and no font CDN or
-live third-party request is used.
+them. The welcome headline uses the self-hosted Latin subset of
+[Alfa Slab One](https://fonts.google.com/specimen/Alfa+Slab+One) Regular, pinned
+to the official Google Fonts `v21` asset with its license and metadata. CSS
+checks for a locally installed copy first, and Chinese uses a local serif
+fallback. Other scripts use local system fallbacks, and no font CDN or live
+third-party request is used.
 
 ## Artwork provenance
 
@@ -299,9 +381,9 @@ Use this only on a trusted home LAN:
   modern secure channel.
 - Profiles, including passwords, are intentionally stored as plain text in the
   browser's `localStorage` so they are ready after reopening the page.
-- HTTP compatibility mode does not authenticate the static page in transit. A
-  network attacker could replace its JavaScript, so prefer Chrome's HTTPS mode
-  where it works and trust the network used for compatibility mode.
+- An HTTP page does not authenticate the static application in transit. A
+  network attacker could replace its JavaScript, so prefer the documented
+  per-site HTTPS exception where it works and trust the network used for HTTP.
 - A deployed static host controls executable code with access to the saved
   profile and LAN endpoints. Deploy from reviewed artifacts and use a host you
   trust.
@@ -315,7 +397,7 @@ Protocol and client behavior were derived from the spice2x source tree and the
 BSD-licensed [`spice2x/substream`](https://github.com/spice2x/substream)
 reference client. The site identity uses the official spice2x icon, and the
 optional game artwork comes from `bicarus-dev/bemani_fan_site_icons`. The UI
-treatment is adapted from open-source Untitled UI React and uses IBM Plex Sans.
-See
+treatment is adapted from open-source Untitled UI React and uses IBM Plex Sans;
+the welcome headline uses Alfa Slab One. See
 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for licenses, revisions, and
 the BEMANI artwork caveat.

@@ -24,6 +24,18 @@ test('welcome and server library remain separate browsable pages', () => {
   assert.equal(mainView([blank], { wanted: false }, 'servers'), 'welcome');
 });
 
+test('browser setup remains available with or without saved servers', () => {
+  assert.equal(browseView([saved], 'browser-setup'), 'browser-setup');
+  assert.equal(mainView([saved], { wanted: false }, 'browser-setup'), 'browser-setup');
+  assert.equal(mainView([blank], { wanted: false }, 'browser-setup'), 'browser-setup');
+});
+
+test('self-hosting guide remains available with or without saved servers', () => {
+  assert.equal(browseView([saved], 'self-host'), 'self-host');
+  assert.equal(mainView([saved], { wanted: false }, 'self-host'), 'self-host');
+  assert.equal(mainView([blank], { wanted: false }, 'self-host'), 'self-host');
+});
+
 test('connection diagnostics remain on the server list until video is live', () => {
   assert.equal(mainView([saved], {
     wanted: true,

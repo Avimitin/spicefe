@@ -1,12 +1,10 @@
-import { compatibilityUrl, likelyNeedsHttpMode } from './lib/endpoints.js';
+import { likelyNeedsBrowserSetup, plainHttpPageUrl } from './lib/endpoints.js';
 import { GAME_ICON_GROUPS, gameIconById } from './lib/game-icons.js';
 import { connectionPresentation } from './lib/connection-status.js';
 import { createI18n, localizeError } from './lib/i18n.js';
 import { configuredProfiles, mainView } from './lib/main-view.js';
 import {
-  decodeProfileTransfer,
   ProfileStore,
-  PROFILE_TRANSFER_KEY,
   sanitizeProfile,
 } from './lib/profile-store.js';
 import {
@@ -40,12 +38,16 @@ const pageMenuButton = element('page-menu-button');
 const pageMenu = element('page-menu');
 const welcomePageLink = element('welcome-page-link');
 const libraryPageLink = element('library-page-link');
+const browserSetupPageLink = element('browser-setup-page-link');
+const selfHostPageLink = element('self-host-page-link');
 const brandIcon = element('brand-icon');
 const settingsButton = element('settings-button');
 const connectButton = element('connect-button');
 const connectButtonLabel = element('connect-button-label');
 const emptyState = element('empty-state');
 const serverLibrary = element('server-library');
+const browserSetup = element('browser-setup');
+const selfHost = element('self-host');
 const serverList = element('server-list');
 const streamMessage = element('stream-message');
 const stageHud = element('stage-hud');
@@ -98,20 +100,11 @@ function showToast(message, timeout = 4500) {
   }, timeout);
 }
 
-function importTransferredProfile() {
-  const hash = new URLSearchParams(location.hash.slice(1));
-  const transfer = hash.get(PROFILE_TRANSFER_KEY);
-  if (!transfer) {
-    return;
-  }
-  const profile = decodeProfileTransfer(transfer);
-  if (profile) {
-    store.replaceAll(profile.profiles, profile.selectedId);
-  }
+// Older releases put complete connection profiles in this fragment while
+// changing schemes. Never import it; only remove it from legacy bookmarks.
+if (new URLSearchParams(location.hash.slice(1)).has('spicefe-profile')) {
   history.replaceState(null, '', `${location.pathname}${location.search}`);
 }
-
-importTransferredProfile();
 
 function requestedBrowsePage() {
   const requested = new URLSearchParams(location.search).get('page');
@@ -120,6 +113,12 @@ function requestedBrowsePage() {
   }
   if (requested === 'library') {
     return 'servers';
+  }
+  if (requested === 'browser-setup') {
+    return 'browser-setup';
+  }
+  if (requested === 'self-host') {
+    return 'self-host';
   }
   return undefined;
 }
@@ -501,7 +500,9 @@ function renderServerList(snapshot) {
 
 function browsePagePath(page) {
   const url = new URL(location.href);
-  url.searchParams.set('page', page === 'servers' ? 'library' : 'welcome');
+  const pageName = page === 'servers' ? 'library' : page;
+  url.searchParams.delete('compat');
+  url.searchParams.set('page', pageName);
   url.hash = '';
   return `${url.pathname}${url.search}`;
 }
@@ -524,6 +525,8 @@ function renderPageNavigation(view) {
   const hasServers = configuredProfiles(store.list()).length > 0;
   welcomePageLink.href = browsePagePath('welcome');
   libraryPageLink.href = browsePagePath('servers');
+  browserSetupPageLink.href = browsePagePath('browser-setup');
+  selfHostPageLink.href = browsePagePath('self-host');
 
   if (view === 'welcome') {
     welcomePageLink.setAttribute('aria-current', 'page');
@@ -534,6 +537,16 @@ function renderPageNavigation(view) {
     libraryPageLink.setAttribute('aria-current', 'page');
   } else {
     libraryPageLink.removeAttribute('aria-current');
+  }
+  if (view === 'browser-setup') {
+    browserSetupPageLink.setAttribute('aria-current', 'page');
+  } else {
+    browserSetupPageLink.removeAttribute('aria-current');
+  }
+  if (view === 'self-host') {
+    selfHostPageLink.setAttribute('aria-current', 'page');
+  } else {
+    selfHostPageLink.removeAttribute('aria-current');
   }
 
   libraryPageLink.setAttribute('aria-disabled', String(!hasServers));
@@ -575,6 +588,8 @@ function renderMainView(snapshot) {
   stage.dataset.mainView = view;
   emptyState.hidden = view !== 'welcome';
   serverLibrary.hidden = view !== 'servers';
+  browserSetup.hidden = view !== 'browser-setup';
+  selfHost.hidden = view !== 'self-host';
 
   const streaming = view === 'stream';
   activeServer.hidden = !streaming;
@@ -590,6 +605,7 @@ function renderMainView(snapshot) {
     element('active-server-name').textContent = snapshot.profile.name;
   }
   renderPageNavigation(view);
+  renderCompatibility(false, view);
   if (view === 'servers' && previousView !== 'servers') {
     queueMicrotask(() => refreshReachability());
   }
@@ -696,36 +712,15 @@ function closeSettings() {
   }
 }
 
-function openCompatibilityMode() {
-  const profile = (() => {
-    try {
-      return profileFromForm();
-    } catch {
-      return store.selected();
-    }
-  })();
-  const profiles = store.list();
-  const position = profiles.findIndex((saved) => saved.id === profile.id);
-  if (position < 0) {
-    profiles.push(profile);
-  } else {
-    profiles[position] = profile;
-  }
-  location.href = compatibilityUrl(profiles, location.href, profile.id);
-}
-
-function renderCompatibility(force = false) {
+function renderCompatibility(force = false, view = renderedMainView) {
   const isHttps = location.protocol === 'https:';
-  const wasForcedBack = isHttps && new URLSearchParams(location.search).has('compat');
-  const recommended = isHttps && likelyNeedsHttpMode();
-  compatBanner.hidden = bannerDismissed || (!force && !recommended && !wasForcedBack);
-  if (wasForcedBack) {
-    element('compat-title').textContent = t('compat.forcedTitle');
-    element('compat-copy').textContent = t('compat.forcedCopy');
-  } else {
-    element('compat-title').textContent = t('compat.title');
-    element('compat-copy').textContent = t('compat.copy');
-  }
+  const recommended = isHttps && likelyNeedsBrowserSetup();
+  compatBanner.hidden = view === 'browser-setup'
+    || view === 'self-host'
+    || bannerDismissed
+    || (!force && !recommended);
+  element('compat-title').textContent = t('compat.title');
+  element('compat-copy').textContent = t('compat.copy');
 }
 
 function reachabilitySignature(profile) {
@@ -851,6 +846,16 @@ libraryPageLink.addEventListener('click', (event) => {
   }
 });
 
+browserSetupPageLink.addEventListener('click', (event) => {
+  event.preventDefault();
+  navigateToBrowsePage('browser-setup');
+});
+
+selfHostPageLink.addEventListener('click', (event) => {
+  event.preventDefault();
+  navigateToBrowsePage('self-host');
+});
+
 document.addEventListener('pointerdown', (event) => {
   if (!pageMenu.hidden && !pageNavigation.contains(event.target)) {
     setPageMenuOpen(false);
@@ -866,7 +871,10 @@ document.addEventListener('keydown', (event) => {
 
 settingsButton.addEventListener('click', openSettings);
 element('empty-configure').addEventListener('click', openSettings);
-element('guide-configure').addEventListener('click', openSettings);
+element('guide-self-host').addEventListener('click', (event) => {
+  event.preventDefault();
+  navigateToBrowsePage('self-host');
+});
 element('add-server').addEventListener('click', createProfileAndEdit);
 element('close-settings').addEventListener('click', closeSettings);
 connectButton.addEventListener('click', connectSelected);
@@ -984,10 +992,39 @@ if (!fullscreen || navigator.standalone) {
   });
 }
 
-element('compat-button').addEventListener('click', openCompatibilityMode);
+element('compat-button').addEventListener('click', () => {
+  navigateToBrowsePage('browser-setup');
+});
 element('compat-dismiss').addEventListener('click', () => {
   bannerDismissed = true;
   compatBanner.hidden = true;
+});
+
+const httpModeAddress = plainHttpPageUrl(location.href);
+element('http-mode-url').textContent = httpModeAddress;
+
+element('copy-http-url').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(httpModeAddress);
+    showToast(t('browserSetup.copied'));
+  } catch {
+    showToast(t('browserSetup.copyFailed'));
+  }
+});
+
+element('browser-setup-done').addEventListener('click', () => {
+  const destination = configuredProfiles(store.list()).length > 0 ? 'servers' : 'welcome';
+  navigateToBrowsePage(destination);
+});
+
+element('browser-deployment-link').addEventListener('click', (event) => {
+  event.preventDefault();
+  navigateToBrowsePage('self-host');
+});
+
+element('self-host-done').addEventListener('click', () => {
+  const destination = configuredProfiles(store.list()).length > 0 ? 'servers' : 'welcome';
+  navigateToBrowsePage(destination);
 });
 
 function renderLocalizedUi() {

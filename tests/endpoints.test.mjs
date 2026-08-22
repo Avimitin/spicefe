@@ -3,10 +3,10 @@ import test from 'node:test';
 
 import {
   apiWebSocketUrl,
-  compatibilityUrl,
   hostAuthority,
   isPrivateLanName,
-  likelyNeedsHttpMode,
+  likelyNeedsBrowserSetup,
+  plainHttpPageUrl,
   streamUrl,
   targetAddressSpaceForUrl,
 } from '../public/lib/endpoints.js';
@@ -57,20 +57,19 @@ test('recognizes local names and private address ranges', () => {
   }
 });
 
-test('marks Safari and Firefox for HTTP compatibility mode', () => {
-  assert.equal(likelyNeedsHttpMode('Mozilla/5.0 Firefox/150.0'), true);
-  assert.equal(likelyNeedsHttpMode('Mozilla/5.0 Version/26.0 Safari/605.1.15'), true);
-  assert.equal(likelyNeedsHttpMode('Mozilla/5.0 Chrome/150.0.0.0 Safari/537.36'), false);
+test('marks Safari and Firefox for proactive browser setup help', () => {
+  assert.equal(likelyNeedsBrowserSetup('Mozilla/5.0 Firefox/150.0'), true);
+  assert.equal(likelyNeedsBrowserSetup('Mozilla/5.0 Version/26.0 Safari/605.1.15'), true);
+  assert.equal(likelyNeedsBrowserSetup('Mozilla/5.0 Chrome/150.0.0.0 Safari/537.36'), false);
 });
 
-test('builds an HTTP compatibility URL with an importable profile fragment', () => {
-  const result = new URL(compatibilityUrl(
-    [profile],
-    'https://client.example:443/app/?from=test',
-    profile.id,
+test('builds a clean HTTP page address for manual entry', () => {
+  const result = new URL(plainHttpPageUrl(
+    'https://client.example:443/app/?page=browser-setup#setup-android',
   ));
   assert.equal(result.protocol, 'http:');
   assert.equal(result.port, '');
-  assert.equal(result.searchParams.get('compat'), '1');
-  assert.match(result.hash, /^#spicefe-profile=/);
+  assert.equal(result.pathname, '/app/');
+  assert.equal(result.search, '');
+  assert.equal(result.hash, '');
 });

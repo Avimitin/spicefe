@@ -59,6 +59,18 @@
             url = "${ibmPlexBase}/LICENSE.txt";
             hash = "sha256-fmsoGO29j2oBroBkHMjxalEIDQj7TlMr46C290rbB9o=";
           };
+          alfaSlabOne = pkgs.fetchurl {
+            url = "https://fonts.gstatic.com/s/alfaslabone/v21/6NUQ8FmMKwSEKjnm5-4v-4Jh2dJhew.woff2";
+            hash = "sha256-SKEQx/2oH5khpkN+GoE9zqVt9an1L3eMey8hUeNuTyw=";
+          };
+          alfaSlabOneLicense = pkgs.fetchurl {
+            url = "https://raw.githubusercontent.com/google/fonts/ec626514f79f831f1ab848a82114a0ce7e2d6372/ofl/alfaslabone/OFL.txt";
+            hash = "sha256-4xWryCp4cQxyQuLy5lKWUf1jHU1Q5q2Y6hlPm1TD1wE=";
+          };
+          alfaSlabOneMetadata = pkgs.fetchurl {
+            url = "https://raw.githubusercontent.com/google/fonts/ec626514f79f831f1ab848a82114a0ce7e2d6372/ofl/alfaslabone/METADATA.pb";
+            hash = "sha256-Aw6JNJCYZYAjE0h7i2rjQueaBsEC/3QO+mz9tbJsuXw=";
+          };
         in
         rec {
           default = pkgs.buildNpmPackage {
@@ -79,6 +91,11 @@
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Regular-Pi.woff2 ${ibmPlexRegularPi}
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Medium-Latin1.woff2 ${ibmPlexMediumLatin1}
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Medium-Pi.woff2 ${ibmPlexMediumPi}
+              cmp public/vendor/alfa-slab-one/fonts/AlfaSlabOne-Regular-Latin.woff2 ${alfaSlabOne}
+              cmp \
+                <(sed 's/\r$//; s/[[:blank:]]*$//' public/vendor/alfa-slab-one/LICENSE.OFL-1.1.txt) \
+                <(sed 's/\r$//; s/[[:blank:]]*$//' ${alfaSlabOneLicense})
+              cmp public/vendor/alfa-slab-one/METADATA.pb ${alfaSlabOneMetadata}
               cmp \
                 <(tr -s '[:space:]' '\n' < public/vendor/ibm-plex-sans/LICENSE.OFL-1.1.txt) \
                 <(tr -s '[:space:]' '\n' < ${ibmPlexLicense})

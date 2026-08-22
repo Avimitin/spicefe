@@ -3,8 +3,6 @@ import test from 'node:test';
 
 import {
   cleanHost,
-  decodeProfileTransfer,
-  encodeProfileTransfer,
   ProfileStore,
   PROFILE_STORAGE_KEY,
   sanitizeProfile,
@@ -96,38 +94,4 @@ test('supports a localized name for newly generated default profiles', () => {
 
   store.remove(store.selectedId);
   assert.equal(store.selected().name, '游戏 PC');
-
-  store.replaceAll([], null);
-  assert.equal(store.selected().name, '游戏 PC');
-});
-
-test('profile transfer preserves multiple instances, unicode, and passwords across schemes', () => {
-  const first = sanitizeProfile({
-    id: 'portable',
-    name: '音游 PC',
-    host: '192.168.1.5',
-    password: '鍵🔑',
-    iconId: 'ac_iidx33',
-  });
-  const second = sanitizeProfile({
-    id: 'other',
-    name: 'Other PC',
-    host: 'pc.local',
-    iconId: 'ac_sdvx7',
-  });
-  assert.deepEqual(
-    decodeProfileTransfer(encodeProfileTransfer([first, second], second.id)),
-    { profiles: [first, second], selectedId: second.id },
-  );
-});
-
-test('replaces the destination scheme library during profile transfer', () => {
-  const storage = new MemoryStorage();
-  const store = new ProfileStore(storage);
-  const first = sanitizeProfile({ id: 'one', host: '192.168.1.10' });
-  const second = sanitizeProfile({ id: 'two', host: '192.168.1.11' });
-  store.replaceAll([first, second], second.id);
-
-  assert.deepEqual(store.list(), [first, second]);
-  assert.equal(store.selected().id, second.id);
 });

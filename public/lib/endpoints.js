@@ -1,5 +1,3 @@
-import { encodeProfileTransfer, PROFILE_TRANSFER_KEY } from './profile-store.js';
-
 export function hostAuthority(host) {
   const value = String(host);
   return value.includes(':') && !value.startsWith('[') ? `[${value}]` : value;
@@ -51,7 +49,7 @@ export function isPrivateLanName(host) {
   return /^(fc|fd|fe8|fe9|fea|feb)/.test(value);
 }
 
-export function likelyNeedsHttpMode(userAgent = globalThis.navigator?.userAgent || '') {
+export function likelyNeedsBrowserSetup(userAgent = globalThis.navigator?.userAgent || '') {
   const ua = String(userAgent);
   const appleMobile = /iPad|iPhone|iPod/.test(ua)
     || (/Macintosh/.test(ua) && (globalThis.navigator?.maxTouchPoints || 0) > 1);
@@ -60,28 +58,13 @@ export function likelyNeedsHttpMode(userAgent = globalThis.navigator?.userAgent 
   return appleMobile || firefox || safari;
 }
 
-export function compatibilityUrl(
-  profiles,
-  currentUrl = globalThis.location?.href,
-  selectedId = Array.isArray(profiles) ? profiles[0]?.id : profiles?.id,
-) {
+export function plainHttpPageUrl(currentUrl = globalThis.location?.href) {
   const url = new URL(currentUrl);
   url.protocol = 'http:';
   if (url.port === '443') {
     url.port = '';
   }
-  url.searchParams.set('compat', '1');
-  url.hash = `${PROFILE_TRANSFER_KEY}=${encodeProfileTransfer(profiles, selectedId)}`;
-  return url.toString();
-}
-
-export function secureModeUrl(currentUrl = globalThis.location?.href) {
-  const url = new URL(currentUrl);
-  url.protocol = 'https:';
-  if (url.port === '80') {
-    url.port = '';
-  }
-  url.searchParams.delete('compat');
+  url.search = '';
   url.hash = '';
   return url.toString();
 }

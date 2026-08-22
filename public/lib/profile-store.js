@@ -1,7 +1,6 @@
 import { DEFAULT_GAME_ICON_ID, normalizeGameIconId } from './game-icons.js';
 
 export const PROFILE_STORAGE_KEY = 'spicefe.connections.v1';
-export const PROFILE_TRANSFER_KEY = 'spicefe-profile';
 
 const FORMATS = new Set(['auto', 'h264', 'mjpg']);
 const SCREENS = new Set(['', '0', '1', '2', '3']);
@@ -201,28 +200,6 @@ export class ProfileStore {
     return this.selected();
   }
 
-  replaceAll(candidates, selectedId) {
-    const unique = new Map();
-    for (const candidate of Array.isArray(candidates) ? candidates : []) {
-      try {
-        const profile = sanitizeProfile(candidate);
-        unique.set(profile.id, profile);
-      } catch {
-        // Ignore malformed entries while retaining the rest of the transfer.
-      }
-    }
-    this.profiles = [...unique.values()];
-    if (this.profiles.length === 0) {
-      this.profiles = [newProfile({ name: this.defaultProfileName })];
-    }
-    const requested = String(selectedId ?? '');
-    this.selectedId = this.profiles.some((profile) => profile.id === requested)
-      ? requested
-      : this.profiles[0].id;
-    this.persist();
-    return this.list();
-  }
-
   persist() {
     try {
       this.storage?.setItem(PROFILE_STORAGE_KEY, JSON.stringify({
@@ -234,54 +211,5 @@ export class ProfileStore {
     } catch {
       return false;
     }
-  }
-}
-
-function bytesToBase64Url(bytes) {
-  let binary = '';
-  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
-    binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
-  }
-  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
-}
-
-function base64UrlToBytes(value) {
-  const base64 = value.replaceAll('-', '+').replaceAll('_', '/');
-  const padding = '='.repeat((4 - (base64.length % 4)) % 4);
-  const binary = atob(base64 + padding);
-  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
-}
-
-export function encodeProfileTransfer(profiles, selectedId) {
-  const candidates = Array.isArray(profiles) ? profiles : [profiles];
-  const sanitized = candidates.slice(0, 64).map((profile) => sanitizeProfile(profile));
-  const selected = sanitized.some((profile) => profile.id === selectedId)
-    ? selectedId
-    : sanitized[0]?.id;
-  const payload = JSON.stringify({ version: 2, profiles: sanitized, selectedId: selected });
-  return bytesToBase64Url(new TextEncoder().encode(payload));
-}
-
-export function decodeProfileTransfer(value) {
-  try {
-    const decoded = new TextDecoder().decode(base64UrlToBytes(value));
-    const payload = JSON.parse(decoded);
-    if (payload?.version === 1) {
-      const profile = sanitizeProfile(payload.profile);
-      return { profiles: [profile], selectedId: profile.id };
-    }
-    if (payload?.version !== 2 || !Array.isArray(payload.profiles)) {
-      return null;
-    }
-    const profiles = payload.profiles.slice(0, 64).map((profile) => sanitizeProfile(profile));
-    if (profiles.length === 0) {
-      return null;
-    }
-    const selectedId = profiles.some((profile) => profile.id === payload.selectedId)
-      ? payload.selectedId
-      : profiles[0].id;
-    return { profiles, selectedId };
-  } catch {
-    return null;
   }
 }

@@ -69,6 +69,16 @@ the SIL Open Font License 1.1, Copyright © 2017 IBM Corp., with Reserved Font
 Name "Plex". The complete license, hashes, and source record ship in
 `public/vendor/ibm-plex-sans/`.
 
+## Alfa Slab One
+
+The welcome headline uses the unmodified Latin WOFF2 subset of Alfa Slab One
+Regular served by Google Fonts. CSS checks for a locally installed copy before
+requesting the self-hosted asset. Alfa Slab One is licensed under the SIL Open
+Font License 1.1, Copyright © 2016 The Alfa Slab One Project Authors, with
+Reserved Font Name "Alfa Slab". The exact font, license, and Google Fonts
+metadata are pinned by Nix; hashes and provenance are recorded in
+`public/vendor/alfa-slab-one/`.
+
 ## spice2x icon
 
 The site icon and default connection-profile icon are copied without

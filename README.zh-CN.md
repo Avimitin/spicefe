@@ -3,13 +3,23 @@
 > [!WARNING]
 > **仅限在可信局域网中使用。** spice2x 通过明文 HTTP 发送未经身份验证的
 > 视频；可选的 API 密码使用已过时的 RC4；spicefe 还会将保存的密码以明文
-> 存入浏览器 `localStorage`。HTTP 兼容模式的页面也可能在传输途中被篡改。
-> 浏览器支持时应优先使用 HTTPS 模式，并且只通过你信任的静态托管服务部署
-> 已审查过的构建产物。
+> 存入浏览器 `localStorage`。通过 HTTP 加载的 spicefe 页面也可能在传输途中
+> 被篡改。桌面浏览器支持时，应优先使用仅针对本站的 HTTPS 例外，并且只通过
+> 你信任的静态托管服务部署已审查过的构建产物。
 
 [English](./README.md)
 
 [![CI](https://github.com/Avimitin/spicefe/actions/workflows/ci.yml/badge.svg)](https://github.com/Avimitin/spicefe/actions/workflows/ci.yml)
+
+## 界面展示
+
+| 欢迎页 | 已保存服务器库 |
+| :---: | :---: |
+| [![spicefe 欢迎页](./docs/screenshots/welcome.png)](./docs/screenshots/welcome.png) | [![包含多个街机 PC 的 spicefe 服务器库](./docs/screenshots/server-library.png)](./docs/screenshots/server-library.png) |
+
+**GITADORA GALAXY WAVE DELTA 实时副屏**
+
+[![通过 spicefe 串流的 GITADORA GALAXY WAVE DELTA 副屏](./docs/screenshots/gitadora-stream.png)](./docs/screenshots/gitadora-stream.png)
 
 `spicefe` 是一个可在全球静态托管、用于 spice2x 副屏视频流的局域网客户端。
 在手机、平板或其他现代浏览器中打开页面，选择已保存的游戏 PC，浏览器就会
@@ -33,6 +43,8 @@
   旁、按游戏分类且支持副屏的版本图标
 - 明确的连接、断开和切换行为；刷新页面后绝不会自动重连
 - 提供英文和简体中文界面；自动检测浏览器语言，并保存手动选择
+- 提供独立的浏览器设置页，包含 iOS、iPadOS、Windows 与 Android 上 Safari、
+  Edge、Chrome 和 Firefox 的操作说明
 - 断开连接时立即清除最后一帧视频和所有播放后端
 - 自适应手机、平板和桌面设备的界面
 
@@ -76,31 +88,44 @@ spice2x 仍然需要 `-api` 才会建立相邻的两个监听器。
 在客户端设备上，应尽可能填写 PC 的私有 IPv4 地址，例如 `192.168.1.50`。
 两台设备必须位于同一局域网，并且 Wi-Fi 网络必须关闭客户端隔离功能。
 
-## 浏览器连接模式
+## 浏览器设置
 
 spice2x 当前只提供明文 HTTP 和 WebSocket 端点。因此，从全球托管的页面访问
 它时，无法绕过以下浏览器安全边界：
 
-| 浏览器 | 推荐页面 | 操作方式 |
+> [!IMPORTANT]
+> 下表要求使用 HTTP 页面时，请手动输入完整地址：
+> **`http://spicefe.avimit.in/`**。不要只输入域名；浏览器历史记录与地址栏自动
+> 补全可能会改用之前访问过的 HTTPS 地址。
+
+| 设备与浏览器 | 推荐页面 | 操作方式 |
 | --- | --- | --- |
-| 当前版本的 Chrome 或 Edge | HTTPS | 允许“本地网络访问”权限请求 |
-| 当前版本的 Safari 及基于 WebKit 的 iOS 浏览器 | HTTP 兼容模式 | 先打开 HTTPS 页面，再选择 **Open HTTP mode** |
-| 当前版本的 Firefox | HTTP 兼容模式 | 先打开 HTTPS 页面，再选择 **Open HTTP mode** |
+| iPhone 或 iPad · Safari | HTTP | 新建标签页，输入上方完整的 `http://` 地址，并确认加载后的地址仍以 `http://` 开头。如果 Safari 将其升级为 HTTPS，请使用本地服务器工具。 |
+| Windows · Edge 或 Chrome | HTTPS | 打开本站权限，允许**不安全内容**，并在浏览器询问时允许**本地网络访问**。 |
+| Windows · Firefox | HTTPS | 打开地址栏锁形图标中的连接安全面板，选择**暂时解除保护**，然后允许访问本地网络设备。 |
+| Android · Edge 或 Chrome | HTTP | 如果已启用**始终使用安全连接**，请暂时关闭；输入完整的 `http://` 地址，再允许本地网络访问。 |
 
-Chrome 142 引入了安全上下文中的本地网络访问权限；用户允许后，浏览器可以
-放行本地明文请求，并解除这些请求受到的混合内容限制。其他浏览器路径通过
-HTTP 加载同一个静态站点。应用会使用 URL 片段，在两个协议各自独立的存储
-来源之间转移完整的连接配置库，并在导入后立即清除该片段。URL 片段不会包含
-在 HTTP 请求中。
+应用内提供了相同的双语说明；在左上角页面菜单中选择**浏览器设置**即可打开。
+该页面会显示当前部署对应的完整 HTTP 地址，并提供复制按钮。如果公共域名仍因
+HSTS、浏览器策略或网络策略而升级为 HTTPS，请使用下文所述的 Windows 本地
+服务器工具。
 
-因此，部署必须同时提供 HTTP 和 HTTPS，且不能把所有 HTTP 流量重定向到
-HTTPS。如果托管平台强制把兼容模式 URL 跳回 HTTPS，应用会检测到循环并说明
-配置问题。
+HTTP 与 HTTPS 是不同的浏览器来源，因此各自拥有独立的 `localStorage`。为了
+避免把密码放入 URL，应用不会在两者之间复制保存的连接配置；切换到 HTTP 页面
+后，请重新填写一次服务器信息。
+
+因此，部署必须同时提供 HTTP 和 HTTPS，且不能把所有 HTTP 流量重定向到 HTTPS，
+公共 HTTP 页面才能正常使用。
 
 相关平台资料：
 
-- [Chrome 本地网络访问权限](https://developer.chrome.com/blog/local-network-access)
-- [Chrome 142 发布说明](https://developer.chrome.com/release-notes/142)
+- [Chrome 网站权限](https://support.google.com/chrome/answer/114662)
+- [Android Chrome 安全连接设置](https://support.google.com/chrome/answer/10468685?co=GENIE.Platform%3DAndroid&hl=zh-Hans)
+- [Edge 本地网络访问](https://support.microsoft.com/zh-cn/edge/control-a-website-s-access-to-the-local-network-in-microsoft-edge)
+- [Edge HTTPS-First 模式](https://support.microsoft.com/zh-cn/edge/secure-your-web-browsing-with-https-first-mode-in-microsoft-edge)
+- [Firefox 混合内容控制](https://support.mozilla.org/zh-CN/kb/mixed-content-blocking-firefox)
+- [Firefox 本地网络权限](https://support.mozilla.org/zh-CN/kb/control-personal-device-local-network-permissions-firefox)
+- [Safari 地址栏说明](https://support.apple.com/zh-cn/guide/iphone/iph1fbef4daa/ios)
 - [W3C Mixed Content](https://www.w3.org/TR/mixed-content/)
 - [WebCodecs AVC 注册说明](https://www.w3.org/TR/webcodecs-avc-codec-registration/)
 
@@ -142,8 +167,8 @@ git push origin v0.2.0
 而不会创建重复 Release。
 
 要启用部署，请打开 GitHub 仓库的 **Settings → Pages**，将 **Source** 设为
-**GitHub Actions**。请配置自定义域名，并保持 **Enforce HTTPS** 关闭，以便兼容
-模式仍可使用该域名的 HTTP 地址；默认的 `github.io` 地址无法提供这样的 HTTP
+**GitHub Actions**。请配置自定义域名，并保持 **Enforce HTTPS** 关闭，使该域名的
+HTTP 页面仍可访问；默认的 `github.io` 地址无法提供这样的 HTTP
 入口。如果域名使用 Cloudflare DNS，请将记录保持为 **DNS only（灰云）**，且
 不要在 GitHub Pages 前方的其他服务中启用 HSTS 或 HTTPS 重定向。
 
@@ -164,7 +189,7 @@ GitHub Actions 与 NixOS 官方安装器均固定到完整 commit ID。安装器
 
 不选择框架、不设置构建命令，并将 `public` 设为输出目录。Pages 会读取其中的
 `_headers` 文件。请使用自定义域名并为该域名关闭 **Always Use HTTPS**；不要
-在客户端域名上启用 HSTS。不建议在兼容模式中使用 `pages.dev` 域名。
+在客户端域名上启用 HSTS。`pages.dev` 域名无法提供所需的公共 HTTP 页面。
 
 上述部署设置可参考
 [GitHub Pages 自定义工作流](https://docs.github.com/zh/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)、
@@ -174,7 +199,13 @@ GitHub Actions 与 NixOS 官方安装器均固定到完整 commit ID。安装器
 [Cloudflare Pages 响应头](https://developers.cloudflare.com/pages/configuration/headers/)
 和 [Cloudflare Always Use HTTPS](https://developers.cloudflare.com/ssl/edge-certificates/additional-options/always-use-https/)。
 
-## Windows 本地 HTTP 服务器
+## 本地部署
+
+应用左上角菜单中的**自行托管**页面，提供了相同的中英文安装、网络、更新与
+故障排查指南。当公共域名因 HSTS 或浏览器策略被升级为 HTTPS 时，自行托管是
+最可靠的方案。
+
+### Windows Release 工具
 
 Windows 没有提供独立的 `cmd.exe` Web 服务器命令，而 IIS 是可选系统组件，对此
 用途过于复杂。仍受支持的 Windows 客户端均自带 Windows PowerShell 5.1，因此
@@ -190,6 +221,12 @@ PowerShell 静态服务器。
    `http://192.168.1.50:45000/`。
 5. 游戏期间保持窗口开启；按 **Ctrl+C** 即可停止服务器。
 
+解压前，可在 PowerShell 中校验 ZIP，并将结果与下载的 `.sha256` 文件比较：
+
+```powershell
+Get-FileHash .\spicefe-vX.Y.Z.zip -Algorithm SHA256
+```
+
 也可在命令提示符中运行 `serve.bat 8080` 来指定其他端口。该工具不会安装系统
 服务、修改防火墙规则、要求管理员权限或下载任何内容。执行策略绕过仅对这一个
 PowerShell 进程有效。它只适合可信局域网，不应暴露到互联网。
@@ -197,6 +234,36 @@ PowerShell 进程有效。它只适合可信局域网，不应暴露到互联网
 实现仅依赖 Windows 自带的
 [Windows PowerShell 5.1](https://learn.microsoft.com/zh-cn/powershell/module/microsoft.powershell.core/about/about_windows_powershell_5.1?view=powershell-5.1)
 和 [.NET `TcpListener`](https://learn.microsoft.com/zh-cn/dotnet/api/system.net.sockets.tcplistener)。
+
+### 在 Linux 或 macOS 上使用 Nix
+
+使用带 Release 标签的仓库检出版本，可得到可复现的本地部署：
+
+```sh
+git clone https://github.com/Avimitin/spicefe.git
+cd spicefe
+git checkout vX.Y.Z
+nix flake check
+SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
+```
+
+Nix 会构建与 CI 相同、依赖已固定的站点，并提供 Python 服务器；无需全局安装
+npm。`0.0.0.0` 会让页面可从局域网访问，因此应将电脑防火墙限制在可信或专用
+网络。游戏期间保持进程运行，按 **Ctrl+C** 即可停止。
+
+### 打开与维护本地页面
+
+- 手动输入工具显示的完整蓝绿色 URL，包括 `http://` 与 `:45000`。不要在手机上
+  使用 `127.0.0.1`，它会指回手机自身。
+- 页面无法打开时，先在服务器 PC 上测试 `127.0.0.1`，再检查局域网地址、专用
+  网络防火墙权限、是否连接同一 Wi-Fi，以及客户端隔离。
+- 页面能打开但串流失败，说明静态部署已经正常；请检查 spice2x API 视频流设置、
+  spice2x 版本、API 端口与密码，以及 spice2x 自己使用的防火墙端口。
+- 更新时，先停止旧服务器，把经过校验的新 Release 解压到新文件夹，再用相同地址
+  与页面端口启动。浏览器会保留该来源下保存的连接配置。
+- 不要通过路由器端口转发对外暴露该工具。高级用户可用其他 HTTP 静态服务器提供
+  `result/` 或 `public/`，但必须保留正常的 JavaScript 与 WOFF2 MIME 类型；不支持
+  通过 `file://` 直接打开 `index.html`。
 
 ## 本地开发
 
@@ -239,7 +306,11 @@ JavaScript；React、Tailwind CSS 与 React Aria 都不是运行时或构建依�
 [`@ibm/plex-sans@1.1.0`](https://github.com/IBM/plex/releases/tag/%40ibm%2Fplex-sans%401.1.0)
 发布版中的四个小型 Latin-1 与符号子集（Regular 和 Medium），并从同一静态来源
 提供。CSS 会优先检查设备中已安装的 IBM Plex Sans；本地存在时不会下载字体文件。
-中文及其他文字使用本地系统后备字体，页面不会访问字体 CDN 或实时第三方资源。
+欢迎页主标题使用自托管的
+[Alfa Slab One](https://fonts.google.com/specimen/Alfa+Slab+One) Regular Latin
+子集；字体固定到 Google Fonts 官方 `v21` 资源，并同时固定许可证与元数据。CSS
+会先检查设备中已安装的字体，中文标题使用设备本地的衬线后备字体。其他文字也
+使用本地系统后备字体，页面不会访问字体 CDN 或实时第三方资源。
 
 ## 图标来源
 
@@ -265,9 +336,9 @@ README 位于
 - 可选的 API 密码使用 RC4；这是旧式加密，不是现代安全信道。
 - 为了在重新打开页面后立即使用，连接配置及密码会有意以明文保存在浏览器
   `localStorage` 中。
-- HTTP 兼容模式无法验证传输中的静态页面。网络攻击者可能替换其中的
-  JavaScript，因此可用时应优先选择 Chrome 的 HTTPS 模式，并且只在可信网络
-  中使用兼容模式。
+- HTTP 页面无法验证传输中的静态应用。网络攻击者可能替换其中的 JavaScript，
+  因此可用时应优先使用文档所述、仅针对本站的 HTTPS 例外，并且只在可信网络中
+  使用 HTTP 页面。
 - 部署后的静态托管服务控制着可访问已保存配置及局域网端点的可执行代码。
   请部署经过审查的产物，并使用你信任的托管服务。
 
@@ -278,6 +349,6 @@ README 位于
 协议和客户端行为基于 spice2x 源码树及采用 BSD 许可证的参考客户端
 [`spice2x/substream`](https://github.com/spice2x/substream)。站点标识使用 spice2x
 官方图标，可选游戏图标来自 `bicarus-dev/bemani_fan_site_icons`；界面样式借鉴
-开源 Untitled UI React，并使用 IBM Plex Sans。许可证、固定版本以及 BEMANI
-图像的注意事项详见
+开源 Untitled UI React，并使用 IBM Plex Sans，欢迎页主标题使用 Alfa Slab One。
+许可证、固定版本以及 BEMANI 图像的注意事项详见
 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)。

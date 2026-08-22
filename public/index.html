@@ -32,6 +32,14 @@
               <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v5H4zM4 14h16v5H4zM8 7.5h.01M8 16.5h.01"/></svg>
               <span data-i18n="nav.library">Saved servers</span>
             </a>
+            <a id="browser-setup-page-link" class="page-menu-link" href="?page=browser-setup">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.4c0 4.7 3.1 8.2 7.5 9.6 4.4-1.4 7.5-4.9 7.5-9.6V6zM9.5 12l1.7 1.7 3.5-4"/></svg>
+              <span data-i18n="nav.browserSetup">Browser setup</span>
+            </a>
+            <a id="self-host-page-link" class="page-menu-link" href="?page=self-host">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4h16v6H4zM4 14h16v6H4zM8 7h.01M8 17h.01M12 7h5M12 17h5"/></svg>
+              <span data-i18n="nav.selfHost">Self-hosting</span>
+            </a>
           </nav>
         </div>
         <span>spice<span>fe</span></span>
@@ -91,11 +99,11 @@
 
     <aside id="compat-banner" class="compat-banner" hidden>
       <div>
-        <strong id="compat-title" data-i18n="compat.title">Browser compatibility mode needed</strong>
-        <span id="compat-copy" data-i18n="compat.copy">Safari and Firefox cannot open plain LAN connections from an HTTPS page.</span>
+        <strong id="compat-title" data-i18n="compat.title">Browser setup may be required</strong>
+        <span id="compat-copy" data-i18n="compat.copy">spice2x uses local HTTP connections that this browser may block from an HTTPS page.</span>
       </div>
-      <button id="compat-button" type="button" data-i18n="button.openHttp">Open HTTP mode</button>
-      <button id="compat-dismiss" class="quiet-button" type="button" aria-label="Dismiss compatibility message" data-i18n="button.dismiss" data-i18n-aria-label="compat.dismiss">Dismiss</button>
+      <button id="compat-button" type="button" data-i18n="button.browserSetup">View setup guide</button>
+      <button id="compat-dismiss" class="quiet-button" type="button" aria-label="Dismiss browser setup message" data-i18n="button.dismiss" data-i18n-aria-label="compat.dismiss">Dismiss</button>
     </aside>
 
     <main id="stage" class="stage" data-view-mode="contain">
@@ -108,8 +116,8 @@
         <div class="welcome-hero">
           <img class="empty-symbol" src="./assets/spice2x.ico" alt="" aria-hidden="true">
           <p class="eyebrow" data-i18n="home.eyebrow">LAN SUBSCREEN CLIENT</p>
-          <h1><span data-i18n="home.titleFirst">Put arcade subscreen</span><br><span data-i18n="home.titleSecond">in your hands</span></h1>
-          <p data-i18n="home.copy">No need to buy another touch screen, your phone and your tablet is the best subscreen</p>
+          <h1><span data-i18n="home.titleFirst">Your arcade subscreen</span><br><span data-i18n="home.titleSecond">is already in your hands.</span></h1>
+          <p data-i18n="home.copy">Turn your phone or tablet into a responsive touch display—no extra screen required.</p>
           <section class="setup-notice" aria-labelledby="setup-notice-title">
             <header class="setup-notice-header">
               <strong id="setup-notice-title" class="setup-notice-title" data-i18n="setup.title">Before you connect</strong>
@@ -205,10 +213,10 @@
 
           <footer class="guide-footer">
             <div>
-              <strong data-i18n="guide.readyTitle">Ready to connect?</strong>
-              <p data-i18n="guide.readyCopy">Keep the game running while you add its connection details.</p>
+              <strong data-i18n="guide.selfHostTitle">Want to self-host?</strong>
+              <p data-i18n="guide.selfHostCopy">Serve spicefe from your own LAN with the no-install Windows helper or Nix.</p>
             </div>
-            <button id="guide-configure" class="primary-button" type="button" data-i18n="home.configure">Set up a connection</button>
+            <a id="guide-self-host" class="primary-button guide-footer-link" href="?page=self-host" data-i18n="guide.selfHostButton">View deployment guide</a>
           </footer>
         </section>
       </section>
@@ -224,6 +232,298 @@
             <button id="add-server" class="primary-button" type="button" data-i18n="library.add">Add server</button>
           </header>
           <div id="server-list" class="server-list" role="list" aria-label="Saved spice2x servers" data-i18n-aria-label="library.listAria"></div>
+        </div>
+      </section>
+
+      <section id="browser-setup" class="browser-setup" hidden aria-labelledby="browser-setup-title">
+        <div class="browser-setup-shell">
+          <header class="browser-setup-header">
+            <p class="eyebrow" data-i18n="browserSetup.eyebrow">CONNECTION HELP</p>
+            <h1 id="browser-setup-title" data-i18n="browserSetup.title">Browser connection setup</h1>
+            <p data-i18n="browserSetup.copy">spice2x serves its stream over your local network without TLS. Choose your device and browser below so spicefe can reach it.</p>
+          </header>
+
+          <aside class="http-entry-notice" role="note" aria-labelledby="http-entry-title">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 8v4M12 16h.01M10.3 4.6 2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4.6a2 2 0 0 0-3.4 0Z"/></svg>
+            <div>
+              <strong id="http-entry-title"><span data-i18n="browserSetup.httpTitle">Type the full address beginning with</span> <code>http://</code></strong>
+              <p data-i18n="browserSetup.httpCopy">Do not enter only the domain name. Address-bar autocomplete can reuse your HTTPS visit and put you back in the blocked mode.</p>
+              <div class="http-address-row">
+                <code id="http-mode-url">http://spicefe.avimit.in/</code>
+                <button id="copy-http-url" class="secondary-button" type="button" data-i18n="browserSetup.copyAddress">Copy address</button>
+              </div>
+              <p class="http-address-check" data-i18n="browserSetup.httpCheck">After loading it, inspect the address bar and verify that the address begins with http://. A “Not secure” label is expected.</p>
+            </div>
+          </aside>
+
+          <nav class="platform-jumps" aria-label="Browser setup sections" data-i18n-aria-label="browserSetup.sectionsAria">
+            <a href="#setup-apple" data-i18n="browserSetup.appleShort">iPhone &amp; iPad</a>
+            <a href="#setup-windows" data-i18n="browserSetup.windowsShort">Windows</a>
+            <a href="#setup-android" data-i18n="browserSetup.androidShort">Android</a>
+            <a href="#setup-local-server" data-i18n="browserSetup.localShort">Local fallback</a>
+          </nav>
+
+          <div class="browser-platforms">
+            <section id="setup-apple" class="platform-guide" aria-labelledby="setup-apple-title">
+              <header class="platform-guide-header">
+                <div>
+                  <p class="platform-label" data-i18n="browserSetup.applePlatform">iOS &amp; iPadOS</p>
+                  <h2 id="setup-apple-title">Safari</h2>
+                </div>
+                <span class="mode-badge" data-i18n="browserSetup.httpPage">Use the HTTP page</span>
+              </header>
+              <p data-i18n="browserSetup.safariCopy">Safari does not offer a per-site switch for loading the spice2x HTTP stream from this HTTPS page.</p>
+              <ol>
+                <li data-i18n="browserSetup.safariStep1">Open a new Safari tab. Do not reuse an HTTPS bookmark or Home Screen shortcut.</li>
+                <li data-i18n="browserSetup.safariStep2">Paste or type the complete HTTP address shown above, then tap Go.</li>
+                <li data-i18n="browserSetup.safariStep3">Confirm the loaded address starts with http:// before configuring your gaming PC.</li>
+              </ol>
+              <aside class="browser-tip" data-i18n="browserSetup.safariFallback">If Safari still returns to HTTPS, use the local-server fallback below. Its private IP address has no HTTPS version to select instead.</aside>
+              <a class="official-doc-link" href="https://support.apple.com/guide/iphone/browse-the-web-iph1fbef4daa/ios" target="_blank" rel="noopener noreferrer"><span data-i18n="browserSetup.officialDocs">Official browser instructions</span><span aria-hidden="true">↗</span></a>
+            </section>
+
+            <section id="setup-windows" class="platform-guide platform-guide-wide" aria-labelledby="setup-windows-title">
+              <header class="platform-guide-header">
+                <div>
+                  <p class="platform-label" data-i18n="browserSetup.windowsPlatform">Windows</p>
+                  <h2 id="setup-windows-title" data-i18n="browserSetup.windowsTitle">Keep HTTPS and allow this site</h2>
+                </div>
+                <span class="mode-badge mode-badge-secure" data-i18n="browserSetup.httpsPage">Use the HTTPS page</span>
+              </header>
+              <p data-i18n="browserSetup.windowsCopy">Desktop browsers can grant an exception only to spicefe, so you do not need to weaken protection for every site.</p>
+
+              <div class="browser-guides-grid">
+                <article class="browser-guide-card">
+                  <h3>Microsoft Edge</h3>
+                  <ol>
+                    <li data-i18n="browserSetup.edgeStep1">On this HTTPS page, select the icon to the left of the address, then Permissions for this site.</li>
+                    <li data-i18n="browserSetup.edgeStep2">Set Insecure content to Allow. Set Local network access to Allow too, or allow its prompt when connecting.</li>
+                    <li data-i18n="browserSetup.edgeStep3">Reload spicefe, then connect again.</li>
+                  </ol>
+                  <a class="official-doc-link" href="https://support.microsoft.com/en-us/edge/control-a-website-s-access-to-the-local-network-in-microsoft-edge" target="_blank" rel="noopener noreferrer"><span data-i18n="browserSetup.officialDocs">Official browser instructions</span><span aria-hidden="true">↗</span></a>
+                </article>
+
+                <article class="browser-guide-card">
+                  <h3>Google Chrome</h3>
+                  <ol>
+                    <li data-i18n="browserSetup.chromeStep1">On this HTTPS page, select the icon to the left of the address, then Site settings.</li>
+                    <li data-i18n="browserSetup.chromeStep2">Set Insecure content to Allow. Set Local network access to Allow too, or allow its prompt when connecting.</li>
+                    <li data-i18n="browserSetup.chromeStep3">Reload spicefe, then connect again.</li>
+                  </ol>
+                  <a class="official-doc-link" href="https://support.google.com/chrome/answer/114662" target="_blank" rel="noopener noreferrer"><span data-i18n="browserSetup.officialDocs">Official browser instructions</span><span aria-hidden="true">↗</span></a>
+                </article>
+
+                <article class="browser-guide-card">
+                  <h3>Mozilla Firefox</h3>
+                  <ol>
+                    <li data-i18n="browserSetup.firefoxStep1">On this HTTPS page, select the padlock beside the address and open Connection security.</li>
+                    <li data-i18n="browserSetup.firefoxStep2">Select Disable protection for now.</li>
+                    <li data-i18n="browserSetup.firefoxStep3">Connect again and allow the Local network devices prompt. Firefox may ask you to repeat the mixed-content step in a later session.</li>
+                  </ol>
+                  <a class="official-doc-link" href="https://support.mozilla.org/en-US/kb/mixed-content-blocking-firefox" target="_blank" rel="noopener noreferrer"><span data-i18n="browserSetup.officialDocs">Official browser instructions</span><span aria-hidden="true">↗</span></a>
+                </article>
+              </div>
+
+              <aside class="browser-tip" data-i18n="browserSetup.windowsAlternative">You can also use the HTTP address at the top. Enter the complete address manually so the browser does not choose HTTPS from history.</aside>
+            </section>
+
+            <section id="setup-android" class="platform-guide platform-guide-wide" aria-labelledby="setup-android-title">
+              <header class="platform-guide-header">
+                <div>
+                  <p class="platform-label" data-i18n="browserSetup.androidPlatform">Android</p>
+                  <h2 id="setup-android-title" data-i18n="browserSetup.androidTitle">Open the HTTP page explicitly</h2>
+                </div>
+                <span class="mode-badge" data-i18n="browserSetup.httpPage">Use the HTTP page</span>
+              </header>
+              <p data-i18n="browserSetup.androidCopy">Chrome and Edge on Android do not provide the desktop per-site insecure-content exception.</p>
+
+              <div class="browser-guides-grid browser-guides-grid-two">
+                <article class="browser-guide-card">
+                  <h3>Google Chrome</h3>
+                  <ol>
+                    <li data-i18n="browserSetup.androidChromeStep1">Open More → Settings → Privacy and security. If Always use secure connections is enabled, turn it off temporarily.</li>
+                    <li data-i18n="browserSetup.androidChromeStep2">Type the complete HTTP address shown above and open it.</li>
+                    <li data-i18n="browserSetup.androidChromeStep3">Allow Local network access when asked. If it was denied earlier, open site information → Permissions → Local network access.</li>
+                  </ol>
+                  <a class="official-doc-link" href="https://support.google.com/chrome/answer/114662?co=GENIE.Platform%3DAndroid&amp;hl=en" target="_blank" rel="noopener noreferrer"><span data-i18n="browserSetup.officialDocs">Official browser instructions</span><span aria-hidden="true">↗</span></a>
+                </article>
+
+                <article class="browser-guide-card">
+                  <h3>Microsoft Edge</h3>
+                  <ol>
+                    <li data-i18n="browserSetup.androidEdgeStep1">Open the menu → Settings → Privacy and security → Security. If Always use secure connections is enabled, turn it off temporarily.</li>
+                    <li data-i18n="browserSetup.androidEdgeStep2">Type the complete HTTP address shown above and open it.</li>
+                    <li data-i18n="browserSetup.androidEdgeStep3">Allow Local network access when Edge asks, then configure your gaming PC.</li>
+                  </ol>
+                  <a class="official-doc-link" href="https://support.microsoft.com/en-us/edge/secure-your-web-browsing-with-https-first-mode-in-microsoft-edge" target="_blank" rel="noopener noreferrer"><span data-i18n="browserSetup.officialDocs">Official browser instructions</span><span aria-hidden="true">↗</span></a>
+                </article>
+              </div>
+
+              <aside class="browser-tip" data-i18n="browserSetup.restoreSecurity">After playing, you can turn Always use secure connections back on.</aside>
+            </section>
+
+            <section id="setup-local-server" class="platform-guide local-server-guide" aria-labelledby="setup-local-server-title">
+              <header class="platform-guide-header">
+                <div>
+                  <p class="platform-label" data-i18n="browserSetup.fallbackLabel">RELIABLE FALLBACK</p>
+                  <h2 id="setup-local-server-title" data-i18n="browserSetup.localTitle">Serve spicefe from the gaming PC</h2>
+                </div>
+                <span class="mode-badge" data-i18n="browserSetup.allBrowsers">All listed browsers</span>
+              </header>
+              <p data-i18n="browserSetup.localCopy">Use this when the public hostname is forced to HTTPS by HSTS, browser policy, or your network.</p>
+              <ol>
+                <li><span data-i18n="browserSetup.localStep1">Download and extract the latest spicefe release ZIP on the gaming PC.</span> <a href="https://github.com/Avimitin/spicefe/releases" target="_blank" rel="noopener noreferrer" data-i18n="browserSetup.downloadRelease">Download releases</a></li>
+                <li data-i18n="browserSetup.localStep2">Double-click serve.bat. If Windows Firewall asks, allow Private networks only.</li>
+                <li data-i18n="browserSetup.localStep3">On the phone or tablet, manually enter one of the cyan http://PC-IP:45000/ addresses printed in the server window.</li>
+              </ol>
+              <a id="browser-deployment-link" class="official-doc-link" href="?page=self-host"><span data-i18n="browserSetup.fullDeployment">Open the full deployment guide</span><span aria-hidden="true">→</span></a>
+            </section>
+          </div>
+
+          <aside class="http-security-note">
+            <strong data-i18n="browserSetup.securityTitle">Trusted home network only</strong>
+            <p data-i18n="browserSetup.securityCopy">HTTP and ws:// traffic is not protected against observation or modification. Use this mode only on a LAN you trust, and turn off the local server when you finish.</p>
+          </aside>
+
+          <footer class="browser-setup-footer">
+            <button id="browser-setup-done" class="primary-button" type="button" data-i18n="browserSetup.back">Back to spicefe</button>
+          </footer>
+        </div>
+      </section>
+
+      <section id="self-host" class="browser-setup self-host" hidden aria-labelledby="self-host-title">
+        <div class="browser-setup-shell self-host-shell">
+          <header class="browser-setup-header">
+            <p class="eyebrow" data-i18n="selfHost.eyebrow">LOCAL DEPLOYMENT</p>
+            <h1 id="self-host-title" data-i18n="selfHost.title">Serve spicefe on your LAN</h1>
+            <p data-i18n="selfHost.copy">Run the static page on a computer you control when a public hostname is forced to HTTPS or you prefer a fully local setup.</p>
+          </header>
+
+          <aside class="self-host-summary" role="note">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4h16v6H4zM4 14h16v6H4zM8 7h.01M8 17h.01M12 7h5M12 17h5"/></svg>
+            <div>
+              <strong data-i18n="selfHost.summaryTitle">The Windows release is the simplest route</strong>
+              <p data-i18n="selfHost.summaryCopy">It needs no installation or administrator access. The included helper serves only the extracted spicefe files and downloads nothing when it runs.</p>
+            </div>
+          </aside>
+
+          <nav class="platform-jumps" aria-label="Local deployment sections" data-i18n-aria-label="selfHost.sectionsAria">
+            <a href="#deploy-windows" data-i18n="selfHost.windowsShort">Windows helper</a>
+            <a href="#deploy-nix" data-i18n="selfHost.nixShort">Nix</a>
+            <a href="#deploy-client" data-i18n="selfHost.clientShort">Open on a device</a>
+            <a href="#deploy-operations" data-i18n="selfHost.operationsShort">Operate &amp; update</a>
+          </nav>
+
+          <div class="browser-platforms">
+            <section id="deploy-windows" class="platform-guide" aria-labelledby="deploy-windows-title">
+              <header class="platform-guide-header">
+                <div>
+                  <p class="platform-label" data-i18n="selfHost.windowsPlatform">WINDOWS 10 &amp; 11</p>
+                  <h2 id="deploy-windows-title" data-i18n="selfHost.windowsTitle">Use the release ZIP</h2>
+                </div>
+                <span class="mode-badge mode-badge-secure" data-i18n="selfHost.recommended">Recommended</span>
+              </header>
+              <p data-i18n="selfHost.windowsCopy">Run this on the gaming PC, or on another Windows PC that stays on the same home network.</p>
+              <ol>
+                <li><span data-i18n="selfHost.windowsStep1">Download the newest spicefe ZIP and its matching .sha256 file.</span> <a href="https://github.com/Avimitin/spicefe/releases" target="_blank" rel="noopener noreferrer" data-i18n="selfHost.downloadRelease">Open GitHub Releases</a></li>
+                <li data-i18n="selfHost.windowsStep2">Extract the entire ZIP into a normal folder. Do not run files from inside the ZIP preview.</li>
+                <li data-i18n="selfHost.windowsStep3">Double-click serve.bat. A terminal opens, starts port 45000, and opens a local test page.</li>
+                <li data-i18n="selfHost.windowsStep4">If Windows Firewall asks, allow Private networks only. Do not allow Public networks.</li>
+                <li data-i18n="selfHost.windowsStep5">Keep the terminal open while using spicefe; press Ctrl+C or close it to stop serving.</li>
+              </ol>
+              <div class="deployment-command-wrap">
+                <p data-i18n="selfHost.verifyCopy">Optional: verify the downloaded ZIP in PowerShell and compare the result with the .sha256 file:</p>
+                <pre class="deployment-command"><code>Get-FileHash .\spicefe-vX.Y.Z.zip -Algorithm SHA256</code></pre>
+              </div>
+              <aside class="browser-tip" data-i18n="selfHost.windowsNoInstall">serve.bat uses Windows PowerShell 5.1 and .NET already included with Windows. It does not install a service, edit firewall rules, or request elevation.</aside>
+            </section>
+
+            <section id="deploy-nix" class="platform-guide" aria-labelledby="deploy-nix-title">
+              <header class="platform-guide-header">
+                <div>
+                  <p class="platform-label" data-i18n="selfHost.nixPlatform">LINUX &amp; MACOS</p>
+                  <h2 id="deploy-nix-title" data-i18n="selfHost.nixTitle">Run the reproducible Nix build</h2>
+                </div>
+                <span class="mode-badge mode-badge-secure" data-i18n="selfHost.nixBadge">Nix flake</span>
+              </header>
+              <p data-i18n="selfHost.nixCopy">Use a repository checkout when Nix is available on a computer that your phone or tablet can reach.</p>
+              <pre class="deployment-command"><code>git clone https://github.com/Avimitin/spicefe.git
+cd spicefe
+nix flake check
+SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run</code></pre>
+              <ol>
+                <li data-i18n="selfHost.nixStep1">For a stable deployment, check out a release tag before running the checks.</li>
+                <li data-i18n="selfHost.nixStep2">Nix builds the same pinned static site used by CI and supplies the Python server; no global npm install is needed.</li>
+                <li data-i18n="selfHost.nixStep3">Leave the terminal open. Ctrl+C stops the server.</li>
+              </ol>
+              <aside class="browser-tip" data-i18n="selfHost.nixBind">0.0.0.0 makes the page reachable from the LAN. Keep the machine firewall limited to trusted/private networks.</aside>
+            </section>
+
+            <section id="deploy-client" class="platform-guide platform-guide-wide" aria-labelledby="deploy-client-title">
+              <header class="platform-guide-header">
+                <div>
+                  <p class="platform-label" data-i18n="selfHost.clientLabel">PHONE OR TABLET</p>
+                  <h2 id="deploy-client-title" data-i18n="selfHost.clientTitle">Open the local page</h2>
+                </div>
+                <span class="mode-badge" data-i18n="selfHost.httpOnly">HTTP on your LAN</span>
+              </header>
+              <div class="browser-guides-grid">
+                <article class="browser-guide-card">
+                  <h3 data-i18n="selfHost.addressTitle">Use the LAN address</h3>
+                  <p data-i18n="selfHost.addressCopy">On the phone or tablet, manually enter a cyan address printed by the Windows helper, such as http://192.168.1.50:45000/. Include http:// and the port.</p>
+                </article>
+                <article class="browser-guide-card">
+                  <h3 data-i18n="selfHost.loopbackTitle">Do not use 127.0.0.1</h3>
+                  <p data-i18n="selfHost.loopbackCopy">That address means “this device.” It works in the gaming PC's test browser but points back to the phone when entered on the phone.</p>
+                </article>
+                <article class="browser-guide-card">
+                  <h3 data-i18n="selfHost.networkTitle">Keep one trusted LAN</h3>
+                  <p data-i18n="selfHost.networkCopy">Both devices must be on the same network. Disable Wi-Fi client isolation, guest isolation, or AP isolation if the page cannot be reached.</p>
+                </article>
+              </div>
+              <aside class="browser-tip" data-i18n="selfHost.clientStorage">A local-IP page has its own browser storage. Add the spice2x connection again the first time you use it; later visits keep that saved profile on the same device and address.</aside>
+            </section>
+
+            <section id="deploy-operations" class="platform-guide platform-guide-wide" aria-labelledby="deploy-operations-title">
+              <header class="platform-guide-header">
+                <div>
+                  <p class="platform-label" data-i18n="selfHost.operationsLabel">DAILY USE</p>
+                  <h2 id="deploy-operations-title" data-i18n="selfHost.operationsTitle">Troubleshoot, change ports, and update</h2>
+                </div>
+              </header>
+              <div class="browser-guides-grid browser-guides-grid-two">
+                <article class="browser-guide-card">
+                  <h3 data-i18n="selfHost.pageFailureTitle">The page does not open</h3>
+                  <p data-i18n="selfHost.pageFailureCopy">First test the 127.0.0.1 address on the server PC. Then recheck the cyan LAN address, Windows Private-network firewall access, the shared Wi-Fi, and client isolation.</p>
+                </article>
+                <article class="browser-guide-card">
+                  <h3 data-i18n="selfHost.streamFailureTitle">The page opens, but streaming fails</h3>
+                  <p data-i18n="selfHost.streamFailureCopy">Local deployment is already working. Recheck spice2x API Video Stream Server, its API port and password, the minimum spice2x version, and the separate spice2x firewall ports.</p>
+                </article>
+                <article class="browser-guide-card">
+                  <h3 data-i18n="selfHost.portTitle">Use another page port</h3>
+                  <p data-i18n="selfHost.portCopy">Run serve.bat 8080 from Command Prompt, or change SPICEFE_PORT for Nix. Use that same page port in the browser address; it does not change the spice2x API port.</p>
+                </article>
+                <article class="browser-guide-card">
+                  <h3 data-i18n="selfHost.updateTitle">Update safely</h3>
+                  <p data-i18n="selfHost.updateCopy">Stop the old server, download and verify the new release, extract it to a new folder, and start its helper. Browser profiles remain saved because the address and port are unchanged.</p>
+                </article>
+              </div>
+              <div class="deployment-advanced">
+                <strong data-i18n="selfHost.advancedTitle">Using another static server</strong>
+                <p data-i18n="selfHost.advancedCopy">Advanced users may serve the Nix result or committed public directory over HTTP. Bind only to the trusted LAN, preserve normal JavaScript and WOFF2 MIME types, and open index.html through HTTP—not file://.</p>
+              </div>
+            </section>
+          </div>
+
+          <aside class="http-security-note">
+            <strong data-i18n="selfHost.securityTitle">Keep the server private</strong>
+            <p data-i18n="selfHost.securityCopy">The helper is designed for a trusted home LAN, not the public Internet. Allow only Private networks, do not port-forward it through your router, and stop it when it is no longer needed.</p>
+          </aside>
+
+          <footer class="browser-setup-footer">
+            <button id="self-host-done" class="primary-button" type="button" data-i18n="selfHost.back">Back to spicefe</button>
+          </footer>
         </div>
       </section>
 
