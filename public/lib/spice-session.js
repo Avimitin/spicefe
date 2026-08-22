@@ -451,11 +451,4 @@ export class SpiceSession {
       }
     }, SpiceSession.PING_MS);
   }
-
-  async setResizeScene(scene) {
-    if (!this.api?.connected || this.apiState !== 'live') {
-      throw new Error('Input API is not connected');
-    }
-    await this.api.request('resize', 'image_resize_set_scene', [Number(scene)]);
-  }
 }

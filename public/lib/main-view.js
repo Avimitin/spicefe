@@ -3,9 +3,16 @@ export function configuredProfiles(profiles) {
     .filter((profile) => String(profile?.host ?? '').trim() !== '');
 }
 
-export function mainView(profiles, snapshot = {}) {
+export function browseView(profiles, requestedView) {
+  if (configuredProfiles(profiles).length === 0) {
+    return 'welcome';
+  }
+  return requestedView === 'welcome' ? 'welcome' : 'servers';
+}
+
+export function mainView(profiles, snapshot = {}, requestedView) {
   if (snapshot.wanted && snapshot.videoState === 'live') {
     return 'stream';
   }
-  return configuredProfiles(profiles).length > 0 ? 'servers' : 'welcome';
+  return browseView(profiles, requestedView);
 }

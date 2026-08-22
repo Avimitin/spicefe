@@ -34,6 +34,13 @@ const form = element('profile-form');
 const streamSettings = element('stream-settings');
 const profilePicker = element('profile-picker');
 const iconGroups = element('game-icon-groups');
+const pageNavigation = element('page-navigation');
+const pageMenuButton = element('page-menu-button');
+const pageMenu = element('page-menu');
+const welcomePageLink = element('welcome-page-link');
+const libraryPageLink = element('library-page-link');
+const brandIcon = element('brand-icon');
+const settingsButton = element('settings-button');
 const connectButton = element('connect-button');
 const connectButtonLabel = element('connect-button-label');
 const emptyState = element('empty-state');
@@ -48,7 +55,6 @@ const connectionStatuses = element('connection-statuses');
 const apiStatus = element('api-status');
 const videoStatus = element('video-status');
 const apiWarning = element('api-warning');
-const resizeScene = element('resize-scene');
 const touchMarker = element('touch-marker');
 const compatBanner = element('compat-banner');
 const toast = element('toast');
@@ -65,14 +71,8 @@ const reachability = new Map();
 const reachabilityInFlight = new Map();
 
 function translationParameters(node) {
-  const parameters = {};
-  for (const name of ['scene', 'screen']) {
-    const value = node.getAttribute(`data-i18n-${name}`);
-    if (value !== null) {
-      parameters[name] = value;
-    }
-  }
-  return parameters;
+  const screen = node.getAttribute('data-i18n-screen');
+  return screen === null ? {} : { screen };
 }
 
 function applyDocumentTranslations() {
@@ -111,6 +111,19 @@ function importTransferredProfile() {
 }
 
 importTransferredProfile();
+
+function requestedBrowsePage() {
+  const requested = new URLSearchParams(location.search).get('page');
+  if (requested === 'welcome') {
+    return 'welcome';
+  }
+  if (requested === 'library') {
+    return 'servers';
+  }
+  return undefined;
+}
+
+let browsePage = requestedBrowsePage();
 
 function setSelectOptions(select, profiles, selectedId) {
   select.replaceChildren(...profiles.map((profile) => {
@@ -485,8 +498,76 @@ function renderServerList(snapshot) {
   ));
 }
 
+function browsePagePath(page) {
+  const url = new URL(location.href);
+  url.searchParams.set('page', page === 'servers' ? 'library' : 'welcome');
+  url.hash = '';
+  return `${url.pathname}${url.search}`;
+}
+
+function updateBrowsePageHistory(page, mode = 'push') {
+  const target = browsePagePath(page);
+  if (target === `${location.pathname}${location.search}`) {
+    return;
+  }
+  history[mode === 'replace' ? 'replaceState' : 'pushState'](null, '', target);
+}
+
+function setPageMenuOpen(open) {
+  const expanded = Boolean(open) && !pageMenuButton.hidden;
+  pageMenu.hidden = !expanded;
+  pageMenuButton.setAttribute('aria-expanded', String(expanded));
+}
+
+function renderPageNavigation(view) {
+  const hasServers = configuredProfiles(store.list()).length > 0;
+  welcomePageLink.href = browsePagePath('welcome');
+  libraryPageLink.href = browsePagePath('servers');
+
+  if (view === 'welcome') {
+    welcomePageLink.setAttribute('aria-current', 'page');
+  } else {
+    welcomePageLink.removeAttribute('aria-current');
+  }
+  if (view === 'servers') {
+    libraryPageLink.setAttribute('aria-current', 'page');
+  } else {
+    libraryPageLink.removeAttribute('aria-current');
+  }
+
+  libraryPageLink.setAttribute('aria-disabled', String(!hasServers));
+  if (hasServers) {
+    libraryPageLink.removeAttribute('tabindex');
+  } else {
+    libraryPageLink.tabIndex = -1;
+  }
+}
+
+function navigateToBrowsePage(requestedPage) {
+  browsePage = mainView(store.list(), { wanted: false }, requestedPage);
+  updateBrowsePageHistory(browsePage);
+  setPageMenuOpen(false);
+  if (session.wanted) {
+    session.disconnect();
+  } else {
+    renderSnapshot(session.snapshot, false);
+  }
+}
+
+function useLibraryPageForConnection() {
+  browsePage = 'servers';
+  updateBrowsePageHistory(browsePage, 'replace');
+}
+
 function renderMainView(snapshot) {
-  const view = mainView(store.list(), snapshot);
+  const requestedPage = browsePage;
+  const view = mainView(store.list(), snapshot, requestedPage);
+  if (view !== 'stream') {
+    browsePage = view;
+    if (requestedPage !== undefined && requestedPage !== view) {
+      updateBrowsePageHistory(view, 'replace');
+    }
+  }
   const previousView = renderedMainView;
   renderedMainView = view;
   stage.dataset.mainView = view;
@@ -497,11 +578,16 @@ function renderMainView(snapshot) {
   activeServer.hidden = !streaming;
   connectionStatuses.hidden = !streaming;
   languagePicker.hidden = streaming;
+  settingsButton.hidden = streaming;
   connectButton.hidden = !streaming;
+  pageMenuButton.hidden = streaming;
+  brandIcon.hidden = !streaming;
+  setPageMenuOpen(false);
   if (streaming && snapshot.profile) {
-    setProfileIcon(element('active-server-icon'), snapshot.profile.iconId);
+    setProfileIcon(brandIcon, snapshot.profile.iconId);
     element('active-server-name').textContent = snapshot.profile.name;
   }
+  renderPageNavigation(view);
   if (view === 'servers' && previousView !== 'servers') {
     queueMicrotask(() => refreshReachability());
   }
@@ -526,7 +612,6 @@ function renderSnapshot(snapshot, announce = true) {
   const hudAvailable = snapshot.videoState === 'live';
   stageHud.hidden = !hudAvailable || hudDismissed;
   hudShowButton.hidden = !hudAvailable || !hudDismissed;
-  resizeScene.disabled = snapshot.apiState !== 'live';
   touch.setEnabled(snapshot.videoState === 'live' && snapshot.apiState === 'live');
   touch.setCanvasSize(snapshot.touchCanvas);
 
@@ -534,7 +619,6 @@ function renderSnapshot(snapshot, announce = true) {
     currentMetric = null;
     lastMetricPaint = 0;
     element('video-metric').textContent = '—';
-    resizeScene.value = '';
     touchMarker.hidden = true;
   } else if (snapshot.videoState === 'connecting' && currentMetric === null) {
     element('video-metric').textContent = t('metric.waiting');
@@ -579,6 +663,7 @@ function connectSelected() {
   }
 
   if (session.wanted && session.profile?.id === profile.id) {
+    useLibraryPageForConnection();
     session.disconnect();
     refreshReachability();
     return;
@@ -587,9 +672,9 @@ function connectSelected() {
   currentMetric = null;
   lastMetricPaint = 0;
   element('video-metric').textContent = t('metric.waiting');
-  resizeScene.value = '';
   stage.dataset.viewMode = profile.viewMode;
   touch.setViewMode(profile.viewMode);
+  useLibraryPageForConnection();
   session.connect(profile);
 }
 
@@ -718,7 +803,8 @@ async function probeProfileReachability(profile, force = false) {
 }
 
 function refreshReachability(force = false) {
-  if (document.hidden || mainView(store.list(), session.snapshot) !== 'servers') {
+  if (document.hidden
+    || mainView(store.list(), session.snapshot, browsePage) !== 'servers') {
     return;
   }
 
@@ -747,7 +833,36 @@ function createProfileAndEdit() {
   element('profile-name').select();
 }
 
-element('settings-button').addEventListener('click', openSettings);
+pageMenuButton.addEventListener('click', () => {
+  setPageMenuOpen(pageMenu.hidden);
+});
+
+welcomePageLink.addEventListener('click', (event) => {
+  event.preventDefault();
+  navigateToBrowsePage('welcome');
+});
+
+libraryPageLink.addEventListener('click', (event) => {
+  event.preventDefault();
+  if (libraryPageLink.getAttribute('aria-disabled') !== 'true') {
+    navigateToBrowsePage('servers');
+  }
+});
+
+document.addEventListener('pointerdown', (event) => {
+  if (!pageMenu.hidden && !pageNavigation.contains(event.target)) {
+    setPageMenuOpen(false);
+  }
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !pageMenu.hidden) {
+    setPageMenuOpen(false);
+    pageMenuButton.focus();
+  }
+});
+
+settingsButton.addEventListener('click', openSettings);
 element('empty-configure').addEventListener('click', openSettings);
 element('guide-configure').addEventListener('click', openSettings);
 element('add-server').addEventListener('click', createProfileAndEdit);
@@ -809,7 +924,7 @@ form.addEventListener('submit', (event) => {
   currentMetric = null;
   lastMetricPaint = 0;
   element('video-metric').textContent = t('metric.waiting');
-  resizeScene.value = '';
+  useLibraryPageForConnection();
   session.connect(profile);
 });
 
@@ -850,23 +965,6 @@ element('view-mode-button').addEventListener('click', () => {
   element('view-mode-button').textContent = t(`display.${next}`);
   const profile = store.selected();
   store.upsert({ ...profile, viewMode: next });
-});
-
-resizeScene.addEventListener('change', async () => {
-  if (resizeScene.value === '') {
-    return;
-  }
-  try {
-    await session.setResizeScene(resizeScene.value);
-    showToast(resizeScene.value === '0'
-      ? t('toast.resizeOff')
-      : t('toast.resizeScene', { scene: resizeScene.value }));
-  } catch (error) {
-    showToast(t('toast.resizeError', {
-      message: localizeError(i18n.locale, error),
-    }));
-    resizeScene.value = '';
-  }
 });
 
 const fullscreen = document.documentElement.requestFullscreen
@@ -932,6 +1030,16 @@ window.addEventListener('online', () => {
   refreshReachability(true);
   if (session.wanted && session.videoState === 'error') {
     session.restartVideo();
+  }
+});
+
+window.addEventListener('popstate', () => {
+  browsePage = requestedBrowsePage();
+  setPageMenuOpen(false);
+  if (session.wanted) {
+    session.disconnect();
+  } else {
+    renderSnapshot(session.snapshot, false);
   }
 });
 

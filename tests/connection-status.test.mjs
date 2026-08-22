@@ -50,7 +50,7 @@ test('keeps live video visible while reporting a failed control API', () => {
   assert.equal(result.streamMessage, null);
   assert.equal(result.apiWarning.title, 'Video is live; control is unavailable');
   assert.match(result.apiWarning.copy, /Could not reach the input socket/);
-  assert.match(result.apiWarning.copy, /Touch and resize are disabled/);
+  assert.match(result.apiWarning.copy, /Touch input is disabled/);
 });
 
 test('identifies an API authentication failure separately', () => {

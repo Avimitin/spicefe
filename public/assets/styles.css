@@ -69,6 +69,7 @@ select:focus-visible,
 .stream-settings summary:focus-visible,
 .guide-jump:focus-visible,
 .spicecfg-image-link:focus-visible,
+.page-menu-link:focus-visible,
 .repository-link:focus-visible,
 .version-link:focus-visible {
   outline: 2px solid var(--accent-bright);
@@ -127,11 +128,87 @@ code {
   color: var(--accent);
 }
 
-.brand-icon {
+.page-navigation {
+  position: relative;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+}
+
+.brand-server-icon {
   width: 32px;
   height: 32px;
   flex: 0 0 auto;
-  object-fit: contain;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f3f4f7;
+  object-fit: cover;
+}
+
+.page-menu {
+  position: absolute;
+  z-index: 40;
+  display: grid;
+  width: 220px;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  top: calc(100% + 10px);
+  left: 0;
+  background: var(--panel-raised);
+  box-shadow: var(--shadow);
+  text-align: left;
+}
+
+.page-menu-label {
+  padding: 6px 9px 5px;
+  color: var(--faint);
+  font-size: 9px;
+  font-weight: 780;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.page-menu-link {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 680;
+  text-decoration: none;
+}
+
+.page-menu-link:hover {
+  background: #f8f9fb;
+  color: var(--text);
+}
+
+.page-menu-link[aria-current="page"] {
+  background: var(--accent-soft);
+  color: var(--accent-bright);
+}
+
+.page-menu-link[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.page-menu-link svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .active-server {
@@ -491,6 +568,13 @@ code {
   inset: 0;
   background: #000;
   image-rendering: auto;
+  /* Decoders initialize before the first frame; do not cover the server list meanwhile. */
+  opacity: 0;
+  pointer-events: none;
+}
+
+.stage[data-main-view="stream"] .stream-view:not([hidden]) {
+  opacity: 1;
 }
 
 .stage[data-view-mode="contain"] .stream-view {
@@ -886,8 +970,7 @@ code {
   flex-direction: column;
 }
 
-.hud-metric span,
-.hud-control > span {
+.hud-metric span {
   color: #929baa;
   font-size: 9px;
   font-weight: 780;
@@ -905,29 +988,15 @@ code {
   flex: 1;
 }
 
-.hud-control {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.hud-control select,
 .hud-button {
   height: 32px;
+  min-width: 52px;
+  padding: 0 10px;
   border: 1px solid #343a47;
   border-radius: 8px;
   background: #1b1f28;
   color: #f8fafc;
   font-size: 12px;
-}
-
-.hud-control select {
-  padding: 0 26px 0 9px;
-}
-
-.hud-button {
-  min-width: 52px;
-  padding: 0 10px;
 }
 
 .hud-close-button {
@@ -1865,8 +1934,7 @@ code {
     grid-column: auto;
   }
 
-  .optional-metric,
-  .hud-control > span {
+  .optional-metric {
     display: none;
   }
 }
@@ -1983,10 +2051,6 @@ code {
     left: 8px;
   }
 
-  .hud-control select {
-    width: 82px;
-  }
-
   .setup-list li {
     align-items: flex-start;
     flex-direction: column;
@@ -2039,10 +2103,6 @@ code {
 
   .language-picker select {
     width: 52px;
-  }
-
-  .stage-hud .hud-metric {
-    display: none;
   }
 }
 

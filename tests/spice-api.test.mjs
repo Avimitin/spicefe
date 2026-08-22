@@ -65,11 +65,11 @@ test('keeps encrypted request and response bytes on one RC4 stream', async () =>
   const socket = FakeWebSocket.instances.at(-1);
   socket.open();
 
-  const pending = api.request('resize', 'image_resize_set_scene', [2]);
+  const pending = api.request('info', 'avs');
   const serverCipher = new RC4(new TextEncoder().encode(password));
   const clearRequest = serverCipher.crypt(Uint8Array.from(socket.sent[0]));
   const request = JSON.parse(new TextDecoder().decode(clearRequest));
-  assert.equal(request.function, 'image_resize_set_scene');
+  assert.equal(request.function, 'avs');
 
   const clearResponse = new TextEncoder().encode(JSON.stringify({
     id: request.id,

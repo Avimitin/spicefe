@@ -63,7 +63,7 @@ test('the language choice persists and translations interpolate values', () => {
   const i18n = createI18n({ storage, languages: ['zh-Hans-CN'] });
   assert.equal(i18n.locale, 'zh-CN');
   assert.equal(i18n.t('button.disconnect'), '断开');
-  assert.equal(i18n.t('hud.scene', { scene: 3 }), '场景 3');
+  assert.equal(i18n.t('settings.screenNumber', { screen: 3 }), '画面 3');
 
   i18n.setLocale('en-US');
   assert.equal(i18n.locale, 'en');

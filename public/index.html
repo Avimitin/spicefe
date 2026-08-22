@@ -17,12 +17,27 @@
   <div id="app">
     <header class="topbar">
       <div class="brand" aria-label="spicefe">
-        <img class="brand-icon" src="./assets/spice2x.ico" alt="" aria-hidden="true">
+        <div id="page-navigation" class="page-navigation">
+          <button id="page-menu-button" class="icon-button page-menu-button" type="button" aria-expanded="false" aria-controls="page-menu" aria-label="Open page navigation" title="Navigate" data-i18n-aria-label="nav.openPages" data-i18n-title="nav.openPages">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>
+          </button>
+          <img id="brand-icon" class="brand-server-icon" alt="" aria-hidden="true" hidden>
+          <nav id="page-menu" class="page-menu" aria-label="Pages" data-i18n-aria-label="nav.pages" hidden>
+            <span class="page-menu-label" data-i18n="nav.pages">Pages</span>
+            <a id="welcome-page-link" class="page-menu-link" href="?page=welcome">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m3 11 9-7 9 7M5 10v10h14V10M9 20v-6h6v6"/></svg>
+              <span data-i18n="nav.welcome">Welcome</span>
+            </a>
+            <a id="library-page-link" class="page-menu-link" href="?page=library">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v5H4zM4 14h16v5H4zM8 7.5h.01M8 16.5h.01"/></svg>
+              <span data-i18n="nav.library">Saved servers</span>
+            </a>
+          </nav>
+        </div>
         <span>spice<span>fe</span></span>
       </div>
 
       <div id="active-server" class="active-server" hidden>
-        <img id="active-server-icon" class="profile-icon" alt="">
         <span class="active-server-copy">
           <span data-i18n="nav.currentServer">Current server</span>
           <strong id="active-server-name"></strong>
@@ -222,7 +237,7 @@
       <div id="api-warning" class="api-warning" hidden role="status" aria-live="polite">
         <span class="status-dot" aria-hidden="true"></span>
         <strong id="api-warning-title" data-i18n="warning.title">Video is live; control is unavailable</strong>
-        <span id="api-warning-copy" data-i18n="warning.copy">Touch and resize are disabled; video can continue independently.</span>
+        <span id="api-warning-copy" data-i18n="warning.copy">Touch input is disabled; video can continue independently.</span>
       </div>
 
       <div id="touch-marker" class="touch-marker" hidden aria-hidden="true"></div>
@@ -237,17 +252,6 @@
           <strong data-i18n="hud.live">LIVE</strong>
         </div>
         <span class="hud-spacer"></span>
-        <label class="hud-control">
-          <span data-i18n="hud.resize">Game resize</span>
-          <select id="resize-scene" disabled>
-            <option value="" selected data-i18n="common.choose">Choose…</option>
-            <option value="0" data-i18n="common.off">Off</option>
-            <option value="1" data-i18n="hud.scene" data-i18n-scene="1">Scene 1</option>
-            <option value="2" data-i18n="hud.scene" data-i18n-scene="2">Scene 2</option>
-            <option value="3" data-i18n="hud.scene" data-i18n-scene="3">Scene 3</option>
-            <option value="4" data-i18n="hud.scene" data-i18n-scene="4">Scene 4</option>
-          </select>
-        </label>
         <button id="view-mode-button" class="hud-button" type="button" title="Change how the video fits the screen" data-i18n="display.contain" data-i18n-title="hud.viewModeTitle">Fit</button>
         <button id="hud-close-button" class="hud-close-button" type="button" aria-label="Hide screen controls" title="Hide screen controls" data-i18n-aria-label="hud.hide" data-i18n-title="hud.hide">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>

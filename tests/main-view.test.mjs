@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { configuredProfiles, mainView } from '../public/lib/main-view.js';
+import { browseView, configuredProfiles, mainView } from '../public/lib/main-view.js';
 
 const blank = { id: 'draft', host: '' };
 const saved = { id: 'saved', host: '192.168.1.20' };
@@ -16,17 +16,29 @@ test('returning and disconnected users see their configured servers', () => {
   assert.equal(mainView([blank, saved], { wanted: false }), 'servers');
 });
 
+test('welcome and server library remain separate browsable pages', () => {
+  assert.equal(browseView([saved], 'welcome'), 'welcome');
+  assert.equal(browseView([saved], 'servers'), 'servers');
+  assert.equal(mainView([saved], { wanted: false }, 'welcome'), 'welcome');
+  assert.equal(mainView([saved], { wanted: false }, 'servers'), 'servers');
+  assert.equal(mainView([blank], { wanted: false }, 'servers'), 'welcome');
+});
+
 test('connection diagnostics remain on the server list until video is live', () => {
   assert.equal(mainView([saved], {
     wanted: true,
     videoState: 'connecting',
-  }), 'servers');
+  }, 'servers'), 'servers');
   assert.equal(mainView([saved], {
     wanted: true,
     videoState: 'error',
-  }), 'servers');
+  }, 'servers'), 'servers');
   assert.equal(mainView([saved], {
     wanted: true,
     videoState: 'live',
-  }), 'stream');
+  }, 'servers'), 'stream');
+  assert.equal(mainView([saved], {
+    wanted: true,
+    videoState: 'live',
+  }, 'welcome'), 'stream');
 });

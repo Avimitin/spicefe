@@ -14,7 +14,7 @@
 `spicefe` is a globally hostable, static LAN client for the spice2x subscreen
 stream. Open the page on a phone, tablet, or another modern browser, select a
 saved gaming PC, and the browser connects directly to spice2x for video, touch,
-and resize control.
+and touch input.
 
 There is no relay and no companion web server to run on the gaming PC. The
 static host only delivers this application; stream and input traffic stay on
@@ -24,14 +24,13 @@ the LAN.
 
 - H.264 video with WebCodecs first and a Media Source Extensions fallback
 - automatic MJPEG fallback when H.264 is unavailable
-- a first-run welcome/setup flow and a saved-server library on later visits or
-  after disconnecting
+- separate Welcome and Saved Servers pages with top-bar navigation; first-time
+  users start on Welcome, while returning users with saved servers start in the library
 - per-server control-API and video-stream indicators with separate failure
   details, plus a read-only API reachability check every five minutes while the
   server library is visible
 - mouse, single-touch, and multi-touch input
 - Fit, Fill, and Stretch display modes with correct touch coordinate mapping
-- spice2x image-resize scene selection (Off and scenes 1–4)
 - a dismissible in-stream adjustment bar, restorable from the top bar
 - multiple named connection profiles in `localStorage`, each with a selectable
   game icon from categorized, subscreen-capable releases shown beside the PC
@@ -52,7 +51,7 @@ The API port entered in the UI is the spice2x base port:
 
 | Purpose | Browser endpoint for API port 1337 | Protection |
 | --- | --- | --- |
-| Touch, resize, and game info | `ws://PC:1338` | Optional spice2x password; legacy RC4 |
+| Touch and game info | `ws://PC:1338` | Optional spice2x password; legacy RC4 |
 | H.264 or MJPEG video | `http://PC:1339` | None |
 
 The CDN never proxies either connection. H.264 is decoded directly with
