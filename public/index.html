@@ -123,6 +123,28 @@
         </div>
 
         <section id="usage-guide" class="usage-guide" aria-labelledby="usage-guide-title">
+          <section class="setup-notice usage-guide-notice" aria-labelledby="setup-notice-title">
+            <header class="setup-notice-header">
+              <strong id="setup-notice-title" class="setup-notice-title" data-i18n="setup.title">Before you connect</strong>
+            </header>
+            <ul class="setup-list">
+              <li>
+                <div>
+                  <strong data-i18n="version.title">Recent spice2x required</strong>
+                  <p><span data-i18n="version.copyBefore">Install</span> <strong class="required-version">spice2x-26-08-20</strong> <span data-i18n="version.copyAfter">or newer for subscreen streaming. Older builds do not include the required stream and CORS support.</span></p>
+                </div>
+                <a class="version-link" href="https://github.com/spice2x/spice2x.github.io/releases" target="_blank" rel="noopener noreferrer" data-i18n="version.download">Download latest spice2x</a>
+              </li>
+              <li>
+                <div>
+                  <strong data-i18n="setup.directTitle">Private, local connection</strong>
+                  <p data-i18n="setup.directCopy">Connections are made directly over your local network between this device and your gaming PC. spicefe never relays stream or control data to a remote service, and its source code is open for anyone to inspect.</p>
+                </div>
+                <a class="repository-link" href="https://github.com/Avimitin/spicefe" target="_blank" rel="noopener noreferrer"><span data-i18n="setup.sourceLink">View source on GitHub</span> <span aria-hidden="true">↗</span></a>
+              </li>
+            </ul>
+          </section>
+
           <header class="usage-guide-header">
             <div>
               <p class="eyebrow" data-i18n="guide.eyebrow">GETTING STARTED</p>
@@ -223,28 +245,6 @@
             <p data-i18n="browserSetup.copy">spice2x serves its stream over your local network without TLS. Choose your device and browser below so spicefe can reach it.</p>
           </header>
 
-          <section class="setup-notice browser-setup-notice" aria-labelledby="setup-notice-title">
-            <header class="setup-notice-header">
-              <strong id="setup-notice-title" class="setup-notice-title" data-i18n="setup.title">Before you connect</strong>
-            </header>
-            <ul class="setup-list">
-              <li>
-                <div>
-                  <strong data-i18n="version.title">Recent spice2x required</strong>
-                  <p><span data-i18n="version.copyBefore">Install</span> <strong class="required-version">spice2x-26-08-20</strong> <span data-i18n="version.copyAfter">or newer for subscreen streaming. Older builds do not include the required stream and CORS support.</span></p>
-                </div>
-                <a class="version-link" href="https://github.com/spice2x/spice2x.github.io/releases" target="_blank" rel="noopener noreferrer" data-i18n="version.download">Download latest spice2x</a>
-              </li>
-              <li>
-                <div>
-                  <strong data-i18n="setup.directTitle">Private, local connection</strong>
-                  <p data-i18n="setup.directCopy">Connections are made directly over your local network between this device and your gaming PC. spicefe never relays stream or control data to a remote service, and its source code is open for anyone to inspect.</p>
-                </div>
-                <a class="repository-link" href="https://github.com/Avimitin/spicefe" target="_blank" rel="noopener noreferrer"><span data-i18n="setup.sourceLink">View source on GitHub</span> <span aria-hidden="true">↗</span></a>
-              </li>
-            </ul>
-          </section>
-
           <aside class="http-entry-notice" role="note" aria-labelledby="http-entry-title">
             <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 8v4M12 16h.01M10.3 4.6 2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4.6a2 2 0 0 0-3.4 0Z"/></svg>
             <div>
@@ -268,9 +268,14 @@
           <div class="browser-platforms">
             <section id="setup-apple" class="platform-guide" aria-labelledby="setup-apple-title">
               <header class="platform-guide-header">
-                <div>
-                  <p class="platform-label" data-i18n="browserSetup.applePlatform">iOS &amp; iPadOS</p>
-                  <h2 id="setup-apple-title">Safari</h2>
+                <div class="platform-guide-title">
+                  <span class="platform-system-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M15.8 1.5c.1 1.4-.4 2.8-1.3 3.8-.9.9-2.3 1.6-3.7 1.5-.2-1.4.4-2.8 1.3-3.8.9-.9 2.4-1.5 3.7-1.5ZM19 8.4c-1.5.9-2.5 2.5-2.5 4.3 0 2.2 1.3 4.1 3.2 4.9-.7 1.7-1.6 3.4-2.7 4.7-.9 1.1-1.9 1.7-3.2 1.7-1.2 0-1.7-.7-3.2-.7s-2 .7-3.3.7c-1.2 0-2.2-.6-3.1-1.7C1.7 19.4.2 14 .9 10.5 1.5 7.7 3.7 6 6.1 6c1.3 0 2.6.8 3.4.8.8 0 2.3-1 3.9-.9 2.1.1 4 1 5.6 2.5Z"/></svg>
+                  </span>
+                  <div>
+                    <p class="platform-label" data-i18n="browserSetup.applePlatform">iOS &amp; iPadOS</p>
+                    <h2 id="setup-apple-title">Safari</h2>
+                  </div>
                 </div>
                 <span class="mode-badge" data-i18n="browserSetup.httpPage">Use the HTTP page</span>
               </header>
@@ -286,9 +291,14 @@
 
             <section id="setup-windows" class="platform-guide platform-guide-wide" aria-labelledby="setup-windows-title">
               <header class="platform-guide-header">
-                <div>
-                  <p class="platform-label" data-i18n="browserSetup.windowsPlatform">Windows</p>
-                  <h2 id="setup-windows-title" data-i18n="browserSetup.windowsTitle">Keep HTTPS and allow this site</h2>
+                <div class="platform-guide-title">
+                  <span class="platform-system-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="m3 4.4 7.8-1.1v8H3V4.4Zm9.2-1.3L21 2v9.3h-8.8V3.1ZM3 12.7h7.8v8L3 19.6v-6.9Zm9.2 0H21V22l-8.8-1.3v-8Z"/></svg>
+                  </span>
+                  <div>
+                    <p class="platform-label" data-i18n="browserSetup.windowsPlatform">Windows</p>
+                    <h2 id="setup-windows-title" data-i18n="browserSetup.windowsTitle">Keep HTTPS and allow this site</h2>
+                  </div>
                 </div>
                 <span class="mode-badge mode-badge-secure" data-i18n="browserSetup.httpsPage">Use the HTTPS page</span>
               </header>
@@ -331,9 +341,14 @@
 
             <section id="setup-android" class="platform-guide platform-guide-wide" aria-labelledby="setup-android-title">
               <header class="platform-guide-header">
-                <div>
-                  <p class="platform-label" data-i18n="browserSetup.androidPlatform">Android</p>
-                  <h2 id="setup-android-title" data-i18n="browserSetup.androidTitle">Open the HTTP page explicitly</h2>
+                <div class="platform-guide-title">
+                  <span class="platform-system-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="m8.1 6.4-1.4-2a.75.75 0 1 1 1.2-.8l1.5 2.1a7 7 0 0 1 5.2 0l1.5-2.1a.75.75 0 1 1 1.2.8l-1.4 2A6.9 6.9 0 0 1 19 12H5a6.9 6.9 0 0 1 3.1-5.6ZM5 13.5h14V19a2 2 0 0 1-2 2h-1v1.25a.75.75 0 0 1-1.5 0V21h-5v1.25a.75.75 0 0 1-1.5 0V21H7a2 2 0 0 1-2-2v-5.5Zm4-4a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm6 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/></svg>
+                  </span>
+                  <div>
+                    <p class="platform-label" data-i18n="browserSetup.androidPlatform">Android</p>
+                    <h2 id="setup-android-title" data-i18n="browserSetup.androidTitle">Open the HTTP page explicitly</h2>
+                  </div>
                 </div>
                 <span class="mode-badge" data-i18n="browserSetup.httpPage">Use the HTTP page</span>
               </header>
@@ -366,9 +381,14 @@
 
             <section id="setup-local-server" class="platform-guide local-server-guide" aria-labelledby="setup-local-server-title">
               <header class="platform-guide-header">
-                <div>
-                  <p class="platform-label" data-i18n="browserSetup.fallbackLabel">RELIABLE FALLBACK</p>
-                  <h2 id="setup-local-server-title" data-i18n="browserSetup.localTitle">Serve spicefe from the gaming PC</h2>
+                <div class="platform-guide-title">
+                  <span class="platform-system-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path fill-rule="evenodd" d="M4 3.5h16A2.5 2.5 0 0 1 22.5 6v10A2.5 2.5 0 0 1 20 18.5h-6.75V20H17a1 1 0 1 1 0 2H7a1 1 0 1 1 0-2h3.75v-1.5H4A2.5 2.5 0 0 1 1.5 16V6A2.5 2.5 0 0 1 4 3.5ZM4 6v9.5h16V6H4Z" clip-rule="evenodd"/></svg>
+                  </span>
+                  <div>
+                    <p class="platform-label" data-i18n="browserSetup.fallbackLabel">RELIABLE FALLBACK</p>
+                    <h2 id="setup-local-server-title" data-i18n="browserSetup.localTitle">Serve spicefe from the gaming PC</h2>
+                  </div>
                 </div>
                 <span class="mode-badge" data-i18n="browserSetup.allBrowsers">All listed browsers</span>
               </header>

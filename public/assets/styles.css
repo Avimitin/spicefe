@@ -4168,16 +4168,6 @@ body {
     font-size: 30px;
   }
 
-  .welcome-hero .setup-notice {
-    margin-bottom: 12px;
-    padding: 9px 11px;
-  }
-
-  .welcome-hero .setup-notice-title,
-  .welcome-hero .setup-list p {
-    display: none;
-  }
-
   .topbar-connect-button {
     width: 34px;
     min-width: 34px;
@@ -4261,9 +4251,9 @@ body {
   line-height: 1.5;
 }
 
-.browser-setup-notice {
+.usage-guide-notice {
   width: 100%;
-  margin-bottom: 18px;
+  margin-bottom: 32px;
 }
 
 .http-entry-notice {
@@ -4389,6 +4379,35 @@ body {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 10px;
+}
+
+.platform-guide-title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 11px;
+}
+
+.platform-guide-title > div {
+  min-width: 0;
+}
+
+.platform-system-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  place-items: center;
+  border-radius: 9px;
+  background: #f0f0f0;
+  color: #414651;
+}
+
+.platform-system-icon svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
 }
 
 .platform-label {
