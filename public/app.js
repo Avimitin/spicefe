@@ -749,6 +749,7 @@ function createProfileAndEdit() {
 
 element('settings-button').addEventListener('click', openSettings);
 element('empty-configure').addEventListener('click', openSettings);
+element('guide-configure').addEventListener('click', openSettings);
 element('add-server').addEventListener('click', createProfileAndEdit);
 element('close-settings').addEventListener('click', closeSettings);
 connectButton.addEventListener('click', connectSelected);

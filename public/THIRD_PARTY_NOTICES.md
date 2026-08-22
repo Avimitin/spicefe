@@ -6,6 +6,11 @@ Parts of the API transport, H.264 parsing, touch mapping, and lifecycle design
 were adapted from `spice2x/substream`, revision
 `8a6aa8474821e139bc4f6865cee1c270d6674730`.
 
+The setup guide also reproduces the spicecfg screenshot referenced by the
+upstream README at revision `a68cee2f2a4e730151331421eac3113db4b624e6`.
+It is vendored as `public/assets/spicecfg-api-stream.png` with SHA-256
+`a8a6dfc0d269e0e023359bc80ef0030a804918ef7239105552f9b4b340912772`.
+
 BSD 3-Clause License
 
 Copyright (c) 2026, spice2x

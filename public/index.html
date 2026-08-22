@@ -90,32 +90,113 @@
       <img id="mjpeg-view" class="stream-view" alt="Spice subscreen stream" hidden data-i18n-alt="stream.aria">
 
       <section id="empty-state" class="empty-state">
-        <img class="empty-symbol" src="./assets/spice2x.ico" alt="" aria-hidden="true">
-        <p class="eyebrow" data-i18n="home.eyebrow">LAN SUBSCREEN CLIENT</p>
-        <h1><span data-i18n="home.titleFirst">Put the game’s second screen</span><br><span data-i18n="home.titleSecond">in your hands.</span></h1>
-        <p data-i18n="home.copy">Connect directly to spice2x. Video and touch stay between this device and your gaming PC.</p>
-        <section class="setup-notice" aria-labelledby="setup-notice-title">
-          <header class="setup-notice-header">
-            <strong id="setup-notice-title" class="setup-notice-title" data-i18n="setup.title">Before you connect</strong>
-            <a class="repository-link" href="https://github.com/Avimitin/spicefe" target="_blank" rel="noopener noreferrer">github.com/Avimitin/spicefe <span aria-hidden="true">↗</span></a>
+        <div class="welcome-hero">
+          <img class="empty-symbol" src="./assets/spice2x.ico" alt="" aria-hidden="true">
+          <p class="eyebrow" data-i18n="home.eyebrow">LAN SUBSCREEN CLIENT</p>
+          <h1><span data-i18n="home.titleFirst">Put the game’s second screen</span><br><span data-i18n="home.titleSecond">in your hands.</span></h1>
+          <p data-i18n="home.copy">Connect directly to spice2x. Video and touch stay between this device and your gaming PC.</p>
+          <section class="setup-notice" aria-labelledby="setup-notice-title">
+            <header class="setup-notice-header">
+              <strong id="setup-notice-title" class="setup-notice-title" data-i18n="setup.title">Before you connect</strong>
+            </header>
+            <ul class="setup-list">
+              <li>
+                <div>
+                  <strong data-i18n="version.title">Recent spice2x required</strong>
+                  <p data-i18n="version.copy">Subscreen streaming requires spice2x-26-08-20 or newer.</p>
+                </div>
+                <a class="version-link" href="https://github.com/spice2x/spice2x.github.io/releases" target="_blank" rel="noopener noreferrer" data-i18n="version.download">Download latest spice2x</a>
+              </li>
+              <li>
+                <div>
+                  <strong data-i18n="setup.directTitle">Private, local connection</strong>
+                  <p data-i18n="setup.directCopy">Connections are made directly over your local network between this device and your gaming PC. spicefe never relays stream or control data to a remote service, and its source code is open for anyone to inspect.</p>
+                </div>
+                <a class="repository-link" href="https://github.com/Avimitin/spicefe" target="_blank" rel="noopener noreferrer"><span data-i18n="setup.sourceLink">View source on GitHub</span> <span aria-hidden="true">↗</span></a>
+              </li>
+            </ul>
+          </section>
+          <button id="empty-configure" class="primary-button large" type="button" data-i18n="home.configure">Set up a connection</button>
+          <a class="guide-jump" href="#usage-guide"><span data-i18n="guide.jump">Read the setup guide</span><span aria-hidden="true">↓</span></a>
+        </div>
+
+        <section id="usage-guide" class="usage-guide" aria-labelledby="usage-guide-title">
+          <header class="usage-guide-header">
+            <div>
+              <p class="eyebrow" data-i18n="guide.eyebrow">GETTING STARTED</p>
+              <h2 id="usage-guide-title" data-i18n="guide.title">Set up spice2x in three steps</h2>
+              <p data-i18n="guide.copy">Enable the API stream on your gaming PC, allow LAN access, then connect from this device.</p>
+            </div>
           </header>
-          <ul class="setup-list">
-            <li>
-              <div>
-                <strong data-i18n="version.title">Recent spice2x required</strong>
-                <p data-i18n="version.copy">Subscreen streaming requires spice2x-26-08-20 or newer.</p>
+
+          <ol class="usage-steps">
+            <li class="usage-step usage-step-config">
+              <h3 data-i18n="guide.enableTitle">Configure spice2x</h3>
+              <p data-i18n="guide.enableCopy">Choose either spicecfg or command-line options. Both enable the same API stream, so you only need one.</p>
+
+              <div class="config-methods">
+                <figure class="config-method spicecfg-demo">
+                  <figcaption>
+                    <p class="method-label" data-i18n="guide.optionA">Option A</p>
+                    <h4 data-i18n="guide.spicecfgTitle">Using spicecfg</h4>
+                    <p data-i18n="guide.spicecfgCopy">Under Companion &amp; API, choose an API TCP Port, enable API Video Stream Server, and optionally set API Password. Enter the same port and password in spicefe.</p>
+                    <small data-i18n="guide.spicecfgImageHint">Open the image to view it at full size.</small>
+                  </figcaption>
+                  <a class="spicecfg-image-link" href="./assets/spicecfg-api-stream.png" target="_blank" rel="noopener noreferrer" aria-label="Open the spicecfg setup image at full size" data-i18n-aria-label="guide.spicecfgImageOpen">
+                    <img src="./assets/spicecfg-api-stream.png" width="568" height="356" loading="lazy" decoding="async" alt="spicecfg Companion &amp; API settings with API TCP Port and API Video Stream Server Enable highlighted" data-i18n-alt="guide.spicecfgImageAlt">
+                  </a>
+                </figure>
+
+                <section class="config-method command-method">
+                  <p class="method-label" data-i18n="guide.optionB">Option B</p>
+                  <h4 data-i18n="guide.commandTitle">Command line</h4>
+                  <p data-i18n="guide.commandCopy">Add these options when launching the game:</p>
+                  <pre class="command-block"><code>spice64.exe -api 1337 -apistream</code></pre>
+                  <p data-i18n="guide.password">To protect API commands with a password, append -apipass your-password and enter the same password in spicefe.</p>
+                </section>
               </div>
-              <a class="version-link" href="https://github.com/spice2x/spice2x.github.io/releases" target="_blank" rel="noopener noreferrer" data-i18n="version.download">Download latest spice2x</a>
             </li>
-            <li>
-              <div>
-                <strong data-i18n="setup.directTitle">Direct connection</strong>
-                <p data-i18n="setup.directCopy">No relay is used. Allow local-network access when your browser asks, and allow spice2x through Windows Firewall.</p>
-              </div>
+            <li class="usage-step">
+              <h3 data-i18n="guide.lanTitle">Prepare the local network</h3>
+              <p data-i18n="guide.lanCopy">Connect this device and the gaming PC to the same LAN. In Windows Firewall, allow spice64.exe on Private networks.</p>
+              <aside class="guide-tip">
+                <strong data-i18n="guide.findIpTitle">Find the gaming PC address</strong>
+                <span data-i18n="guide.findIpCopy">Run ipconfig in Command Prompt and note the IPv4 Address for the active network adapter.</span>
+              </aside>
             </li>
-          </ul>
+            <li class="usage-step">
+              <h3 data-i18n="guide.connectTitle">Connect with spicefe</h3>
+              <p data-i18n="guide.connectCopy">Enter that IPv4 address as Host. Use the same API port and password configured in spice2x, then leave Format and Screen on Auto for the first connection.</p>
+            </li>
+          </ol>
+
+          <div class="guide-panels">
+            <section class="guide-panel" aria-labelledby="guide-defaults-title">
+              <h3 id="guide-defaults-title" data-i18n="guide.defaultsTitle">Recommended starting settings</h3>
+              <ul>
+                <li data-i18n="guide.defaultFormat">Auto format prefers H.264, which uses much less battery and bandwidth than MJPEG.</li>
+                <li data-i18n="guide.defaultScreen">Auto screen selects the subscreen when the game provides one.</li>
+                <li data-i18n="guide.defaultPerformance">Start at 30 FPS and quality 70. Lower them if Wi-Fi is slow or the game is affected.</li>
+              </ul>
+            </section>
+            <section class="guide-panel" aria-labelledby="guide-troubleshoot-title">
+              <h3 id="guide-troubleshoot-title" data-i18n="guide.troubleshootTitle">Quick troubleshooting</h3>
+              <ul>
+                <li data-i18n="guide.troubleshootConnection">If both API and video fail, recheck the PC address, API port, spice2x version, and Windows Firewall.</li>
+                <li data-i18n="guide.troubleshootViewer">If API connects but video fails, disconnect other viewers; spice2x allows one viewer per screen.</li>
+                <li data-i18n="guide.troubleshootIos">On iPhone or iPad, use Share → Add to Home Screen for a fullscreen app experience.</li>
+              </ul>
+            </section>
+          </div>
+
+          <footer class="guide-footer">
+            <div>
+              <strong data-i18n="guide.readyTitle">Ready to connect?</strong>
+              <p data-i18n="guide.readyCopy">Keep the game running while you add its connection details.</p>
+            </div>
+            <button id="guide-configure" class="primary-button" type="button" data-i18n="home.configure">Set up a connection</button>
+          </footer>
         </section>
-        <button id="empty-configure" class="primary-button large" type="button" data-i18n="home.configure">Set up a connection</button>
       </section>
 
       <section id="server-library" class="server-library" hidden aria-labelledby="server-library-title">
