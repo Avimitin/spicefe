@@ -39,7 +39,7 @@
         let
           pkgs = import nixpkgs { inherit system; };
         in
-        {
+        rec {
           default = pkgs.buildNpmPackage {
             pname = "spicefe";
             version = "0.1.0";
@@ -69,6 +69,28 @@
               runHook postInstall
             '';
           };
+
+          release = pkgs.runCommand "spicefe-public.zip"
+            {
+              nativeBuildInputs = [
+                pkgs.coreutils
+                pkgs.findutils
+                pkgs.zip
+              ];
+            }
+            ''
+              mkdir staging
+              cp -R ${default}/. staging/
+              install -m 0444 ${self}/serve.bat staging/serve.bat
+              install -m 0444 ${self}/serve.ps1 staging/serve.ps1
+
+              # Stable timestamps and sorted input make repeated builds byte-identical.
+              find staging -exec touch -h -d '@315532800' {} +
+              cd staging
+              find . -type f -printf '%P\n' \
+                | LC_ALL=C sort \
+                | zip -X -q "$out" -@
+            '';
         });
 
       apps = forAllSystems (system:
@@ -96,6 +118,11 @@
             program = "${serve}/bin/spicefe-serve";
             meta.description = "Serve spicefe locally";
           };
+          github-cli = {
+            type = "app";
+            program = "${pkgs.gh}/bin/gh";
+            meta.description = "Run the pinned GitHub CLI";
+          };
         });
 
       checks = forAllSystems (system:
@@ -104,11 +131,13 @@
         in
         {
           package = self.packages.${system}.default;
+          release = self.packages.${system}.release;
           static = pkgs.runCommand "spicefe-checks"
             {
               nativeBuildInputs = [
                 pkgs.actionlint
                 pkgs.nodejs
+                pkgs.powershell
                 pkgs.python3
                 pkgs.shellcheck
               ];
@@ -120,6 +149,19 @@
               actionlint .github/workflows/*.yml
               node --test tests/*.test.mjs
               python tools/check_static.py public
+              pwsh -NoLogo -NoProfile -Command '
+                $tokens = $null
+                $parseErrors = $null
+                [System.Management.Automation.Language.Parser]::ParseFile(
+                  (Resolve-Path "serve.ps1"),
+                  [ref]$tokens,
+                  [ref]$parseErrors
+                ) > $null
+                if ($parseErrors.Count -gt 0) {
+                  $parseErrors | ForEach-Object { Write-Error $_.Message }
+                  exit 1
+                }
+              '
               touch "$out"
             '';
         });

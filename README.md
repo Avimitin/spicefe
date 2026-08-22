@@ -119,6 +119,8 @@ nix build
 
 The deployable directory is `result/`. The committed `public/` directory is
 also already complete and can be directly uploaded without a build step.
+Build the downloadable ZIP, including the Windows local-server helper, with
+`nix build .#release`.
 
 ### GitHub Actions
 
@@ -132,6 +134,20 @@ dereferenced output as a GitHub Pages artifact and deploys it from a separate
 job. Pull requests keep read-only permissions; only the deployment job receives
 `pages: write` and `id-token: write`. The workflow never commits generated
 files, so no generated `gh-pages` branch is needed.
+
+The [`Release` workflow](./.github/workflows/release.yml) runs for every pushed
+Git tag. It reruns the flake checks, builds the `release` package, and creates a
+GitHub Release with a versioned ZIP, SHA-256 checksum, and generated release
+notes. The archive is built entirely by Nix from the same site derivation used
+for Pages. For example:
+
+```sh
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+If a release already exists for that tag, rerunning the workflow replaces its
+two generated assets instead of creating a duplicate release.
 
 To enable deployment, open **Settings → Pages** in the GitHub repository and
 set **Source** to **GitHub Actions**. Configure a custom domain and leave
@@ -169,6 +185,35 @@ The deployment details referenced above are documented by
 [EdgeOne HTTPS configuration](https://pages.edgeone.ai/document/https-configuration-overview),
 [Cloudflare Pages headers](https://developers.cloudflare.com/pages/configuration/headers/),
 and [Cloudflare Always Use HTTPS](https://developers.cloudflare.com/ssl/edge-certificates/additional-options/always-use-https/).
+
+## Windows local HTTP server
+
+Windows does not include a standalone `cmd.exe` web-server command, and IIS is
+an optional system component that would be excessive for this use. Supported
+Windows client versions do include Windows PowerShell 5.1, so the release ZIP
+ships `serve.bat` and a small PowerShell static server built on .NET
+`TcpListener`.
+
+To serve spicefe directly from the gaming PC:
+
+1. Download a release ZIP and its `.sha256` file, verify it, and extract the
+   ZIP.
+2. Double-click `serve.bat`. It listens on port `45000` and opens a local test
+   page.
+3. If Windows Firewall prompts, allow **Private networks** only.
+4. On the phone or tablet, open one of the cyan LAN URLs printed in the server
+   window, such as `http://192.168.1.50:45000/`.
+5. Keep the window open while playing; press **Ctrl+C** to stop the server.
+
+Run `serve.bat 8080` from Command Prompt to choose a different port. The helper
+does not install a service, change firewall rules, require administrator
+rights, or download anything. Its execution-policy override applies only to
+that one PowerShell process. It is intentionally a trusted-LAN development
+server, not an Internet-facing server.
+
+The implementation relies on the Windows-included
+[Windows PowerShell 5.1](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_windows_powershell_5.1?view=powershell-5.1)
+and [.NET `TcpListener`](https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.tcplistener).
 
 ## Local development
 

@@ -1,0 +1,82 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '**'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Download pinned Nix installer
+        shell: bash
+        env:
+          NIX_INSTALLER_SHA256: 3b49a0b91820accb76e3d9ff7ed64fc430121b9fafb3869b0d549721fbeb4c85
+          NIX_INSTALLER_URL: https://github.com/NixOS/nix-installer/releases/download/2.35.1/nix-installer-x86_64-linux
+        run: |
+          set -euo pipefail
+          installer_dir="${RUNNER_TEMP}/nix-installer"
+          installer_path="${installer_dir}/nix-installer-x86_64-linux"
+          mkdir -p "${installer_dir}"
+          curl --fail --location --proto '=https' --tlsv1.2 \
+            --output "${installer_path}" "${NIX_INSTALLER_URL}"
+          printf '%s  %s\n' "${NIX_INSTALLER_SHA256}" "${installer_path}" \
+            | sha256sum --check --strict
+
+      - name: Install Nix
+        uses: NixOS/nix-installer-action@62c1943b776c509394b550f3f983adc14e9212d6 # v1.0.0
+        with:
+          dogfood: true
+          dogfood-path: ${{ runner.temp }}/nix-installer
+          extra-conf: |
+            experimental-features = nix-command flakes
+
+      - name: Run checks
+        run: nix flake check --print-build-logs
+
+      - name: Build Nix release archive
+        run: nix build .#release --print-build-logs --out-link release-archive
+
+      - name: Name release assets
+        id: assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          safe_tag="${GITHUB_REF_NAME//\//-}"
+          archive_name="spicefe-${safe_tag}.zip"
+          cp -L release-archive "${archive_name}"
+          sha256sum "${archive_name}" > "${archive_name}.sha256"
+          printf 'archive_name=%s\n' "${archive_name}" >> "${GITHUB_OUTPUT}"
+
+      - name: Publish GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          ARCHIVE_NAME: ${{ steps.assets.outputs.archive_name }}
+        run: |
+          set -euo pipefail
+          if nix run .#github-cli -- release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            nix run .#github-cli -- release upload "${GITHUB_REF_NAME}" \
+              "${ARCHIVE_NAME}" "${ARCHIVE_NAME}.sha256" --clobber
+          else
+            nix run .#github-cli -- release create "${GITHUB_REF_NAME}" \
+              "${ARCHIVE_NAME}" "${ARCHIVE_NAME}.sha256" \
+              --verify-tag --generate-notes --title "spicefe ${GITHUB_REF_NAME}"
+          fi

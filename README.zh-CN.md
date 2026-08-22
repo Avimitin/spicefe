@@ -107,7 +107,8 @@ nix build
 ```
 
 可部署目录为 `result/`。仓库中的 `public/` 目录也已经包含完整产物，无需构建
-即可直接上传。
+即可直接上传。运行 `nix build .#release` 可生成带有 Windows 本地服务器工具的
+下载用 ZIP。
 
 ### GitHub Actions
 
@@ -119,6 +120,19 @@ nix build
 Pages 专用构建产物，并由独立任务进行部署。Pull Request 保持只读权限；只有
 部署任务会取得 `pages: write` 和 `id-token: write`。工作流绝不会提交生成文件，
 因此不需要维护由 CI 生成的 `gh-pages` 分支。
+
+每次推送 Git 标签时，[`Release` 工作流](./.github/workflows/release.yml)都会运行。
+它会重新执行 flake 检查、构建 `release` 包，并创建 GitHub Release，附上带版本号
+的 ZIP、SHA-256 校验文件及自动生成的发行说明。压缩包完全由 Nix 从 Pages 使用的
+同一个站点 derivation 构建。例如：
+
+```sh
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+如果该标签的 Release 已存在，重新运行工作流会替换两个自动生成的构建产物，
+而不会创建重复 Release。
 
 要启用部署，请打开 GitHub 仓库的 **Settings → Pages**，将 **Source** 设为
 **GitHub Actions**。请配置自定义域名，并保持 **Enforce HTTPS** 关闭，以便兼容
@@ -152,6 +166,30 @@ GitHub Actions 与 NixOS 官方安装器均固定到完整 commit ID。安装器
 [EdgeOne HTTPS 配置](https://pages.edgeone.ai/document/https-configuration-overview)、
 [Cloudflare Pages 响应头](https://developers.cloudflare.com/pages/configuration/headers/)
 和 [Cloudflare Always Use HTTPS](https://developers.cloudflare.com/ssl/edge-certificates/additional-options/always-use-https/)。
+
+## Windows 本地 HTTP 服务器
+
+Windows 没有提供独立的 `cmd.exe` Web 服务器命令，而 IIS 是可选系统组件，对此
+用途过于复杂。仍受支持的 Windows 客户端均自带 Windows PowerShell 5.1，因此
+Release ZIP 中提供了 `serve.bat`，以及一个基于 .NET `TcpListener` 的小型
+PowerShell 静态服务器。
+
+在游戏 PC 上直接提供 spicefe 页面：
+
+1. 下载 Release ZIP 及对应的 `.sha256` 文件，验证后解压 ZIP。
+2. 双击 `serve.bat`。服务器会监听 `45000` 端口，并打开本机测试页面。
+3. Windows 防火墙询问时，只允许访问**专用网络**。
+4. 在手机或平板中打开服务器窗口显示的任一蓝绿色局域网地址，例如
+   `http://192.168.1.50:45000/`。
+5. 游戏期间保持窗口开启；按 **Ctrl+C** 即可停止服务器。
+
+也可在命令提示符中运行 `serve.bat 8080` 来指定其他端口。该工具不会安装系统
+服务、修改防火墙规则、要求管理员权限或下载任何内容。执行策略绕过仅对这一个
+PowerShell 进程有效。它只适合可信局域网，不应暴露到互联网。
+
+实现仅依赖 Windows 自带的
+[Windows PowerShell 5.1](https://learn.microsoft.com/zh-cn/powershell/module/microsoft.powershell.core/about/about_windows_powershell_5.1?view=powershell-5.1)
+和 [.NET `TcpListener`](https://learn.microsoft.com/zh-cn/dotnet/api/system.net.sockets.tcplistener)。
 
 ## 本地开发
 
