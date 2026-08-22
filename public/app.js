@@ -851,7 +851,7 @@ browserSetupPageLink.addEventListener('click', (event) => {
   navigateToBrowsePage('browser-setup');
 });
 
-element('welcome-connection-help').addEventListener('click', (event) => {
+element('library-connection-help').addEventListener('click', (event) => {
   event.preventDefault();
   navigateToBrowsePage('browser-setup');
 });

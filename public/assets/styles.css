@@ -3375,8 +3375,8 @@ body {
   font-size: 12px;
 }
 
-.diagnostic-jump {
-  margin-top: 8px;
+.library-diagnostic-link {
+  margin-top: 16px;
 }
 
 .usage-guide {
