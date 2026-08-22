@@ -14,9 +14,9 @@
 
 ## Showcase
 
-| Welcome | Saved server library |
+| Welcome | Saved server diagnostics |
 | :---: | :---: |
-| [![spicefe welcome page](./docs/screenshots/welcome.png)](./docs/screenshots/welcome.png) | [![spicefe library with several saved arcade PCs](./docs/screenshots/server-library.png)](./docs/screenshots/server-library.png) |
+| [![spicefe welcome page](./docs/screenshots/welcome.png)](./docs/screenshots/welcome.png) | [![spicefe library showing independent Host, API, and Video states](./docs/screenshots/server-library.png)](./docs/screenshots/server-library.png) |
 
 **Live GITADORA GALAXY WAVE DELTA subscreen**
 
@@ -37,9 +37,8 @@ the LAN.
 - automatic MJPEG fallback when H.264 is unavailable
 - separate Welcome and Saved Servers pages with top-bar navigation; first-time
   users start on Welcome, while returning users with saved servers start in the library
-- per-server control-API and video-stream indicators with separate failure
-  details, plus a read-only API reachability check every five minutes while the
-  server library is visible
+- per-server Host, control-API, and video-server indicators with independent
+  failure details, refreshed every minute while the server library is visible
 - mouse, single-touch, and multi-touch input
 - Fit, Fill, and Stretch display modes with correct touch coordinate mapping
 - a dismissible in-stream adjustment bar, restorable from the top bar
@@ -73,11 +72,19 @@ frame for each display refresh. Otherwise, the pinned pure-JavaScript jMuxer
 package repackages Annex-B into fragmented MP4 in the client for MSE; it does
 not transcode the video.
 
-The saved-server page briefly opens the configured API WebSocket and sends the
-same read-only `info/avs` query used when establishing a full session. It does
-this when the list opens and every five minutes while the list remains visible;
-it never opens a video stream for a reachability check. Any API response proves
-the endpoint is reachable even when its authentication cannot be verified.
+The saved-server page checks both services in parallel. It briefly opens the
+configured API WebSocket and sends the same read-only `info/avs` query used when
+establishing a full session. It also sends a `HEAD` request to the configured
+video endpoint; spice2x answers before allocating a capture screen, so the check
+does not start an encoder or claim a capture screen. Checks run when the list
+opens, every minute while it remains visible, and after the browser regains
+network access.
+
+Any response from either service confirms that the host is reachable over the
+LAN. API authentication can therefore be red while Host remains green. When
+neither service responds, spicefe reports **No response** rather than claiming
+that a browser-level check can distinguish an offline host, broken route,
+firewall rule, or blocked local-network request.
 
 ## Gaming PC setup
 

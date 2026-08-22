@@ -8,7 +8,9 @@ import {
   sanitizeProfile,
 } from './lib/profile-store.js';
 import {
+  deriveReachability,
   probeSpiceApi,
+  probeSpiceVideo,
   REACHABILITY_INTERVAL_MS,
 } from './lib/reachability.js';
 import { SpiceSession } from './lib/spice-session.js';
@@ -72,6 +74,49 @@ let hudDismissed = false;
 let renderedMainView = null;
 const reachability = new Map();
 const reachabilityInFlight = new Map();
+let serverNameMeasureFrame = null;
+
+function syncServerNameOverflow(name) {
+  const text = name.querySelector('.server-name-text');
+  if (!text) {
+    return;
+  }
+  const shift = Math.max(0, Math.ceil(text.scrollWidth - name.clientWidth));
+  name.dataset.overflow = String(shift > 1);
+  if (shift > 1) {
+    name.style.setProperty('--server-name-shift', `${-shift}px`);
+    name.style.setProperty('--server-name-duration', `${Math.min(12, 5 + shift / 24)}s`);
+  } else {
+    name.style.removeProperty('--server-name-shift');
+    name.style.removeProperty('--server-name-duration');
+  }
+}
+
+const serverNameResizeObserver = typeof ResizeObserver === 'function'
+  ? new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      syncServerNameOverflow(entry.target);
+    }
+  })
+  : null;
+
+function measureServerNames() {
+  serverNameMeasureFrame = null;
+  for (const name of serverList.querySelectorAll('.server-name')) {
+    syncServerNameOverflow(name);
+  }
+}
+
+function observeServerNames() {
+  serverNameResizeObserver?.disconnect();
+  for (const name of serverList.querySelectorAll('.server-name')) {
+    serverNameResizeObserver?.observe(name);
+  }
+  if (serverNameMeasureFrame !== null) {
+    cancelAnimationFrame(serverNameMeasureFrame);
+  }
+  serverNameMeasureFrame = requestAnimationFrame(measureServerNames);
+}
 
 function translationParameters(node) {
   const screen = node.getAttribute('data-i18n-screen');
@@ -318,17 +363,6 @@ function renderChannelStatus(node, label, presentation) {
   label.textContent = presentation.label;
 }
 
-function disconnectedSnapshot(profile) {
-  return {
-    wanted: false,
-    profile,
-    apiState: 'idle',
-    videoState: 'idle',
-    apiError: null,
-    videoError: null,
-  };
-}
-
 function createChannelStatus(channel, presentation) {
   const node = document.createElement('span');
   const dot = document.createElement('span');
@@ -356,16 +390,89 @@ function checkedTime(timestamp) {
   }).format(new Date(timestamp));
 }
 
-function reachabilityPresentation(profile) {
+function unknownProbeChannel() {
+  return {
+    state: 'unknown',
+    responded: false,
+    checkedAt: null,
+    reason: null,
+    message: null,
+  };
+}
+
+function probeStatus(profile) {
   const saved = reachability.get(profile.id);
   if (!saved || saved.signature !== reachabilitySignature(profile)) {
+    return {
+      signature: reachabilitySignature(profile),
+      api: unknownProbeChannel(),
+      video: unknownProbeChannel(),
+    };
+  }
+  return saved;
+}
+
+function probeError(channel, kind) {
+  if (channel.reason === 'timeout') {
+    return t('probe.timeout');
+  }
+  if (channel.reason === 'password') {
+    return localizeError(i18n.locale, channel.message, 'error.wrongPassword');
+  }
+  if (kind === 'video' && channel.reason === 'http') {
+    return t('probe.videoHttp', { status: channel.status ?? '—' });
+  }
+  return localizeError(
+    i18n.locale,
+    channel.message,
+    kind === 'api' ? 'status.apiDefaultError' : 'status.videoDefaultError',
+  );
+}
+
+function probeChannelPresentation(channel, kind) {
+  const key = kind === 'api' ? 'probe.api' : 'probe.video';
+  if (channel.state === 'checking') {
+    return {
+      state: 'connecting',
+      label: t('status.checking'),
+      detail: t(`${key}Checking`),
+    };
+  }
+  if (channel.state === 'ready') {
+    return {
+      state: 'connected',
+      label: t('status.ready'),
+      detail: t(`${key}Ready`, { time: checkedTime(channel.checkedAt) }),
+    };
+  }
+  if (channel.state === 'error') {
+    return {
+      state: 'error',
+      label: t(channel.reason === 'password' ? 'status.authFailed' : 'status.disconnected'),
+      detail: t(`${key}Failed`, {
+        time: checkedTime(channel.checkedAt),
+        error: probeError(channel, kind),
+      }),
+    };
+  }
+  return {
+    state: 'idle',
+    label: t('status.notChecked'),
+    detail: t(`${key}Unknown`),
+  };
+}
+
+function reachabilityPresentation(profile) {
+  const saved = probeStatus(profile);
+  const availability = deriveReachability(saved);
+  if (availability.state === 'unknown') {
     return {
       state: 'unknown',
       label: t('reachability.unknown'),
       detail: t('reachability.unknownDetail'),
     };
   }
-  if (saved.state === 'checking') {
+  if (availability.state === 'checking') {
     return {
       state: 'checking',
       label: t('reachability.checking'),
@@ -373,37 +480,31 @@ function reachabilityPresentation(profile) {
     };
   }
 
-  const time = checkedTime(saved.checkedAt);
-  if (saved.state === 'reachable') {
+  const time = checkedTime(availability.checkedAt);
+  if (availability.state === 'reachable') {
     return {
       state: 'reachable',
       label: t('reachability.reachable'),
-      detail: t(
-        (saved.reason === 'password' || saved.reason === 'protocol')
-          ? 'reachability.reachableAuthDetail'
-          : 'reachability.reachableDetail',
-        { time },
-      ),
+      detail: t('reachability.reachableDetail', { time }),
     };
   }
 
-  const error = saved.reason === 'timeout'
-    ? t('reachability.timeout')
-    : localizeError(i18n.locale, saved.message, 'status.apiDefaultError');
   return {
     state: 'unreachable',
-    label: t('reachability.unreachable'),
-    detail: t('reachability.unreachableDetail', {
-      time,
-      error,
-    }),
+    label: t('reachability.noResponse'),
+    detail: t('reachability.noResponseDetail', { time }),
   };
 }
 
 function createServerCard(profile, snapshot) {
   const active = snapshot.wanted && snapshot.profile?.id === profile.id;
-  const cardSnapshot = active ? snapshot : disconnectedSnapshot(profile);
-  const presentation = connectionPresentation(cardSnapshot, i18n.locale);
+  const saved = probeStatus(profile);
+  const presentation = active
+    ? connectionPresentation(snapshot, i18n.locale)
+    : {
+      api: probeChannelPresentation(saved.api, 'api'),
+      video: probeChannelPresentation(saved.video, 'video'),
+    };
   const availability = reachabilityPresentation(profile);
   const card = document.createElement('article');
   const artwork = document.createElement('div');
@@ -414,6 +515,7 @@ function createServerCard(profile, snapshot) {
   const summary = document.createElement('div');
   const identity = document.createElement('div');
   const name = document.createElement('strong');
+  const nameText = document.createElement('span');
   const address = document.createElement('span');
   const reachable = document.createElement('span');
   const reachableDot = document.createElement('span');
@@ -449,7 +551,10 @@ function createServerCard(profile, snapshot) {
 
   identity.className = 'server-identity';
   name.className = 'server-name';
-  name.textContent = profile.name;
+  name.title = profile.name;
+  nameText.className = 'server-name-text';
+  nameText.textContent = profile.name;
+  name.append(nameText);
   address.className = 'server-address';
   address.textContent = t('library.address', {
     host: profile.host,
@@ -514,8 +619,12 @@ function renderServerList(snapshot) {
   const profiles = configuredProfiles(store.list());
   serverList.replaceChildren(...profiles.map((profile) => createServerCard(profile, snapshot)));
   serverList.setAttribute('aria-busy', String(
-    profiles.some((profile) => reachability.get(profile.id)?.state === 'checking'),
+    profiles.some((profile) => {
+      const saved = probeStatus(profile);
+      return saved.api.state === 'checking' || saved.video.state === 'checking';
+    }),
   ));
+  observeServerNames();
 }
 
 function browsePagePath(page) {
@@ -744,7 +853,41 @@ function renderCompatibility(force = false, view = renderedMainView) {
 }
 
 function reachabilitySignature(profile) {
-  return `${profile.host}\u0000${profile.apiPort}\u0000${profile.password}`;
+  return `${profile.host}\u0000${profile.apiPort}\u0000${profile.password}\u0000${profile.format}`;
+}
+
+function sessionProbeChannel(state, error, kind, responseObserved = false) {
+  if (state === 'connecting' || state === 'checking') {
+    const responded = responseObserved || (kind === 'api' && state === 'checking');
+    return {
+      ...unknownProbeChannel(),
+      state: 'checking',
+      responded,
+      checkedAt: responded ? Date.now() : null,
+    };
+  }
+  if (state === 'live') {
+    return {
+      ...unknownProbeChannel(),
+      state: 'ready',
+      responded: true,
+      checkedAt: Date.now(),
+    };
+  }
+  if (state === 'error') {
+    const reason = error?.code || null;
+    return {
+      ...unknownProbeChannel(),
+      state: 'error',
+      responded: responseObserved
+        || (kind === 'api' && ['password', 'protocol', 'remote'].includes(reason)),
+      checkedAt: Date.now(),
+      reason,
+      message: error?.message || String(error || ''),
+      status: error?.status,
+    };
+  }
+  return unknownProbeChannel();
 }
 
 function recordSessionReachability(snapshot) {
@@ -757,29 +900,16 @@ function recordSessionReachability(snapshot) {
   // The active session is a fresher source than a background probe. Invalidate
   // the probe token so a late result cannot overwrite live connection state.
   reachabilityInFlight.delete(profile.id);
-  if (snapshot.apiState === 'connecting' || snapshot.apiState === 'checking') {
-    reachability.set(profile.id, { state: 'checking', signature });
-    return;
-  }
-  if (snapshot.apiState === 'live') {
-    reachability.set(profile.id, {
-      state: 'reachable',
-      signature,
-      checkedAt: Date.now(),
-      reason: null,
-      message: null,
-    });
-    return;
-  }
-  if (snapshot.apiState === 'error') {
-    reachability.set(profile.id, {
-      state: snapshot.apiError?.code === 'password' ? 'reachable' : 'unreachable',
-      signature,
-      checkedAt: Date.now(),
-      reason: snapshot.apiError?.code || null,
-      message: snapshot.apiError?.message || null,
-    });
-  }
+  reachability.set(profile.id, {
+    signature,
+    api: sessionProbeChannel(snapshot.apiState, snapshot.apiError, 'api'),
+    video: sessionProbeChannel(
+      snapshot.videoState,
+      snapshot.videoError,
+      'video',
+      snapshot.videoResponded,
+    ),
+  });
 }
 
 async function probeProfileReachability(profile, force = false) {
@@ -790,27 +920,48 @@ async function probeProfileReachability(profile, force = false) {
   }
 
   const saved = reachability.get(profile.id);
+  const checkedAt = saved?.api?.checkedAt && saved?.video?.checkedAt
+    ? Math.min(saved.api.checkedAt, saved.video.checkedAt)
+    : null;
   if (!force
     && saved?.signature === signature
-    && saved.checkedAt
-    && Date.now() - saved.checkedAt < REACHABILITY_INTERVAL_MS) {
+    && checkedAt
+    && Date.now() - checkedAt < REACHABILITY_INTERVAL_MS) {
     return null;
   }
 
   const token = {};
-  reachability.set(profile.id, { state: 'checking', signature });
+  reachability.set(profile.id, {
+    signature,
+    api: { ...unknownProbeChannel(), state: 'checking' },
+    video: { ...unknownProbeChannel(), state: 'checking' },
+  });
   renderServerList(session.snapshot);
-  const promise = probeSpiceApi(profile).then((probe) => {
+
+  const updateChannel = (channel, probe) => {
     if (reachabilityInFlight.get(profile.id)?.token !== token) {
       return probe;
     }
     const current = store.get(profile.id);
     if (current?.host && reachabilitySignature(current) === signature) {
-      reachability.set(profile.id, { ...probe, signature });
+      const currentStatus = probeStatus(profile);
+      reachability.set(profile.id, {
+        ...currentStatus,
+        signature,
+        [channel]: probe,
+      });
       renderServerList(session.snapshot);
     }
     return probe;
-  }).finally(() => {
+  };
+
+  const apiPromise = probeSpiceApi(profile).then(
+    (probe) => updateChannel('api', probe),
+  );
+  const videoPromise = probeSpiceVideo(profile).then(
+    (probe) => updateChannel('video', probe),
+  );
+  const promise = Promise.all([apiPromise, videoPromise]).finally(() => {
     if (reachabilityInFlight.get(profile.id)?.token === token) {
       reachabilityInFlight.delete(profile.id);
     }
@@ -1114,3 +1265,4 @@ renderProfileLists();
 fillForm(store.selected());
 renderCompatibility();
 renderSnapshot(session.snapshot);
+document.fonts?.ready?.then(() => measureServerNames());

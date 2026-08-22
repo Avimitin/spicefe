@@ -118,27 +118,6 @@
           <p class="eyebrow" data-i18n="home.eyebrow">LAN SUBSCREEN CLIENT</p>
           <h1><span data-i18n="home.titleFirst">Your arcade subscreen</span><br><span data-i18n="home.titleSecond">is already in your hands.</span></h1>
           <p data-i18n="home.copy">Turn your phone or tablet into a responsive touch display—no extra screen required.</p>
-          <section class="setup-notice" aria-labelledby="setup-notice-title">
-            <header class="setup-notice-header">
-              <strong id="setup-notice-title" class="setup-notice-title" data-i18n="setup.title">Before you connect</strong>
-            </header>
-            <ul class="setup-list">
-              <li>
-                <div>
-                  <strong data-i18n="version.title">Recent spice2x required</strong>
-                  <p><span data-i18n="version.copyBefore">Install</span> <strong class="required-version">spice2x-26-08-20</strong> <span data-i18n="version.copyAfter">or newer for subscreen streaming. Older builds do not include the required stream and CORS support.</span></p>
-                </div>
-                <a class="version-link" href="https://github.com/spice2x/spice2x.github.io/releases" target="_blank" rel="noopener noreferrer" data-i18n="version.download">Download latest spice2x</a>
-              </li>
-              <li>
-                <div>
-                  <strong data-i18n="setup.directTitle">Private, local connection</strong>
-                  <p data-i18n="setup.directCopy">Connections are made directly over your local network between this device and your gaming PC. spicefe never relays stream or control data to a remote service, and its source code is open for anyone to inspect.</p>
-                </div>
-                <a class="repository-link" href="https://github.com/Avimitin/spicefe" target="_blank" rel="noopener noreferrer"><span data-i18n="setup.sourceLink">View source on GitHub</span> <span aria-hidden="true">↗</span></a>
-              </li>
-            </ul>
-          </section>
           <button id="empty-configure" class="primary-button large" type="button" data-i18n="home.configure">Set up a connection</button>
           <a class="guide-jump" href="#usage-guide"><span data-i18n="guide.jump">Read the setup guide</span><span aria-hidden="true">↓</span></a>
         </div>
@@ -243,6 +222,28 @@
             <h1 id="browser-setup-title" data-i18n="browserSetup.title">Browser connection setup</h1>
             <p data-i18n="browserSetup.copy">spice2x serves its stream over your local network without TLS. Choose your device and browser below so spicefe can reach it.</p>
           </header>
+
+          <section class="setup-notice browser-setup-notice" aria-labelledby="setup-notice-title">
+            <header class="setup-notice-header">
+              <strong id="setup-notice-title" class="setup-notice-title" data-i18n="setup.title">Before you connect</strong>
+            </header>
+            <ul class="setup-list">
+              <li>
+                <div>
+                  <strong data-i18n="version.title">Recent spice2x required</strong>
+                  <p><span data-i18n="version.copyBefore">Install</span> <strong class="required-version">spice2x-26-08-20</strong> <span data-i18n="version.copyAfter">or newer for subscreen streaming. Older builds do not include the required stream and CORS support.</span></p>
+                </div>
+                <a class="version-link" href="https://github.com/spice2x/spice2x.github.io/releases" target="_blank" rel="noopener noreferrer" data-i18n="version.download">Download latest spice2x</a>
+              </li>
+              <li>
+                <div>
+                  <strong data-i18n="setup.directTitle">Private, local connection</strong>
+                  <p data-i18n="setup.directCopy">Connections are made directly over your local network between this device and your gaming PC. spicefe never relays stream or control data to a remote service, and its source code is open for anyone to inspect.</p>
+                </div>
+                <a class="repository-link" href="https://github.com/Avimitin/spicefe" target="_blank" rel="noopener noreferrer"><span data-i18n="setup.sourceLink">View source on GitHub</span> <span aria-hidden="true">↗</span></a>
+              </li>
+            </ul>
+          </section>
 
           <aside class="http-entry-notice" role="note" aria-labelledby="http-entry-title">
             <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 8v4M12 16h.01M10.3 4.6 2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4.6a2 2 0 0 0-3.4 0Z"/></svg>

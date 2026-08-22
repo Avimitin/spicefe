@@ -38,6 +38,7 @@ export class SpiceSession {
     this.apiState = 'idle';
     this.videoFormat = null;
     this.videoBackend = null;
+    this.videoResponded = false;
     this.videoError = null;
     this.apiError = null;
     this.gameInfo = null;
@@ -58,10 +59,10 @@ export class SpiceSession {
     this.onframe = () => {};
     this.onapi = () => {};
 
-    this.webCodecsPlayer.onresponse = () => this.armStallFor('webcodecs');
+    this.webCodecsPlayer.onresponse = () => this.videoResponse('webcodecs');
     this.webCodecsPlayer.onframe = (metric) => this.videoFrame(metric, 'webcodecs');
     this.webCodecsPlayer.onerror = (error) => this.videoFailedFor(error, 'webcodecs');
-    this.msePlayer.onresponse = () => this.armStallFor('mse');
+    this.msePlayer.onresponse = () => this.videoResponse('mse');
     this.msePlayer.onframe = (metric) => this.videoFrame(metric, 'mse');
     this.msePlayer.onerror = (error) => this.videoFailedFor(error, 'mse');
     this.image.addEventListener('load', () => this.mjpegLoaded());
@@ -76,6 +77,7 @@ export class SpiceSession {
       apiState: this.apiState,
       videoFormat: this.videoFormat,
       videoBackend: this.videoBackend,
+      videoResponded: this.videoResponded,
       videoError: this.videoError,
       apiError: this.apiError,
       gameInfo: this.gameInfo,
@@ -94,6 +96,7 @@ export class SpiceSession {
     this.wanted = true;
     this.videoState = 'connecting';
     this.apiState = 'connecting';
+    this.videoResponded = false;
     this.videoError = null;
     this.apiError = null;
     this.streamRetryDelay = 1000;
@@ -126,6 +129,7 @@ export class SpiceSession {
     this.apiState = 'idle';
     this.videoFormat = null;
     this.videoBackend = null;
+    this.videoResponded = false;
     this.videoError = null;
     this.apiError = null;
     this.gameInfo = null;
@@ -150,6 +154,7 @@ export class SpiceSession {
     this.stopStallWatchdog();
     this.streamRetryTimer = null;
     this.videoState = 'connecting';
+    this.videoResponded = false;
     this.videoError = null;
 
     const wantsH264 = this.profile.format !== 'mjpg' && !this.fellBackToMjpeg;
@@ -251,11 +256,21 @@ export class SpiceSession {
     }
   }
 
+  videoResponse(backend) {
+    if (!this.wanted || this.videoBackend !== backend) {
+      return;
+    }
+    this.videoResponded = true;
+    this.armStallFor(backend);
+    this.emitState();
+  }
+
   videoFrame(metric, backend) {
     if (!this.wanted || this.videoFormat !== 'h264' || this.videoBackend !== backend) {
       return;
     }
     this.armStall();
+    this.videoResponded = true;
     const becameLive = this.videoState !== 'live';
     this.videoState = 'live';
     this.videoError = null;
@@ -277,6 +292,7 @@ export class SpiceSession {
       return;
     }
     this.stopStallWatchdog();
+    this.videoResponded = true;
     this.videoState = 'live';
     this.videoError = null;
     this.streamRetryDelay = 1000;
@@ -301,6 +317,7 @@ export class SpiceSession {
       return;
     }
     this.stopStallWatchdog();
+    this.videoResponded ||= Number.isFinite(error?.status);
 
     if (this.videoFormat === 'h264'
       && this.profile.format === 'auto'

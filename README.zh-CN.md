@@ -13,9 +13,9 @@
 
 ## 界面展示
 
-| 欢迎页 | 已保存服务器库 |
+| 欢迎页 | 已保存服务器诊断 |
 | :---: | :---: |
-| [![spicefe 欢迎页](./docs/screenshots/welcome.png)](./docs/screenshots/welcome.png) | [![包含多个街机 PC 的 spicefe 服务器库](./docs/screenshots/server-library.png)](./docs/screenshots/server-library.png) |
+| [![spicefe 欢迎页](./docs/screenshots/welcome.png)](./docs/screenshots/welcome.png) | [![分别显示主机、API 与视频状态的 spicefe 服务器库](./docs/screenshots/server-library.png)](./docs/screenshots/server-library.png) |
 
 **GITADORA GALAXY WAVE DELTA 实时副屏**
 
@@ -34,8 +34,8 @@
 - H.264 不可用时自动回退到 MJPEG
 - 欢迎页和已保存服务器页相互独立，可从顶部导航切换；首次使用默认显示
   欢迎页，已保存服务器的用户默认进入服务器列表
-- 在每个服务器旁分别显示控制 API 与视频流状态及各自的失败原因；服务器列表可见
-  时，每五分钟使用只读 API 请求检查一次可达性
+- 在每个服务器旁分别显示主机、控制 API 与视频服务器状态及各自的失败原因；
+  服务器列表可见时每分钟刷新一次
 - 支持鼠标、单点触控和多点触控输入
 - 支持适应（Fit）、填充（Fill）和拉伸（Stretch）显示模式，并正确映射触控坐标
 - 视频内的调整栏可以关闭，并可从顶部栏重新打开
@@ -65,10 +65,15 @@ CDN 不会代理上述任何连接。可用时，浏览器通过 WebCodecs 直�
 jMuxer 会在客户端将 Annex-B 重新封装为供 MSE 播放的分片 MP4，不会对视频进行
 转码。
 
-已保存服务器页面会短暂打开配置中的 API WebSocket，并发送与完整会话建立时相同
-的只读 `info/avs` 查询。列表打开时会立即检查一次，列表持续可见时每五分钟再次
-检查；可达性检查绝不会打开视频流。因此，只要收到了 API 响应，即使无法验证其
-身份认证，该服务器仍会被标记为可连接。
+已保存服务器页面会并行检查两个服务：短暂打开配置中的 API WebSocket，发送与
+完整会话建立时相同的只读 `info/avs` 查询；同时向配置的视频端点发送 `HEAD`
+请求。spice2x 会在分配画面捕获前响应，因此该检查不会启动编码器，也不会与视频
+观看者争用画面。列表打开时会立即检查一次，列表持续可见时每分钟再次检查；浏览器
+恢复联网后也会立即检查。
+
+任一服务作出响应，都足以确认该主机的局域网路由可用。因此，API 认证可以显示为
+红色，而主机仍保持绿色。若两个服务均未响应，spicefe 会显示**无响应**，而不会
+声称浏览器能够进一步区分主机离线、路由故障、防火墙规则或被拦截的局域网请求。
 
 ## 游戏 PC 设置
 

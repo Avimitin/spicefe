@@ -90,3 +90,18 @@ test('video heartbeats extend one stall watchdog without replacing its timer', (
 
   session.disconnect();
 });
+
+test('video response headers confirm server reachability before the first frame', () => {
+  const session = new SpiceSession(new FakeCanvas(), new FakeVideo(), new FakeImage());
+  session.wanted = true;
+  session.videoFormat = 'h264';
+  session.videoBackend = 'webcodecs';
+  session.videoState = 'connecting';
+
+  session.videoResponse('webcodecs');
+
+  assert.equal(session.snapshot.videoResponded, true);
+  assert.equal(session.snapshot.videoState, 'connecting');
+  session.disconnect();
+  assert.equal(session.snapshot.videoResponded, false);
+});
