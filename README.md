@@ -24,6 +24,8 @@ the LAN.
 
 - H.264 video with WebCodecs first and a Media Source Extensions fallback
 - automatic MJPEG fallback when H.264 is unavailable
+- separate control-API and video-stream health indicators with port-specific
+  failure details
 - mouse, single-touch, and multi-touch input
 - Fit, Fill, and Stretch display modes with correct touch coordinate mapping
 - spice2x image-resize scene selection (Off and scenes 1–4)

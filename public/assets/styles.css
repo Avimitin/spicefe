@@ -185,17 +185,45 @@ code {
   text-overflow: ellipsis;
 }
 
+.connection-statuses {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .connection-status {
   display: flex;
-  min-width: 94px;
+  min-width: 92px;
   align-items: center;
-  justify-content: center;
   gap: 7px;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.025);
   color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
   white-space: nowrap;
+}
+
+.status-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  line-height: 1.08;
+}
+
+.status-channel {
+  color: var(--faint);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.status-value {
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 750;
+  text-overflow: ellipsis;
 }
 
 .status-dot {
@@ -229,6 +257,12 @@ code {
 .connection-status[data-state="error"] .status-dot {
   background: var(--bad);
   box-shadow: 0 0 0 3px rgba(255, 107, 114, 0.14);
+}
+
+.connection-status[data-state="connected"] .status-channel,
+.connection-status[data-state="error"] .status-channel {
+  color: currentColor;
+  opacity: 0.72;
 }
 
 .icon-button,
@@ -488,6 +522,14 @@ code {
   grid-column: 2;
 }
 
+.stream-message[data-state="error"] {
+  border-color: rgba(255, 107, 114, 0.32);
+}
+
+.stream-message[data-state="error"] .spinner {
+  border-top-color: var(--bad);
+}
+
 .stream-message strong {
   align-self: end;
   font-size: 14px;
@@ -508,6 +550,45 @@ code {
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.75s linear infinite;
+}
+
+.api-warning {
+  position: absolute;
+  z-index: 9;
+  display: grid;
+  width: min(560px, calc(100% - 24px));
+  grid-template-columns: 18px minmax(0, 1fr);
+  padding: 10px 13px;
+  border: 1px solid rgba(255, 107, 114, 0.34);
+  border-radius: 12px;
+  top: 12px;
+  left: 50%;
+  background: rgba(31, 17, 22, 0.92);
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.api-warning .status-dot {
+  grid-row: 1 / span 2;
+  align-self: center;
+  background: var(--bad);
+  box-shadow: 0 0 0 3px rgba(255, 107, 114, 0.14);
+}
+
+.api-warning strong,
+.api-warning > span:last-child {
+  grid-column: 2;
+}
+
+.api-warning strong {
+  font-size: 12px;
+}
+
+.api-warning > span:last-child {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
 }
 
 .touch-marker {
@@ -1030,11 +1111,16 @@ fieldset legend {
     flex-basis: 120px;
   }
 
-  .connection-status {
-    min-width: 8px;
+  .connection-statuses {
+    gap: 4px;
   }
 
-  #status-label {
+  .connection-status {
+    min-width: 0;
+    padding: 5px 6px;
+  }
+
+  .status-value {
     display: none;
   }
 
@@ -1149,6 +1235,25 @@ fieldset legend {
 
   .hud-control select {
     width: 82px;
+  }
+}
+
+@media (max-width: 360px) {
+  .topbar {
+    gap: 4px;
+    padding-right: 6px;
+    padding-left: 6px;
+  }
+
+  .connection-status {
+    gap: 4px;
+    padding-right: 4px;
+    padding-left: 4px;
+  }
+
+  #connect-button {
+    padding-right: 9px;
+    padding-left: 9px;
   }
 }
 

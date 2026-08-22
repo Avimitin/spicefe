@@ -1,5 +1,6 @@
 import { compatibilityUrl, isPrivateLanName, likelyNeedsHttpMode } from './lib/endpoints.js';
 import { GAME_ICONS, gameIconById } from './lib/game-icons.js';
+import { connectionPresentation } from './lib/connection-status.js';
 import {
   decodeProfileTransfer,
   newProfile,
@@ -29,8 +30,9 @@ const connectButton = element('connect-button');
 const emptyState = element('empty-state');
 const streamMessage = element('stream-message');
 const stageHud = element('stage-hud');
-const status = element('connection-status');
-const statusLabel = element('status-label');
+const apiStatus = element('api-status');
+const videoStatus = element('video-status');
+const apiWarning = element('api-warning');
 const resizeScene = element('resize-scene');
 const touchMarker = element('touch-marker');
 const compatBanner = element('compat-banner');
@@ -272,20 +274,11 @@ function renderConnectionButton() {
   connectButton.textContent = session.profile?.id === selected.id ? 'Disconnect' : 'Switch';
 }
 
-function messageForSnapshot(snapshot) {
-  if (!snapshot.wanted) {
-    return null;
-  }
-  if (snapshot.videoState === 'error') {
-    return {
-      title: 'Video unavailable',
-      copy: `${snapshot.videoError || 'Could not open the stream'} · retrying`,
-    };
-  }
-  if (snapshot.videoState !== 'live') {
-    return { title: 'Connecting', copy: 'Opening the video stream…' };
-  }
-  return null;
+function renderChannelStatus(node, label, presentation) {
+  node.dataset.state = presentation.state;
+  node.title = presentation.detail;
+  node.setAttribute('aria-label', presentation.detail);
+  label.textContent = presentation.label;
 }
 
 function renderSnapshot(snapshot) {
@@ -296,28 +289,22 @@ function renderSnapshot(snapshot) {
   touch.setEnabled(snapshot.videoState === 'live' && snapshot.apiState === 'live');
   touch.setCanvasSize(snapshot.touchCanvas);
 
-  const message = messageForSnapshot(snapshot);
+  const presentation = connectionPresentation(snapshot);
+  renderChannelStatus(apiStatus, element('api-status-label'), presentation.api);
+  renderChannelStatus(videoStatus, element('video-status-label'), presentation.video);
+
+  const message = presentation.streamMessage;
   streamMessage.hidden = !message;
   if (message) {
+    streamMessage.dataset.state = message.state;
     element('stream-message-title').textContent = message.title;
     element('stream-message-copy').textContent = message.copy;
   }
 
-  if (!snapshot.wanted) {
-    status.dataset.state = 'idle';
-    statusLabel.textContent = 'Ready';
-  } else if (snapshot.connected) {
-    status.dataset.state = 'connected';
-    statusLabel.textContent = 'Connected';
-  } else if (snapshot.videoState === 'live' && snapshot.apiState === 'error') {
-    status.dataset.state = 'error';
-    statusLabel.textContent = 'Video only';
-  } else if (snapshot.videoState === 'error') {
-    status.dataset.state = 'error';
-    statusLabel.textContent = 'Retrying';
-  } else {
-    status.dataset.state = 'connecting';
-    statusLabel.textContent = 'Connecting';
+  apiWarning.hidden = !presentation.apiWarning;
+  if (presentation.apiWarning) {
+    element('api-warning-title').textContent = presentation.apiWarning.title;
+    element('api-warning-copy').textContent = presentation.apiWarning.copy;
   }
 
   if (snapshot.apiError?.code === 'password') {
