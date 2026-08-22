@@ -228,6 +228,19 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
 站点之前，将其发布文件和许可证与 `public/vendor/` 中的副本逐字节比较。
 构建不会下载或运行任何来自 npm 包的可执行二进制文件。
 
+## 界面与字体资源
+
+界面借鉴了采用 MIT 许可证的开源
+[`untitleduico/react`](https://github.com/untitleduico/react) 设计系统，包括其中性
+配色、紧凑组件尺寸、焦点状态及克制的阴影。项目仍然使用纯静态 HTML、CSS 和
+JavaScript；React、Tailwind CSS 与 React Aria 都不是运行时或构建依赖。
+
+界面首选 IBM Plex Sans。站点固定使用 IBM
+[`@ibm/plex-sans@1.1.0`](https://github.com/IBM/plex/releases/tag/%40ibm%2Fplex-sans%401.1.0)
+发布版中的四个小型 Latin-1 与符号子集（Regular 和 Medium），并从同一静态来源
+提供。CSS 会优先检查设备中已安装的 IBM Plex Sans；本地存在时不会下载字体文件。
+中文及其他文字使用本地系统后备字体，页面不会访问字体 CDN 或实时第三方资源。
+
 ## 图标来源
 
 站点图标及连接配置的默认图标，是来自固定版本 `b9c8afb` 的未经修改的 spice2x
@@ -264,6 +277,7 @@ README 位于
 
 协议和客户端行为基于 spice2x 源码树及采用 BSD 许可证的参考客户端
 [`spice2x/substream`](https://github.com/spice2x/substream)。站点标识使用 spice2x
-官方图标，可选游戏图标来自 `bicarus-dev/bemani_fan_site_icons`。许可证、固定
-版本以及 BEMANI 图像的注意事项详见
+官方图标，可选游戏图标来自 `bicarus-dev/bemani_fan_site_icons`；界面样式借鉴
+开源 Untitled UI React，并使用 IBM Plex Sans。许可证、固定版本以及 BEMANI
+图像的注意事项详见
 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)。

@@ -47,6 +47,28 @@ The deployable site includes `jmuxer@2.1.1` from
 licensed under the MIT License, Copyright (c) 2018 Samir Das. The complete
 license ships with the browser asset as `public/vendor/jmuxer.LICENSE.txt`.
 
+## Untitled UI React
+
+The visual tokens and component treatment are adapted for the existing static
+HTML/CSS application from the open-source
+[`untitleduico/react`](https://github.com/untitleduico/react) design system,
+revision `548c28ad9c9449bcc20751c84c542d5739f1e17e`. No Untitled UI PRO
+assets or examples are included. The referenced source is licensed under the
+MIT License, Copyright (c) 2025 Untitled UI. The complete license and source
+record ship in `public/vendor/untitled-ui/`.
+
+## IBM Plex Sans
+
+The site self-hosts the unmodified Latin-1 and Pi WOFF2 subsets for IBM Plex
+Sans Regular and Medium from
+[`IBM/plex`](https://github.com/IBM/plex), release tag
+`@ibm/plex-sans@1.1.0`, peeled commit
+`1da12f02587b630c07e92692d21492d722f53614`. CSS checks for a locally
+installed copy before requesting these assets. IBM Plex Sans is licensed under
+the SIL Open Font License 1.1, Copyright © 2017 IBM Corp., with Reserved Font
+Name "Plex". The complete license, hashes, and source record ship in
+`public/vendor/ibm-plex-sans/`.
+
 ## spice2x icon
 
 The site icon and default connection-profile icon are copied without

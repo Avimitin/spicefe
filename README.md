@@ -256,6 +256,22 @@ derivation, and byte-compares its distribution and license with the copies in
 `public/vendor/` before producing the site. No executable npm binary is
 downloaded or run.
 
+## Interface and font assets
+
+The interface adapts the neutral palette, compact component geometry, focus
+states, and restrained shadows of the MIT-licensed open-source
+[`untitleduico/react`](https://github.com/untitleduico/react) design system.
+It remains plain static HTML, CSS, and JavaScript; React, Tailwind CSS, and
+React Aria are not runtime or build dependencies.
+
+IBM Plex Sans is the primary interface font. Four small Latin-1 and symbol
+subsets (Regular and Medium) are pinned to IBM's
+[`@ibm/plex-sans@1.1.0`](https://github.com/IBM/plex/releases/tag/%40ibm%2Fplex-sans%401.1.0)
+release and served from the same static origin. CSS tries an installed IBM Plex
+Sans first, so the font files are not downloaded when the device already has
+them. Chinese and other scripts use local system fallbacks, and no font CDN or
+live third-party request is used.
+
 ## Artwork provenance
 
 The favicon and default profile artwork are the unmodified official spice2x
@@ -298,6 +314,8 @@ on page load.
 Protocol and client behavior were derived from the spice2x source tree and the
 BSD-licensed [`spice2x/substream`](https://github.com/spice2x/substream)
 reference client. The site identity uses the official spice2x icon, and the
-optional game artwork comes from `bicarus-dev/bemani_fan_site_icons`. See
+optional game artwork comes from `bicarus-dev/bemani_fan_site_icons`. The UI
+treatment is adapted from open-source Untitled UI React and uses IBM Plex Sans.
+See
 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for licenses, revisions, and
 the BEMANI artwork caveat.

@@ -23,6 +23,7 @@ const store = new ProfileStore(undefined, {
   defaultProfileName: t('settings.profilePlaceholder'),
 });
 
+const app = element('app');
 const stage = element('stage');
 const canvas = element('h264-view');
 const video = element('mse-view');
@@ -570,6 +571,7 @@ function renderMainView(snapshot) {
   }
   const previousView = renderedMainView;
   renderedMainView = view;
+  app.dataset.mainView = view;
   stage.dataset.mainView = view;
   emptyState.hidden = view !== 'welcome';
   serverLibrary.hidden = view !== 'servers';

@@ -38,6 +38,27 @@
       packages = forAllSystems (system:
         let
           pkgs = import nixpkgs { inherit system; };
+          ibmPlexBase = "https://raw.githubusercontent.com/IBM/plex/1da12f02587b630c07e92692d21492d722f53614/packages/plex-sans";
+          ibmPlexRegularLatin1 = pkgs.fetchurl {
+            url = "${ibmPlexBase}/fonts/split/woff2/IBMPlexSans-Regular-Latin1.woff2";
+            hash = "sha256-ta1705+ZYUSRXwrZhJqQGDsn2MKK2X7ZivWxvrxR9rE=";
+          };
+          ibmPlexRegularPi = pkgs.fetchurl {
+            url = "${ibmPlexBase}/fonts/split/woff2/IBMPlexSans-Regular-Pi.woff2";
+            hash = "sha256-FIcFmCmhgPl1Yn5HOsyB/yLCwPrx2gmzFMJ+60G38uQ=";
+          };
+          ibmPlexMediumLatin1 = pkgs.fetchurl {
+            url = "${ibmPlexBase}/fonts/split/woff2/IBMPlexSans-Medium-Latin1.woff2";
+            hash = "sha256-tWEK8E0NS1oUpiHZbZdLmT6UWgZdsaiGGRj2nvkyGTQ=";
+          };
+          ibmPlexMediumPi = pkgs.fetchurl {
+            url = "${ibmPlexBase}/fonts/split/woff2/IBMPlexSans-Medium-Pi.woff2";
+            hash = "sha256-vwXxDJdzU8+1pcEeiXOt93wrk6R5jaOqDdi6UIjhJRU=";
+          };
+          ibmPlexLicense = pkgs.fetchurl {
+            url = "${ibmPlexBase}/LICENSE.txt";
+            hash = "sha256-fmsoGO29j2oBroBkHMjxalEIDQj7TlMr46C290rbB9o=";
+          };
         in
         rec {
           default = pkgs.buildNpmPackage {
@@ -54,6 +75,13 @@
               cmp public/vendor/bemani-fan-site-icons/UPSTREAM_README.md ${bemaniIcons}/README.md
               cmp public/assets/spice2x.ico ${spice2xSource}/src/spice2x/build/icon.ico
               cmp public/vendor/spice2x/LICENSE.GPL-3.0.txt ${spice2xSource}/LICENSE
+              cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Regular-Latin1.woff2 ${ibmPlexRegularLatin1}
+              cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Regular-Pi.woff2 ${ibmPlexRegularPi}
+              cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Medium-Latin1.woff2 ${ibmPlexMediumLatin1}
+              cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Medium-Pi.woff2 ${ibmPlexMediumPi}
+              cmp \
+                <(tr -s '[:space:]' '\n' < public/vendor/ibm-plex-sans/LICENSE.OFL-1.1.txt) \
+                <(tr -s '[:space:]' '\n' < ${ibmPlexLicense})
               cmp LICENSE public/LICENSE.txt
               cmp THIRD_PARTY_NOTICES.md public/THIRD_PARTY_NOTICES.md
               mkdir -p "$out"
