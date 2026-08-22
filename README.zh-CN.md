@@ -26,6 +26,7 @@
 - 支持鼠标、单点触控和多点触控输入
 - 支持适应（Fit）、填充（Fill）和拉伸（Stretch）显示模式，并正确映射触控坐标
 - 支持选择 spice2x 画面缩放场景（关闭及场景 1–4）
+- 视频内的调整栏可以关闭，并可从顶部栏重新打开
 - 在 `localStorage` 中保存多个具名连接配置，并可为每个配置选择显示在 PC 名称
   旁、按游戏分类且支持副屏的版本图标
 - 明确的连接、断开和切换行为；刷新页面后绝不会自动重连
@@ -45,13 +46,17 @@
 | 触控、画面缩放及游戏信息 | `ws://PC:1338` | 可选 spice2x 密码；使用旧式 RC4 |
 | H.264 或 MJPEG 视频 | `http://PC:1339` | 无 |
 
-CDN 不会代理上述任何连接。可用时，浏览器通过 WebCodecs 直接解码 H.264；
-否则，固定版本的纯 JavaScript jMuxer 会在客户端将 Annex-B 重新封装为供 MSE
-播放的分片 MP4，不会对视频进行转码。
+CDN 不会代理上述任何连接。可用时，浏览器通过 WebCodecs 直接解码 H.264，并在
+每次屏幕刷新时只绘制解码器批量输出的最新一帧。否则，固定版本的纯 JavaScript
+jMuxer 会在客户端将 Annex-B 重新封装为供 MSE 播放的分片 MP4，不会对视频进行
+转码。
 
 ## 游戏 PC 设置
 
-使用包含 `-apistream` 的新版 spice2x，并以类似下方的参数启动游戏：
+请安装[最新版 spice2x](https://github.com/spice2x/spice2x.github.io/releases)。
+最低支持版本为
+[`spice2x-26-08-20`](https://github.com/spice2x/spice2x.github.io/releases/tag/26-08-20)；
+该版本加入了所需的副屏视频流及 CORS 支持。然后以类似下方的参数启动游戏：
 
 ```text
 spice64.exe ... -api 1337 -apipass choose-a-lan-password -apistream

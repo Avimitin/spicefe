@@ -47,6 +47,7 @@ export class SpiceSession {
     this.streamRetryTimer = null;
     this.apiRetryTimer = null;
     this.stallTimer = null;
+    this.stallDeadline = 0;
     this.pingTimer = null;
     this.mjpegActive = false;
     this.fellBackToMjpeg = false;
@@ -108,11 +109,10 @@ export class SpiceSession {
     this.wanted = false;
     clearTimeout(this.streamRetryTimer);
     clearTimeout(this.apiRetryTimer);
-    clearTimeout(this.stallTimer);
+    this.stopStallWatchdog();
     clearInterval(this.pingTimer);
     this.streamRetryTimer = null;
     this.apiRetryTimer = null;
-    this.stallTimer = null;
     this.pingTimer = null;
 
     this.stopH264();
@@ -147,7 +147,7 @@ export class SpiceSession {
       return;
     }
     clearTimeout(this.streamRetryTimer);
-    clearTimeout(this.stallTimer);
+    this.stopStallWatchdog();
     this.streamRetryTimer = null;
     this.videoState = 'connecting';
     this.videoError = null;
@@ -216,10 +216,33 @@ export class SpiceSession {
   }
 
   armStall() {
+    this.stallDeadline = Date.now() + SpiceSession.STREAM_STALL_MS;
+    if (this.stallTimer === null) {
+      this.stallTimer = setTimeout(
+        () => this.checkStall(),
+        SpiceSession.STREAM_STALL_MS,
+      );
+    }
+  }
+
+  checkStall() {
+    this.stallTimer = null;
+    if (!this.wanted || this.stallDeadline === 0) {
+      return;
+    }
+    const remaining = this.stallDeadline - Date.now();
+    if (remaining > 0) {
+      this.stallTimer = setTimeout(() => this.checkStall(), remaining);
+      return;
+    }
+    this.stallDeadline = 0;
+    this.videoFailed(new Error('No video frames arrived from that screen'));
+  }
+
+  stopStallWatchdog() {
     clearTimeout(this.stallTimer);
-    this.stallTimer = setTimeout(() => {
-      this.videoFailed(new Error('No video frames arrived from that screen'));
-    }, SpiceSession.STREAM_STALL_MS);
+    this.stallTimer = null;
+    this.stallDeadline = 0;
   }
 
   armStallFor(backend) {
@@ -253,8 +276,7 @@ export class SpiceSession {
     if (!this.wanted || !this.mjpegActive || this.image.src.startsWith('data:')) {
       return;
     }
-    clearTimeout(this.stallTimer);
-    this.stallTimer = null;
+    this.stopStallWatchdog();
     this.videoState = 'live';
     this.videoError = null;
     this.streamRetryDelay = 1000;
@@ -278,8 +300,7 @@ export class SpiceSession {
     if (!this.wanted) {
       return;
     }
-    clearTimeout(this.stallTimer);
-    this.stallTimer = null;
+    this.stopStallWatchdog();
 
     if (this.videoFormat === 'h264'
       && this.profile.format === 'auto'
@@ -329,6 +350,7 @@ export class SpiceSession {
     }
     this.stopH264();
     this.stopMjpeg();
+    this.stopStallWatchdog();
     clearTimeout(this.streamRetryTimer);
     this.videoState = 'connecting';
     this.emitState();

@@ -26,6 +26,12 @@ export class H264Player {
     this.fetchImpl = options.fetchImpl || globalThis.fetch.bind(globalThis);
     this.VideoDecoderImpl = options.VideoDecoderImpl || globalThis.VideoDecoder;
     this.EncodedVideoChunkImpl = options.EncodedVideoChunkImpl || globalThis.EncodedVideoChunk;
+    this.requestFrame = options.requestAnimationFrameImpl
+      || globalThis.requestAnimationFrame?.bind(globalThis)
+      || ((callback) => setTimeout(callback, 0));
+    this.cancelFrame = options.cancelAnimationFrameImpl
+      || globalThis.cancelAnimationFrame?.bind(globalThis)
+      || clearTimeout;
 
     this.controller = null;
     this.decoder = null;
@@ -34,7 +40,10 @@ export class H264Player {
     this.frameDuration = 1_000_000 / 30;
     this.decodeIndex = 0;
     this.decodedFrames = 0;
+    this.presentedFrames = 0;
     this.droppedFrames = 0;
+    this.pendingFrame = null;
+    this.paintRequest = null;
     this.resyncing = false;
     this.lastMetricAt = 0;
     this.lastMetricFrames = 0;
@@ -115,11 +124,20 @@ export class H264Player {
       }
       this.decoder = null;
     }
+    if (this.paintRequest !== null) {
+      this.cancelFrame(this.paintRequest);
+      this.paintRequest = null;
+    }
+    if (this.pendingFrame) {
+      this.pendingFrame.close();
+      this.pendingFrame = null;
+    }
 
     this.parser.reset();
     this.accessUnit = [];
     this.decodeIndex = 0;
     this.decodedFrames = 0;
+    this.presentedFrames = 0;
     this.droppedFrames = 0;
     this.resyncing = false;
     this.fps = 0;
@@ -216,28 +234,68 @@ export class H264Player {
   }
 
   draw(frame) {
+    if (!this.controller) {
+      frame.close();
+      return;
+    }
+
+    this.decodedFrames += 1;
+    if (this.pendingFrame) {
+      this.pendingFrame.close();
+      this.droppedFrames += 1;
+    }
+    this.pendingFrame = frame;
+    if (this.paintRequest === null) {
+      // Decoder output can arrive in bursts. Painting only the freshest frame
+      // once per display refresh prevents stale canvas work from building up.
+      this.paintRequest = this.requestFrame(() => this.paint());
+    }
+  }
+
+  paint() {
+    this.paintRequest = null;
+    const frame = this.pendingFrame;
+    this.pendingFrame = null;
+    if (!frame) {
+      return;
+    }
+    if (!this.controller) {
+      frame.close();
+      return;
+    }
+
     const width = frame.displayWidth || frame.codedWidth;
     const height = frame.displayHeight || frame.codedHeight;
+    let drawError = null;
     try {
       if (this.canvas.width !== width || this.canvas.height !== height) {
         this.canvas.width = width;
         this.canvas.height = height;
       }
       this.context.drawImage(frame, 0, 0, width, height);
+    } catch (error) {
+      drawError = error;
     } finally {
       frame.close();
     }
+    if (drawError) {
+      this.fail(new H264PlayerError(drawError?.message || 'Could not draw the H.264 frame', {
+        cause: drawError,
+        code: 'decoder',
+      }));
+      return;
+    }
 
-    this.decodedFrames += 1;
+    this.presentedFrames += 1;
     const now = performance.now();
     if (this.lastMetricAt === 0) {
       this.lastMetricAt = now;
-      this.lastMetricFrames = this.decodedFrames;
+      this.lastMetricFrames = this.presentedFrames;
     } else if (now - this.lastMetricAt >= 500) {
-      this.fps = (this.decodedFrames - this.lastMetricFrames) * 1000
+      this.fps = (this.presentedFrames - this.lastMetricFrames) * 1000
         / (now - this.lastMetricAt);
       this.lastMetricAt = now;
-      this.lastMetricFrames = this.decodedFrames;
+      this.lastMetricFrames = this.presentedFrames;
     }
 
     this.onframe({

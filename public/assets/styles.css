@@ -62,7 +62,8 @@ button {
 
 button:focus-visible,
 input:focus-visible,
-select:focus-visible {
+select:focus-visible,
+.version-link:focus-visible {
   outline: 2px solid var(--accent-bright);
   outline-offset: 2px;
 }
@@ -299,6 +300,7 @@ code {
 .quiet-button,
 .inline-button,
 .hud-button,
+.hud-close-button,
 .game-icon-button,
 .game-icon-option,
 .text-button {
@@ -642,10 +644,8 @@ code {
   right: 12px;
   bottom: 12px;
   left: 12px;
-  background: rgba(11, 13, 18, 0.82);
+  background: rgba(11, 13, 18, 0.95);
   box-shadow: 0 8px 36px rgba(0, 0, 0, 0.24);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   transition: opacity 180ms ease;
 }
 
@@ -697,6 +697,32 @@ code {
 .hud-button {
   min-width: 52px;
   padding: 0 10px;
+}
+
+.hud-close-button {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-raised);
+  color: var(--muted);
+}
+
+.hud-close-button:hover {
+  border-color: #474f60;
+  color: var(--text);
+}
+
+.hud-close-button svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
 }
 
 .settings-dialog,
@@ -917,6 +943,54 @@ fieldset legend {
 
 .stream-options .field small {
   display: none;
+}
+
+.version-note {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 18px 24px 0;
+  padding: 13px 15px;
+  border: 1px solid rgba(245, 185, 66, 0.28);
+  border-radius: 12px;
+  background: rgba(245, 185, 66, 0.07);
+}
+
+.version-note > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.version-note strong {
+  font-size: 12px;
+}
+
+.version-note p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.version-link {
+  display: inline-flex;
+  min-height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border: 1px solid rgba(245, 185, 66, 0.34);
+  border-radius: 9px;
+  background: rgba(245, 185, 66, 0.1);
+  color: #ffd884;
+  font-size: 11px;
+  font-weight: 720;
+  text-decoration: none;
+}
+
+.version-link:hover {
+  border-color: rgba(245, 185, 66, 0.65);
+  color: #ffe7ad;
 }
 
 .transport-note {
@@ -1255,6 +1329,7 @@ fieldset legend {
   }
 
   fieldset,
+  .version-note,
   .transport-note {
     margin-right: 18px;
     margin-left: 18px;
@@ -1270,6 +1345,12 @@ fieldset legend {
 
   .hud-control select {
     width: 82px;
+  }
+
+  .version-note {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
   }
 }
 
@@ -1289,6 +1370,10 @@ fieldset legend {
   #connect-button {
     padding-right: 9px;
     padding-left: 9px;
+  }
+
+  .stage-hud .hud-metric {
+    display: none;
   }
 }
 

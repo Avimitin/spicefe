@@ -29,6 +29,7 @@ the LAN.
 - mouse, single-touch, and multi-touch input
 - Fit, Fill, and Stretch display modes with correct touch coordinate mapping
 - spice2x image-resize scene selection (Off and scenes 1–4)
+- a dismissible in-stream adjustment bar, restorable from the top bar
 - multiple named connection profiles in `localStorage`, each with a selectable
   game icon from categorized, subscreen-capable releases shown beside the PC
   name
@@ -52,14 +53,18 @@ The API port entered in the UI is the spice2x base port:
 | H.264 or MJPEG video | `http://PC:1339` | None |
 
 The CDN never proxies either connection. H.264 is decoded directly with
-WebCodecs when available. Otherwise, the pinned pure-JavaScript jMuxer package
-repackages Annex-B into fragmented MP4 in the client for MSE; it does not
-transcode the video.
+WebCodecs when available, with bursty decoder output coalesced to the newest
+frame for each display refresh. Otherwise, the pinned pure-JavaScript jMuxer
+package repackages Annex-B into fragmented MP4 in the client for MSE; it does
+not transcode the video.
 
 ## Gaming PC setup
 
-Use a current spice2x build that includes `-apistream`, then launch the game
-with options equivalent to:
+Install the [latest spice2x release](https://github.com/spice2x/spice2x.github.io/releases).
+The minimum supported build is
+[`spice2x-26-08-20`](https://github.com/spice2x/spice2x.github.io/releases/tag/26-08-20),
+which introduced the required subscreen stream and CORS support. Then launch
+the game with options equivalent to:
 
 ```text
 spice64.exe ... -api 1337 -apipass choose-a-lan-password -apistream

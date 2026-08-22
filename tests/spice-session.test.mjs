@@ -71,3 +71,22 @@ test('disconnect removes the final frame from every video backend', () => {
   assert.equal(session.snapshot.wanted, false);
   assert.equal(session.snapshot.videoState, 'idle');
 });
+
+test('video heartbeats extend one stall watchdog without replacing its timer', () => {
+  const session = new SpiceSession(new FakeCanvas(), new FakeVideo(), new FakeImage());
+  session.wanted = true;
+  session.videoFormat = 'h264';
+  session.videoBackend = 'webcodecs';
+  session.videoState = 'connecting';
+
+  session.videoFrame({ decodedFrames: 1 }, 'webcodecs');
+  const firstTimer = session.stallTimer;
+  const firstDeadline = session.stallDeadline;
+  session.videoFrame({ decodedFrames: 2 }, 'webcodecs');
+
+  assert.ok(firstTimer);
+  assert.equal(session.stallTimer, firstTimer);
+  assert.ok(session.stallDeadline >= firstDeadline);
+
+  session.disconnect();
+});

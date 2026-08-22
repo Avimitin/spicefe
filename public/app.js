@@ -34,6 +34,8 @@ const connectButton = element('connect-button');
 const emptyState = element('empty-state');
 const streamMessage = element('stream-message');
 const stageHud = element('stage-hud');
+const hudShowButton = element('hud-show-button');
+const hudCloseButton = element('hud-close-button');
 const apiStatus = element('api-status');
 const videoStatus = element('video-status');
 const apiWarning = element('api-warning');
@@ -47,6 +49,7 @@ let toastTimer = null;
 let currentMetric = null;
 let lastMetricPaint = 0;
 let bannerDismissed = false;
+let hudDismissed = false;
 
 function translationParameters(node) {
   const parameters = {};
@@ -335,7 +338,9 @@ function renderChannelStatus(node, label, presentation) {
 function renderSnapshot(snapshot, announce = true) {
   renderConnectionButton();
   emptyState.hidden = snapshot.wanted;
-  stageHud.hidden = snapshot.videoState !== 'live';
+  const hudAvailable = snapshot.videoState === 'live';
+  stageHud.hidden = !hudAvailable || hudDismissed;
+  hudShowButton.hidden = !hudAvailable || !hudDismissed;
   resizeScene.disabled = snapshot.apiState !== 'live';
   touch.setEnabled(snapshot.videoState === 'live' && snapshot.apiState === 'live');
   touch.setCanvasSize(snapshot.touchCanvas);
@@ -462,6 +467,18 @@ element('settings-button').addEventListener('click', openSettings);
 element('empty-configure').addEventListener('click', openSettings);
 element('close-settings').addEventListener('click', closeSettings);
 connectButton.addEventListener('click', connectSelected);
+
+hudCloseButton.addEventListener('click', () => {
+  hudDismissed = true;
+  renderSnapshot(session.snapshot, false);
+  hudShowButton.focus();
+});
+
+hudShowButton.addEventListener('click', () => {
+  hudDismissed = false;
+  renderSnapshot(session.snapshot, false);
+  hudCloseButton.focus();
+});
 
 quickProfile.addEventListener('change', () => selectProfile(quickProfile.value));
 profilePicker.addEventListener('change', () => selectProfile(profilePicker.value));
