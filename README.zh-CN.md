@@ -108,9 +108,20 @@ nix build
 运行。它会执行全部 flake 检查、构建站点、确认仓库中的 `public/` 与 Nix 构建
 结果一致，并将结果作为保留七天的 `spicefe-public` 构建产物上传。
 
-该工作流只有仓库只读权限，绝不会提交生成文件。`public/` 本身已经是静态站点
-源目录；让 CI 机器人把同一批文件复制回来，只会多生成一次提交及一次部署。
-经过审查的改动进入 `main` 后，Cloudflare Pages 应继续直接发布 `public/`。
+成功推送到 `main` 后，工作流还会把同一份解除符号链接后的输出上传为 GitHub
+Pages 专用构建产物，并由独立任务进行部署。Pull Request 保持只读权限；只有
+部署任务会取得 `pages: write` 和 `id-token: write`。工作流绝不会提交生成文件，
+因此不需要维护由 CI 生成的 `gh-pages` 分支。
+
+要启用部署，请打开 GitHub 仓库的 **Settings → Pages**，将 **Source** 设为
+**GitHub Actions**。请配置自定义域名，并保持 **Enforce HTTPS** 关闭，以便兼容
+模式仍可使用该域名的 HTTP 地址；默认的 `github.io` 地址无法提供这样的 HTTP
+入口。如果域名使用 Cloudflare DNS，请将记录保持为 **DNS only（灰云）**，且
+不要在 GitHub Pages 前方的其他服务中启用 HSTS 或 HTTPS 重定向。
+
+GitHub Pages 不处理 `_headers`，因此 Cloudflare Pages 使用的自定义响应头不会
+应用在这个部署目标上。这不会改变直连局域网服务的设计，但与支持这些响应头的
+托管平台相比，浏览器策略层面的加固会少一些。
 
 GitHub Actions 与 NixOS 官方安装器均固定到完整 commit ID。安装器可执行文件
 还固定为 Nix `2.35.1`，并且会在运行前用仓库中记录的 SHA-256 校验。
@@ -128,6 +139,8 @@ GitHub Actions 与 NixOS 官方安装器均固定到完整 commit ID。安装器
 在客户端域名上启用 HSTS。不建议在兼容模式中使用 `pages.dev` 域名。
 
 上述部署设置可参考
+[GitHub Pages 自定义工作流](https://docs.github.com/zh/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)、
+[GitHub Pages HTTPS 配置](https://docs.github.com/zh/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https)、
 [EdgeOne 直接上传](https://pages.edgeone.ai/document/direct-upload)、
 [EdgeOne HTTPS 配置](https://pages.edgeone.ai/document/https-configuration-overview)、
 [Cloudflare Pages 响应头](https://developers.cloudflare.com/pages/configuration/headers/)

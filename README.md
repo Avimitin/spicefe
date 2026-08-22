@@ -117,11 +117,23 @@ pushes to `main`. It runs every flake check, builds the site, confirms that the
 committed `public/` directory matches the Nix result, and uploads that result
 as the seven-day `spicefe-public` artifact.
 
-The workflow has read-only repository permission and never commits generated
-files. `public/` is already the static-site source, so having a CI bot copy the
-same files back into it would only create an unnecessary second commit and a
-second deployment. Cloudflare Pages should continue to publish `public/`
-directly after a reviewed change reaches `main`.
+After a successful push to `main`, the workflow also uploads the same
+dereferenced output as a GitHub Pages artifact and deploys it from a separate
+job. Pull requests keep read-only permissions; only the deployment job receives
+`pages: write` and `id-token: write`. The workflow never commits generated
+files, so no generated `gh-pages` branch is needed.
+
+To enable deployment, open **Settings → Pages** in the GitHub repository and
+set **Source** to **GitHub Actions**. Configure a custom domain and leave
+**Enforce HTTPS** disabled so its HTTP URL remains available for compatibility
+mode. The default `github.io` address cannot provide that HTTP endpoint. If the
+domain uses Cloudflare DNS, keep the record **DNS only** and do not enable HSTS
+or an HTTPS redirect elsewhere in front of GitHub Pages.
+
+GitHub Pages does not process `_headers`, so the custom response headers used
+by Cloudflare Pages are not applied on this deployment target. This does not
+change the direct-LAN connection design, but it provides less browser-policy
+hardening than hosts that support those headers.
 
 GitHub Actions and the official NixOS installer are pinned to complete commit
 IDs. The installer executable is additionally pinned to Nix `2.35.1` and
@@ -141,6 +153,8 @@ disable **Always Use HTTPS** for that zone; do not enable HSTS on this client
 hostname. The `pages.dev` hostname is not recommended for compatibility mode.
 
 The deployment details referenced above are documented by
+[GitHub Pages custom workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages),
+[GitHub Pages HTTPS configuration](https://docs.github.com/en/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https),
 [EdgeOne direct upload](https://pages.edgeone.ai/document/direct-upload),
 [EdgeOne HTTPS configuration](https://pages.edgeone.ai/document/https-configuration-overview),
 [Cloudflare Pages headers](https://developers.cloudflare.com/pages/configuration/headers/),
