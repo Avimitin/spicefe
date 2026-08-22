@@ -9,6 +9,8 @@
 
 [简体中文](./README.zh-CN.md)
 
+[![CI](https://github.com/Avimitin/spicefe/actions/workflows/ci.yml/badge.svg)](https://github.com/Avimitin/spicefe/actions/workflows/ci.yml)
+
 `spicefe` is a globally hostable, static LAN client for the spice2x subscreen
 stream. Open the page on a phone, tablet, or another modern browser, select a
 saved gaming PC, and the browser connects directly to spice2x for video, touch,
@@ -104,6 +106,23 @@ nix build
 
 The deployable directory is `result/`. The committed `public/` directory is
 also already complete and can be directly uploaded without a build step.
+
+### GitHub Actions
+
+The [`CI` workflow](./.github/workflows/ci.yml) runs for pull requests and
+pushes to `main`. It runs every flake check, builds the site, confirms that the
+committed `public/` directory matches the Nix result, and uploads that result
+as the seven-day `spicefe-public` artifact.
+
+The workflow has read-only repository permission and never commits generated
+files. `public/` is already the static-site source, so having a CI bot copy the
+same files back into it would only create an unnecessary second commit and a
+second deployment. Cloudflare Pages should continue to publish `public/`
+directly after a reviewed change reaches `main`.
+
+GitHub Actions and the official NixOS installer are pinned to complete commit
+IDs. The installer executable is additionally pinned to Nix `2.35.1` and
+verified against a repository-recorded SHA-256 before it runs.
 
 ### EdgeOne Pages
 

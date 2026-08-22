@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build public site
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Download pinned Nix installer
+        shell: bash
+        env:
+          NIX_INSTALLER_SHA256: 3b49a0b91820accb76e3d9ff7ed64fc430121b9fafb3869b0d549721fbeb4c85
+          NIX_INSTALLER_URL: https://github.com/NixOS/nix-installer/releases/download/2.35.1/nix-installer-x86_64-linux
+        run: |
+          set -euo pipefail
+          installer_dir="${RUNNER_TEMP}/nix-installer"
+          installer_path="${installer_dir}/nix-installer-x86_64-linux"
+          mkdir -p "${installer_dir}"
+          curl --fail --location --proto '=https' --tlsv1.2 \
+            --output "${installer_path}" "${NIX_INSTALLER_URL}"
+          printf '%s  %s\n' "${NIX_INSTALLER_SHA256}" "${installer_path}" \
+            | sha256sum --check --strict
+
+      - name: Install Nix
+        uses: NixOS/nix-installer-action@62c1943b776c509394b550f3f983adc14e9212d6 # v1.0.0
+        with:
+          dogfood: true
+          dogfood-path: ${{ runner.temp }}/nix-installer
+          extra-conf: |
+            experimental-features = nix-command flakes
+
+      - name: Run checks
+        run: nix flake check --print-build-logs
+
+      - name: Build public site
+        run: nix build --print-build-logs
+
+      - name: Confirm public directory is current
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f result/index.html
+          diff --brief --recursive public result
+
+      - name: Prepare public artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir ci-public
+          cp -RL result/. ci-public/
+
+      - name: Upload public artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: spicefe-public
+          path: ci-public/
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 9
+          include-hidden-files: true

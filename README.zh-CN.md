@@ -9,6 +9,8 @@
 
 [English](./README.md)
 
+[![CI](https://github.com/Avimitin/spicefe/actions/workflows/ci.yml/badge.svg)](https://github.com/Avimitin/spicefe/actions/workflows/ci.yml)
+
 `spicefe` 是一个可在全球静态托管、用于 spice2x 副屏视频流的局域网客户端。
 在手机、平板或其他现代浏览器中打开页面，选择已保存的游戏 PC，浏览器就会
 直接连接 spice2x，提供视频、触控及画面缩放控制。
@@ -97,6 +99,19 @@ nix build
 
 可部署目录为 `result/`。仓库中的 `public/` 目录也已经包含完整产物，无需构建
 即可直接上传。
+
+### GitHub Actions
+
+[`CI` 工作流](./.github/workflows/ci.yml)会在 Pull Request 及向 `main` 推送时
+运行。它会执行全部 flake 检查、构建站点、确认仓库中的 `public/` 与 Nix 构建
+结果一致，并将结果作为保留七天的 `spicefe-public` 构建产物上传。
+
+该工作流只有仓库只读权限，绝不会提交生成文件。`public/` 本身已经是静态站点
+源目录；让 CI 机器人把同一批文件复制回来，只会多生成一次提交及一次部署。
+经过审查的改动进入 `main` 后，Cloudflare Pages 应继续直接发布 `public/`。
+
+GitHub Actions 与 NixOS 官方安装器均固定到完整 commit ID。安装器可执行文件
+还固定为 Nix `2.35.1`，并且会在运行前用仓库中记录的 SHA-256 校验。
 
 ### EdgeOne Pages
 

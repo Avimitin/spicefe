@@ -74,12 +74,18 @@
           package = self.packages.${system}.default;
           static = pkgs.runCommand "spicefe-checks"
             {
-              nativeBuildInputs = [ pkgs.nodejs pkgs.python3 ];
+              nativeBuildInputs = [
+                pkgs.actionlint
+                pkgs.nodejs
+                pkgs.python3
+                pkgs.shellcheck
+              ];
             }
             ''
               cp -R ${self} source
               chmod -R u+w source
               cd source
+              actionlint .github/workflows/*.yml
               node --test tests/*.test.mjs
               python tools/check_static.py public
               touch "$out"
@@ -92,7 +98,12 @@
         in
         {
           default = pkgs.mkShellNoCC {
-            packages = [ pkgs.nodejs pkgs.python3 ];
+            packages = [
+              pkgs.actionlint
+              pkgs.nodejs
+              pkgs.python3
+              pkgs.shellcheck
+            ];
           };
         });
 
