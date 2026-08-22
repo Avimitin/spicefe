@@ -25,7 +25,8 @@
 - 支持鼠标、单点触控和多点触控输入
 - 支持适应（Fit）、填充（Fill）和拉伸（Stretch）显示模式，并正确映射触控坐标
 - 支持选择 spice2x 画面缩放场景（关闭及场景 1–4）
-- 在 `localStorage` 中保存多个具名连接配置
+- 在 `localStorage` 中保存多个具名连接配置，并可为每个配置选择显示在 PC 名称
+  旁的游戏图标
 - 明确的连接、断开和切换行为；刷新页面后绝不会自动重连
 - 自适应手机、平板和桌面设备的界面
 
@@ -161,6 +162,20 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
 站点之前，将其发布文件和许可证与 `public/vendor/` 中的副本逐字节比较。
 构建不会下载或运行任何来自 npm 包的可执行二进制文件。
 
+## 图标来源
+
+站点图标及连接配置的默认图标，是来自固定版本 `b9c8afb` 的未经修改的 spice2x
+官方图标；站点中同时提供其 GPLv3 许可证。可搜索的连接图标选择器还包含
+[`bicarus-dev/bemani_fan_site_icons`](https://github.com/bicarus-dev/bemani_fan_site_icons)
+固定版本 `225e494` 中全部 111 个浏览器图像。选择器会分批渲染图标，因此打开
+时不会立即下载整个图标集合。
+
+BEMANI 图标仓库没有提供许可证，并说明这些图像收集自 KONAMI BEMANI 粉丝
+站点。站点运营者必须自行取得重新分发或公开提供这些图像所需的许可。本项目
+不表示与 KONAMI 或各游戏存在关联，也不代表其认可。完整来源记录及上游
+README 位于
+[`public/vendor/bemani-fan-site-icons/`](./public/vendor/bemani-fan-site-icons/)。
+
 ## 安全模型
 
 仅限在可信的家庭局域网中使用：
@@ -180,5 +195,7 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
 ## 致谢
 
 协议和客户端行为基于 spice2x 源码树及采用 BSD 许可证的参考客户端
-[`spice2x/substream`](https://github.com/spice2x/substream)。详情请参阅
+[`spice2x/substream`](https://github.com/spice2x/substream)。站点标识使用 spice2x
+官方图标，可选游戏图标来自 `bicarus-dev/bemani_fan_site_icons`。许可证、固定
+版本以及 BEMANI 图像的注意事项详见
 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)。

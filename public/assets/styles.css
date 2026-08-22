@@ -143,15 +143,40 @@ code {
 }
 
 .quick-profile {
+  position: relative;
   min-width: 0;
   max-width: 280px;
   flex: 1 1 220px;
 }
 
+.profile-icon {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: #f3f4f7;
+  object-fit: cover;
+}
+
+.profile-icon.large {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+}
+
+.quick-profile > .profile-icon {
+  position: absolute;
+  z-index: 1;
+  top: 5px;
+  left: 6px;
+  pointer-events: none;
+}
+
 .quick-profile select {
   width: 100%;
   height: 38px;
-  padding: 0 34px 0 12px;
+  padding: 0 34px 0 43px;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -213,6 +238,9 @@ code {
 .quiet-button,
 .inline-button,
 .hud-button,
+.game-icon-button,
+.game-icon-more,
+.game-icon-option,
 .text-button {
   cursor: pointer;
 }
@@ -565,6 +593,7 @@ code {
 }
 
 .settings-dialog,
+.icon-dialog,
 .confirm-dialog {
   padding: 0;
   border: 1px solid var(--line);
@@ -580,6 +609,7 @@ code {
 }
 
 .settings-dialog::backdrop,
+.icon-dialog::backdrop,
 .confirm-dialog::backdrop {
   background: rgba(3, 4, 7, 0.76);
   backdrop-filter: blur(5px);
@@ -603,6 +633,7 @@ code {
 }
 
 .dialog-header h2,
+.icon-dialog h2,
 .confirm-dialog h2 {
   margin: 0;
   font-size: 24px;
@@ -647,6 +678,23 @@ fieldset legend {
   color: var(--text);
 }
 
+.profile-select {
+  position: relative;
+  display: block;
+}
+
+.profile-select .profile-icon {
+  position: absolute;
+  z-index: 1;
+  top: 7px;
+  left: 7px;
+  pointer-events: none;
+}
+
+.wide-field .profile-select select {
+  padding-left: 47px;
+}
+
 .wide-field select,
 .field select,
 .field input {
@@ -669,6 +717,42 @@ fieldset legend {
   color: var(--faint);
   font-size: 11px;
   line-height: 1.45;
+}
+
+.game-icon-button {
+  display: grid;
+  width: 100%;
+  min-height: 62px;
+  grid-template-columns: 44px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #0d1016;
+  color: var(--text);
+  text-align: left;
+}
+
+.game-icon-button:hover {
+  border-color: #4c5567;
+  background: #11151d;
+}
+
+.game-icon-button > span {
+  overflow: hidden;
+  font-weight: 680;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-icon-button svg {
+  width: 20px;
+  fill: none;
+  stroke: var(--muted);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
 }
 
 .form-grid {
@@ -780,6 +864,108 @@ fieldset legend {
   border-radius: 18px;
 }
 
+.icon-dialog {
+  width: min(760px, calc(100vw - 28px));
+  max-height: min(760px, calc(100dvh - 28px));
+  border-radius: 20px;
+}
+
+.icon-dialog form {
+  display: flex;
+  max-height: min(760px, calc(100dvh - 30px));
+  flex-direction: column;
+}
+
+.icon-search {
+  padding: 0 24px 10px;
+}
+
+.icon-search input {
+  width: 100%;
+  height: 42px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #0d1016;
+  color: var(--text);
+}
+
+.icon-results {
+  margin: 0;
+  padding: 0 24px 10px;
+  color: var(--faint);
+  font-size: 11px;
+}
+
+.icon-grid {
+  display: grid;
+  min-height: 180px;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 8px;
+  padding: 0 24px 24px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.game-icon-option {
+  display: flex;
+  min-width: 0;
+  min-height: 116px;
+  align-items: center;
+  flex-direction: column;
+  gap: 7px;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: #0d1016;
+  color: var(--muted);
+}
+
+.game-icon-option:hover {
+  border-color: #4c5567;
+  color: var(--text);
+}
+
+.game-icon-option[aria-selected="true"] {
+  border-color: var(--accent);
+  background: rgba(255, 77, 53, 0.1);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px rgba(255, 77, 53, 0.3);
+}
+
+.game-icon-option img {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  background: #f3f4f7;
+  object-fit: cover;
+}
+
+.game-icon-option span {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1.25;
+  text-align: center;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.game-icon-more {
+  min-height: 42px;
+  grid-column: 1 / -1;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-raised);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.game-icon-more:hover {
+  border-color: #4c5567;
+}
+
 .confirm-dialog p {
   margin: 10px 0 22px;
   color: var(--muted);
@@ -879,6 +1065,11 @@ fieldset legend {
     border-radius: 0;
   }
 
+  .icon-dialog {
+    width: calc(100vw - 18px);
+    max-height: calc(100dvh - 18px);
+  }
+
   .settings-dialog form {
     height: 100%;
     max-height: none;
@@ -920,6 +1111,18 @@ fieldset legend {
 
   .form-grid {
     grid-template-columns: minmax(0, 1fr) 112px;
+  }
+
+  .icon-grid {
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .icon-search,
+  .icon-results {
+    padding-right: 18px;
+    padding-left: 18px;
   }
 
   .dialog-header,

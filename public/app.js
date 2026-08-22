@@ -1,4 +1,5 @@
 import { compatibilityUrl, isPrivateLanName, likelyNeedsHttpMode } from './lib/endpoints.js';
+import { GAME_ICONS, gameIconById } from './lib/game-icons.js';
 import {
   decodeProfileTransfer,
   newProfile,
@@ -17,10 +18,13 @@ const canvas = element('h264-view');
 const video = element('mse-view');
 const image = element('mjpeg-view');
 const settingsDialog = element('settings-dialog');
+const iconDialog = element('icon-dialog');
 const deleteDialog = element('delete-dialog');
 const form = element('profile-form');
 const quickProfile = element('quick-profile');
 const profilePicker = element('profile-picker');
+const iconGrid = element('game-icon-grid');
+const iconSearch = element('game-icon-search');
 const connectButton = element('connect-button');
 const emptyState = element('empty-state');
 const streamMessage = element('stream-message');
@@ -36,6 +40,9 @@ let toastTimer = null;
 let currentMetric = null;
 let lastMetricPaint = 0;
 let bannerDismissed = false;
+let visibleIconLimit = 30;
+
+const ICON_PAGE_SIZE = 30;
 
 function showToast(message, timeout = 4500) {
   toast.textContent = message;
@@ -71,15 +78,88 @@ function setSelectOptions(select, profiles, selectedId) {
   }));
 }
 
+function setProfileIcon(imageElement, iconId) {
+  const icon = gameIconById(iconId);
+  imageElement.src = icon.src;
+  imageElement.title = icon.label;
+}
+
+function renderSelectedProfileIcons(profile) {
+  setProfileIcon(element('quick-profile-icon'), profile.iconId);
+  setProfileIcon(element('profile-picker-icon'), profile.iconId);
+}
+
+function setFormGameIcon(iconId) {
+  const icon = gameIconById(iconId);
+  element('game-icon-id').value = icon.id;
+  setProfileIcon(element('game-icon-preview'), icon.id);
+  element('game-icon-label').textContent = icon.label;
+}
+
+function renderIconGrid(query = '') {
+  const selectedId = element('game-icon-id').value;
+  const needle = query.trim().toLocaleLowerCase();
+  const matching = GAME_ICONS.filter((icon) => !needle
+    || icon.label.toLocaleLowerCase().includes(needle)
+    || icon.id.toLocaleLowerCase().includes(needle));
+
+  const visible = matching.slice(0, visibleIconLimit);
+  const choices = visible.map((icon) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'game-icon-option';
+    button.dataset.iconId = icon.id;
+    button.setAttribute('role', 'option');
+    button.setAttribute('aria-selected', String(icon.id === selectedId));
+    button.title = icon.label;
+
+    const preview = document.createElement('img');
+    preview.src = icon.src;
+    preview.alt = '';
+    preview.loading = 'lazy';
+    preview.decoding = 'async';
+
+    const label = document.createElement('span');
+    label.textContent = icon.label;
+    button.append(preview, label);
+    button.addEventListener('click', () => {
+      setFormGameIcon(icon.id);
+      iconDialog.close();
+    });
+    return button;
+  });
+
+  if (visible.length < matching.length) {
+    const more = document.createElement('button');
+    more.type = 'button';
+    more.className = 'game-icon-more';
+    more.textContent = `Show ${Math.min(ICON_PAGE_SIZE, matching.length - visible.length)} more`;
+    more.addEventListener('click', () => {
+      visibleIconLimit += ICON_PAGE_SIZE;
+      renderIconGrid(query);
+    });
+    choices.push(more);
+  }
+
+  iconGrid.replaceChildren(...choices);
+
+  const scope = matching.length === GAME_ICONS.length
+    ? `${matching.length} icons total`
+    : `${matching.length} of ${GAME_ICONS.length} icons match`;
+  element('game-icon-results').textContent = `Showing ${visible.length} · ${scope}`;
+}
+
 function renderProfileLists() {
   const profiles = store.list();
   setSelectOptions(quickProfile, profiles, store.selectedId);
   setSelectOptions(profilePicker, profiles, store.selectedId);
+  renderSelectedProfileIcons(store.selected());
   renderConnectionButton();
 }
 
 function fillForm(profile) {
   element('profile-name').value = profile.name;
+  setFormGameIcon(profile.iconId);
   element('host').value = profile.host;
   element('api-port').value = String(profile.apiPort);
   element('password').value = profile.password;
@@ -88,6 +168,7 @@ function fillForm(profile) {
   element('fps').value = String(profile.fps);
   element('quality').value = String(profile.quality);
   element('view-mode').value = profile.viewMode;
+  renderSelectedProfileIcons(profile);
   stage.dataset.viewMode = profile.viewMode;
   touch.setViewMode(profile.viewMode);
 }
@@ -97,6 +178,7 @@ function profileFromForm() {
   return sanitizeProfile({
     id: selected.id,
     name: element('profile-name').value,
+    iconId: element('game-icon-id').value,
     host: element('host').value,
     apiPort: element('api-port').value,
     password: element('password').value,
@@ -379,6 +461,19 @@ element('show-password').addEventListener('click', () => {
   const showing = password.type === 'text';
   password.type = showing ? 'password' : 'text';
   element('show-password').textContent = showing ? 'Show' : 'Hide';
+});
+
+element('game-icon-button').addEventListener('click', () => {
+  iconSearch.value = '';
+  visibleIconLimit = ICON_PAGE_SIZE;
+  renderIconGrid();
+  iconDialog.showModal();
+  iconSearch.focus();
+});
+
+iconSearch.addEventListener('input', () => {
+  visibleIconLimit = ICON_PAGE_SIZE;
+  renderIconGrid(iconSearch.value);
 });
 
 element('view-mode').addEventListener('change', () => {

@@ -6,6 +6,7 @@ import {
   decodeProfileTransfer,
   encodeProfileTransfer,
   ProfileStore,
+  PROFILE_STORAGE_KEY,
   sanitizeProfile,
 } from '../public/lib/profile-store.js';
 
@@ -38,12 +39,14 @@ test('sanitizes profile ranges and drops connection state', () => {
     apiPort: 70000,
     fps: 0,
     quality: 500,
+    iconId: '../../not-an-icon',
     connected: true,
   });
   assert.equal(profile.name, 'PC');
   assert.equal(profile.apiPort, 65533);
   assert.equal(profile.fps, 1);
   assert.equal(profile.quality, 100);
+  assert.equal(profile.iconId, 'spice2x');
   assert.equal('connected' in profile, false);
 });
 
@@ -55,16 +58,35 @@ test('persists several instances and their connection information only', () => {
     name: 'IIDX cabinet',
     host: '192.168.8.10',
     password: 'local-secret',
+    iconId: 'ac_iidx33',
   });
-  const second = firstStore.create({ name: 'SDVX cabinet', host: 'sdvx.local' });
+  const second = firstStore.create({
+    name: 'SDVX cabinet',
+    host: 'sdvx.local',
+    iconId: 'ac_sdvx7',
+  });
   firstStore.select(first.id);
 
   const reloaded = new ProfileStore(storage);
   assert.equal(reloaded.list().length, 2);
   assert.equal(reloaded.selected().id, first.id);
   assert.equal(reloaded.selected().password, 'local-secret');
+  assert.equal(reloaded.selected().iconId, 'ac_iidx33');
   assert.equal(reloaded.get(second.id).host, 'sdvx.local');
+  assert.equal(reloaded.get(second.id).iconId, 'ac_sdvx7');
   assert.equal('connected' in reloaded.selected(), false);
+});
+
+test('adds the spice2x icon when loading a profile saved before icon support', () => {
+  const storage = new MemoryStorage();
+  storage.setItem(PROFILE_STORAGE_KEY, JSON.stringify({
+    version: 1,
+    selectedId: 'legacy',
+    profiles: [{ id: 'legacy', name: 'Legacy PC', host: '192.168.1.20' }],
+  }));
+
+  const store = new ProfileStore(storage);
+  assert.equal(store.selected().iconId, 'spice2x');
 });
 
 test('profile transfer preserves multiple instances, unicode, and passwords across schemes', () => {
@@ -73,8 +95,14 @@ test('profile transfer preserves multiple instances, unicode, and passwords acro
     name: '音游 PC',
     host: '192.168.1.5',
     password: '鍵🔑',
+    iconId: 'ac_iidx33',
   });
-  const second = sanitizeProfile({ id: 'other', name: 'Other PC', host: 'pc.local' });
+  const second = sanitizeProfile({
+    id: 'other',
+    name: 'Other PC',
+    host: 'pc.local',
+    iconId: 'ac_sdvx7',
+  });
   assert.deepEqual(
     decodeProfileTransfer(encodeProfileTransfer([first, second], second.id)),
     { profiles: [first, second], selectedId: second.id },

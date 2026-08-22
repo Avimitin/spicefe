@@ -1,5 +1,22 @@
 {
   "nodes": {
+    "bemaniIcons": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1768279073,
+        "narHash": "sha256-hQ7gXYTRbo/9k433WV79x5oqM33wK8frCNY1J4ezwdo=",
+        "owner": "bicarus-dev",
+        "repo": "bemani_fan_site_icons",
+        "rev": "225e494eebe3db5cd9b2ce04349b87606df97be3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "bicarus-dev",
+        "repo": "bemani_fan_site_icons",
+        "rev": "225e494eebe3db5cd9b2ce04349b87606df97be3",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1787135253,
@@ -18,7 +35,26 @@
     },
     "root": {
       "inputs": {
-        "nixpkgs": "nixpkgs"
+        "bemaniIcons": "bemaniIcons",
+        "nixpkgs": "nixpkgs",
+        "spice2xSource": "spice2xSource"
+      }
+    },
+    "spice2xSource": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787355208,
+        "narHash": "sha256-xBTn1KXAQzW/bD2bx6vqK5TTH2178XkjPbzDIPSGQcc=",
+        "owner": "spice2x",
+        "repo": "spice2x.github.io",
+        "rev": "b9c8afbbc12452edc3f4ac50cc1eda9ed0ee7f61",
+        "type": "github"
+      },
+      "original": {
+        "owner": "spice2x",
+        "repo": "spice2x.github.io",
+        "rev": "b9c8afbbc12452edc3f4ac50cc1eda9ed0ee7f61",
+        "type": "github"
       }
     }
   },

@@ -10,7 +10,7 @@
   <meta name="referrer" content="no-referrer">
   <title>spicefe</title>
   <link rel="manifest" href="./site.webmanifest">
-  <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="./assets/spice2x.ico" type="image/x-icon" sizes="any">
   <link rel="stylesheet" href="./assets/styles.css">
 </head>
 <body>
@@ -27,6 +27,7 @@
 
       <label class="quick-profile">
         <span class="sr-only">Connection profile</span>
+        <img id="quick-profile-icon" class="profile-icon" alt="">
         <select id="quick-profile" aria-label="Connection profile"></select>
       </label>
 
@@ -116,7 +117,10 @@
       <div class="profile-actions">
         <label class="wide-field">
           <span>Saved instance</span>
-          <select id="profile-picker"></select>
+          <span class="profile-select">
+            <img id="profile-picker-icon" class="profile-icon" alt="">
+            <select id="profile-picker"></select>
+          </span>
         </label>
         <button id="new-profile" class="secondary-button" type="button">New</button>
         <button id="delete-profile" class="danger-button" type="button">Delete</button>
@@ -127,6 +131,17 @@
           <span>Profile name</span>
           <input id="profile-name" name="profile-name" type="text" maxlength="48" required placeholder="Gaming PC">
         </label>
+
+        <div class="field span-two">
+          <span>Game icon</span>
+          <input id="game-icon-id" name="game-icon-id" type="hidden" value="spice2x">
+          <button id="game-icon-button" class="game-icon-button" type="button" aria-haspopup="dialog" aria-controls="icon-dialog">
+            <img id="game-icon-preview" class="profile-icon large" alt="">
+            <span id="game-icon-label">spice2x</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m8 10 4 4 4-4"/></svg>
+          </button>
+          <small>Saved with this connection and shown beside its PC name.</small>
+        </div>
 
         <label class="field host-field">
           <span>Host PC address</span>
@@ -201,6 +216,26 @@
         <button id="save-profile" class="secondary-button" type="button">Save</button>
         <button id="save-connect" class="primary-button" type="submit">Save &amp; connect</button>
       </footer>
+    </form>
+  </dialog>
+
+  <dialog id="icon-dialog" class="icon-dialog">
+    <form method="dialog">
+      <header class="dialog-header">
+        <div>
+          <p class="eyebrow">PROFILE APPEARANCE</p>
+          <h2>Choose a game icon</h2>
+        </div>
+        <button class="icon-button" value="close" aria-label="Close icon picker">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></svg>
+        </button>
+      </header>
+      <label class="icon-search">
+        <span class="sr-only">Search game icons</span>
+        <input id="game-icon-search" type="search" autocomplete="off" placeholder="Search IIDX, DDR, SDVX…">
+      </label>
+      <p id="game-icon-results" class="icon-results" aria-live="polite"></p>
+      <div id="game-icon-grid" class="icon-grid" role="listbox" aria-label="Available game icons"></div>
     </form>
   </dialog>
 

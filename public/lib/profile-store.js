@@ -1,3 +1,5 @@
+import { DEFAULT_GAME_ICON_ID, normalizeGameIconId } from './game-icons.js';
+
 export const PROFILE_STORAGE_KEY = 'spicefe.connections.v1';
 export const PROFILE_TRANSFER_KEY = 'spicefe-profile';
 
@@ -50,6 +52,7 @@ export function newProfile(overrides = {}) {
   return sanitizeProfile({
     id: createId(),
     name: 'Gaming PC',
+    iconId: DEFAULT_GAME_ICON_ID,
     host: '',
     apiPort: 1337,
     password: '',
@@ -75,6 +78,7 @@ export function sanitizeProfile(input = {}) {
   return {
     id,
     name,
+    iconId: normalizeGameIconId(input.iconId),
     host,
     apiPort: clampInteger(input.apiPort, 1337, 1, 65533),
     password: String(input.password ?? '').slice(0, 1024),

@@ -1,9 +1,17 @@
 {
   description = "spicefe - a static browser client for the spice2x subscreen stream";
 
+  inputs.bemaniIcons = {
+    url = "github:bicarus-dev/bemani_fan_site_icons/225e494eebe3db5cd9b2ce04349b87606df97be3";
+    flake = false;
+  };
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs.spice2xSource = {
+    url = "github:spice2x/spice2x.github.io/b9c8afbbc12452edc3f4ac50cc1eda9ed0ee7f61";
+    flake = false;
+  };
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, bemaniIcons, nixpkgs, spice2xSource }:
     let
       systems = [
         "x86_64-linux"
@@ -30,6 +38,10 @@
               runHook preInstall
               cmp public/vendor/jmuxer.min.js node_modules/jmuxer/dist/jmuxer.min.js
               cmp public/vendor/jmuxer.LICENSE.txt node_modules/jmuxer/LICENSE
+              diff --brief --recursive public/vendor/bemani-fan-site-icons/img ${bemaniIcons}/img
+              cmp public/vendor/bemani-fan-site-icons/UPSTREAM_README.md ${bemaniIcons}/README.md
+              cmp public/assets/spice2x.ico ${spice2xSource}/src/spice2x/build/icon.ico
+              cmp public/vendor/spice2x/LICENSE.GPL-3.0.txt ${spice2xSource}/LICENSE
               cmp LICENSE public/LICENSE.txt
               cmp THIRD_PARTY_NOTICES.md public/THIRD_PARTY_NOTICES.md
               mkdir -p "$out"

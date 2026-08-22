@@ -27,7 +27,8 @@ the LAN.
 - mouse, single-touch, and multi-touch input
 - Fit, Fill, and Stretch display modes with correct touch coordinate mapping
 - spice2x image-resize scene selection (Off and scenes 1–4)
-- multiple named connection profiles in `localStorage`
+- multiple named connection profiles in `localStorage`, each with a selectable
+  game icon shown beside the PC name
 - explicit Connect, Disconnect, and Switch behavior; a reload never reconnects
 - responsive phone, tablet, and desktop UI
 
@@ -176,6 +177,22 @@ derivation, and byte-compares its distribution and license with the copies in
 `public/vendor/` before producing the site. No executable npm binary is
 downloaded or run.
 
+## Artwork provenance
+
+The favicon and default profile artwork are the unmodified official spice2x
+icon from pinned revision `b9c8afb`; its GPLv3 license ships with the site.
+The searchable profile picker also includes the 111 browser-ready images from
+[`bicarus-dev/bemani_fan_site_icons`](https://github.com/bicarus-dev/bemani_fan_site_icons)
+at pinned revision `225e494`. Icons are rendered in batches so opening the
+picker does not immediately fetch the complete collection.
+
+The BEMANI icon repository provides no license and says the artwork was
+gathered from the KONAMI BEMANI fan site. Operators must obtain any permission
+required to redistribute or publicly serve those images. No affiliation with
+or endorsement by KONAMI or the individual games is implied. Exact provenance
+and the upstream README are included in
+[`public/vendor/bemani-fan-site-icons/`](./public/vendor/bemani-fan-site-icons/).
+
 ## Security model
 
 Use this only on a trusted home LAN:
@@ -199,4 +216,7 @@ on page load.
 
 Protocol and client behavior were derived from the spice2x source tree and the
 BSD-licensed [`spice2x/substream`](https://github.com/spice2x/substream)
-reference client. See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
+reference client. The site identity uses the official spice2x icon, and the
+optional game artwork comes from `bicarus-dev/bemani_fan_site_icons`. See
+[THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for licenses, revisions, and
+the BEMANI artwork caveat.
