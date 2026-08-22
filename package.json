@@ -1,0 +1,12 @@
+{
+  "name": "spicefe",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "jmuxer": "2.1.1"
+  }
+}

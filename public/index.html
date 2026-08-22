@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0b0d12">
+  <meta name="referrer" content="no-referrer">
+  <title>spicefe</title>
+  <link rel="manifest" href="./site.webmanifest">
+  <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./assets/styles.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <button id="settings-button" class="icon-button" type="button" aria-label="Open connection settings" title="Connection settings">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"/></svg>
+      </button>
+
+      <div class="brand" aria-label="spicefe">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>spice<span>fe</span></span>
+      </div>
+
+      <label class="quick-profile">
+        <span class="sr-only">Connection profile</span>
+        <select id="quick-profile" aria-label="Connection profile"></select>
+      </label>
+
+      <div id="connection-status" class="connection-status" data-state="idle" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="status-label">Ready</span>
+      </div>
+
+      <button id="connect-button" class="primary-button" type="button">Connect</button>
+
+      <button id="fullscreen-button" class="icon-button" type="button" aria-label="Toggle fullscreen" title="Fullscreen">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
+      </button>
+    </header>
+
+    <aside id="compat-banner" class="compat-banner" hidden>
+      <div>
+        <strong id="compat-title">Browser compatibility mode needed</strong>
+        <span id="compat-copy">Safari and Firefox cannot open plain LAN connections from an HTTPS page.</span>
+      </div>
+      <button id="compat-button" type="button">Open HTTP mode</button>
+      <button id="compat-dismiss" class="quiet-button" type="button" aria-label="Dismiss compatibility message">Dismiss</button>
+    </aside>
+
+    <main id="stage" class="stage" data-view-mode="contain">
+      <div class="stage-backdrop" aria-hidden="true"></div>
+      <canvas id="h264-view" class="stream-view" hidden></canvas>
+      <video id="mse-view" class="stream-view" autoplay muted playsinline hidden aria-label="Spice subscreen stream"></video>
+      <img id="mjpeg-view" class="stream-view" alt="Spice subscreen stream" hidden>
+
+      <section id="empty-state" class="empty-state">
+        <div class="empty-symbol" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <p class="eyebrow">LAN SUBSCREEN CLIENT</p>
+        <h1>Put the game’s second screen<br>in your hands.</h1>
+        <p>Connect directly to spice2x. Video and touch stay between this device and your gaming PC.</p>
+        <button id="empty-configure" class="primary-button large" type="button">Set up a connection</button>
+      </section>
+
+      <div id="stream-message" class="stream-message" hidden aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <strong id="stream-message-title">Connecting</strong>
+        <span id="stream-message-copy">Opening the video stream…</span>
+      </div>
+
+      <div id="touch-marker" class="touch-marker" hidden aria-hidden="true"></div>
+
+      <footer id="stage-hud" class="stage-hud" hidden>
+        <div class="hud-metric">
+          <span>VIDEO</span>
+          <strong id="video-metric">—</strong>
+        </div>
+        <div class="hud-metric optional-metric">
+          <span>LATENCY MODE</span>
+          <strong>LIVE</strong>
+        </div>
+        <span class="hud-spacer"></span>
+        <label class="hud-control">
+          <span>Game resize</span>
+          <select id="resize-scene" disabled>
+            <option value="" selected>Choose…</option>
+            <option value="0">Off</option>
+            <option value="1">Scene 1</option>
+            <option value="2">Scene 2</option>
+            <option value="3">Scene 3</option>
+            <option value="4">Scene 4</option>
+          </select>
+        </label>
+        <button id="view-mode-button" class="hud-button" type="button" title="Change how the video fits the screen">Fit</button>
+      </footer>
+    </main>
+  </div>
+
+  <dialog id="settings-dialog" class="settings-dialog">
+    <form id="profile-form" method="dialog">
+      <header class="dialog-header">
+        <div>
+          <p class="eyebrow">CONNECTION LIBRARY</p>
+          <h2>Spice instances</h2>
+        </div>
+        <button id="close-settings" class="icon-button" type="button" aria-label="Close settings">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></svg>
+        </button>
+      </header>
+
+      <div class="profile-actions">
+        <label class="wide-field">
+          <span>Saved instance</span>
+          <select id="profile-picker"></select>
+        </label>
+        <button id="new-profile" class="secondary-button" type="button">New</button>
+        <button id="delete-profile" class="danger-button" type="button">Delete</button>
+      </div>
+
+      <div class="form-grid">
+        <label class="field span-two">
+          <span>Profile name</span>
+          <input id="profile-name" name="profile-name" type="text" maxlength="48" required placeholder="Gaming PC">
+        </label>
+
+        <label class="field host-field">
+          <span>Host PC address</span>
+          <input id="host" name="host" type="text" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" required placeholder="192.168.1.100">
+          <small>Use a private IP address or a <code>.local</code> name.</small>
+        </label>
+
+        <label class="field port-field">
+          <span>API port</span>
+          <input id="api-port" name="api-port" type="number" inputmode="numeric" min="1" max="65533" required value="1337">
+          <small>Video uses port +2.</small>
+        </label>
+
+        <label class="field span-two">
+          <span>Password</span>
+          <span class="password-input">
+            <input id="password" name="password" type="password" autocomplete="off" placeholder="Optional API password">
+            <button id="show-password" class="inline-button" type="button">Show</button>
+          </span>
+          <small>Saved as plain text in this browser’s local storage. The video endpoint itself is not authenticated.</small>
+        </label>
+      </div>
+
+      <fieldset>
+        <legend>Stream</legend>
+        <div class="stream-options">
+          <label class="field">
+            <span>Format</span>
+            <select id="format">
+              <option value="auto" selected>Auto · H.264 first</option>
+              <option value="h264">H.264 only</option>
+              <option value="mjpg">MJPEG</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Screen</span>
+            <select id="screen">
+              <option value="" selected>Auto · prefer subscreen</option>
+              <option value="0">Screen 0</option>
+              <option value="1">Screen 1</option>
+              <option value="2">Screen 2</option>
+              <option value="3">Screen 3</option>
+            </select>
+          </label>
+          <label class="field compact-field">
+            <span>FPS</span>
+            <input id="fps" type="number" inputmode="numeric" min="1" max="60" value="30">
+          </label>
+          <label class="field compact-field">
+            <span>Quality</span>
+            <input id="quality" type="number" inputmode="numeric" min="1" max="100" value="70">
+          </label>
+          <label class="field">
+            <span>Display</span>
+            <select id="view-mode">
+              <option value="contain" selected>Fit</option>
+              <option value="cover">Fill</option>
+              <option value="fill">Stretch</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
+
+      <section id="transport-note" class="transport-note">
+        <strong>Direct connection</strong>
+        <p>No relay is used. Allow local-network access when your browser asks, and permit the WebSocket and stream ports (API port +1 and +2) through Windows Firewall.</p>
+        <button id="dialog-compat-button" class="text-button" type="button" hidden>Open this app in HTTP compatibility mode</button>
+      </section>
+
+      <footer class="dialog-footer">
+        <span id="save-status" aria-live="polite"></span>
+        <button id="save-profile" class="secondary-button" type="button">Save</button>
+        <button id="save-connect" class="primary-button" type="submit">Save &amp; connect</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="delete-dialog" class="confirm-dialog">
+    <form method="dialog">
+      <h2>Delete this instance?</h2>
+      <p id="delete-copy">The saved connection information will be removed from this device.</p>
+      <footer>
+        <button value="cancel" class="secondary-button">Cancel</button>
+        <button id="confirm-delete" value="confirm" class="danger-button">Delete</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
+
+  <script src="./vendor/jmuxer.min.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
