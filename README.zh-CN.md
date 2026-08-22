@@ -307,10 +307,11 @@ JavaScript；React、Tailwind CSS 与 React Aria 都不是运行时或构建依�
 发布版中的四个小型 Latin-1 与符号子集（Regular 和 Medium），并从同一静态来源
 提供。CSS 会优先检查设备中已安装的 IBM Plex Sans；本地存在时不会下载字体文件。
 欢迎页主标题使用自托管的
-[Alfa Slab One](https://fonts.google.com/specimen/Alfa+Slab+One) Regular Latin
-子集；字体固定到 Google Fonts 官方 `v21` 资源，并同时固定许可证与元数据。CSS
-会先检查设备中已安装的字体，中文标题使用设备本地的衬线后备字体。其他文字也
-使用本地系统后备字体，页面不会访问字体 CDN 或实时第三方资源。
+[Libre Caslon Text](https://github.com/impallari/Libre-Caslon-Text) Regular；
+项目将其上游精确版本固定为非 flake Nix 输入，并通过 Nix 将 TTF 可复现地转换为
+WOFF2，同时验证仓库中的浏览器字体文件。CSS 会先检查设备中已安装的字体，中文
+标题使用设备本地的衬线后备字体。其他文字也使用本地系统后备字体，页面不会访问
+字体 CDN 或实时第三方资源。
 
 ## 图标来源
 
@@ -349,6 +350,6 @@ README 位于
 协议和客户端行为基于 spice2x 源码树及采用 BSD 许可证的参考客户端
 [`spice2x/substream`](https://github.com/spice2x/substream)。站点标识使用 spice2x
 官方图标，可选游戏图标来自 `bicarus-dev/bemani_fan_site_icons`；界面样式借鉴
-开源 Untitled UI React，并使用 IBM Plex Sans，欢迎页主标题使用 Alfa Slab One。
+开源 Untitled UI React，并使用 IBM Plex Sans，欢迎页主标题使用 Libre Caslon Text。
 许可证、固定版本以及 BEMANI 图像的注意事项详见
 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)。

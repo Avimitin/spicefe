@@ -69,15 +69,16 @@ the SIL Open Font License 1.1, Copyright © 2017 IBM Corp., with Reserved Font
 Name "Plex". The complete license, hashes, and source record ship in
 `public/vendor/ibm-plex-sans/`.
 
-## Alfa Slab One
+## Libre Caslon Text
 
-The welcome headline uses the unmodified Latin WOFF2 subset of Alfa Slab One
-Regular served by Google Fonts. CSS checks for a locally installed copy before
-requesting the self-hosted asset. Alfa Slab One is licensed under the SIL Open
-Font License 1.1, Copyright © 2016 The Alfa Slab One Project Authors, with
-Reserved Font Name "Alfa Slab". The exact font, license, and Google Fonts
-metadata are pinned by Nix; hashes and provenance are recorded in
-`public/vendor/alfa-slab-one/`.
+The welcome headline uses Libre Caslon Text Regular from the official
+[`impallari/Libre-Caslon-Text`](https://github.com/impallari/Libre-Caslon-Text)
+repository. CSS checks for a locally installed copy before requesting the
+self-hosted asset. Libre Caslon Text is licensed under the SIL Open Font
+License 1.1, Copyright © 2012 Impallari Type. Its exact source and license are
+pinned as a non-flake Nix input, and Nix reproducibly converts the source TTF
+to the checked-in WOFF2. Hashes and provenance are recorded in
+`public/vendor/libre-caslon-text/`.
 
 ## spice2x icon
 

@@ -17,6 +17,23 @@
         "type": "github"
       }
     },
+    "libreCaslonText": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1469470293,
+        "narHash": "sha256-BRz21ixBWYaD+z84+BPa/UQHLnC2EnMDP+wxVHHan30=",
+        "owner": "impallari",
+        "repo": "Libre-Caslon-Text",
+        "rev": "c31e21f7e8cf91f18d90f778ce20e66c68219c74",
+        "type": "github"
+      },
+      "original": {
+        "owner": "impallari",
+        "repo": "Libre-Caslon-Text",
+        "rev": "c31e21f7e8cf91f18d90f778ce20e66c68219c74",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1787135253,
@@ -36,6 +53,7 @@
     "root": {
       "inputs": {
         "bemaniIcons": "bemaniIcons",
+        "libreCaslonText": "libreCaslonText",
         "nixpkgs": "nixpkgs",
         "spice2xSource": "spice2xSource"
       }

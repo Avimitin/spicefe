@@ -851,6 +851,11 @@ browserSetupPageLink.addEventListener('click', (event) => {
   navigateToBrowsePage('browser-setup');
 });
 
+element('welcome-connection-help').addEventListener('click', (event) => {
+  event.preventDefault();
+  navigateToBrowsePage('browser-setup');
+});
+
 selfHostPageLink.addEventListener('click', (event) => {
   event.preventDefault();
   navigateToBrowsePage('self-host');

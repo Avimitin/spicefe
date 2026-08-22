@@ -5,13 +5,17 @@
     url = "github:bicarus-dev/bemani_fan_site_icons/225e494eebe3db5cd9b2ce04349b87606df97be3";
     flake = false;
   };
+  inputs.libreCaslonText = {
+    url = "github:impallari/Libre-Caslon-Text/c31e21f7e8cf91f18d90f778ce20e66c68219c74";
+    flake = false;
+  };
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   inputs.spice2xSource = {
     url = "github:spice2x/spice2x.github.io/b9c8afbbc12452edc3f4ac50cc1eda9ed0ee7f61";
     flake = false;
   };
 
-  outputs = { self, bemaniIcons, nixpkgs, spice2xSource }:
+  outputs = { self, bemaniIcons, libreCaslonText, nixpkgs, spice2xSource }:
     let
       systems = [
         "x86_64-linux"
@@ -59,18 +63,16 @@
             url = "${ibmPlexBase}/LICENSE.txt";
             hash = "sha256-fmsoGO29j2oBroBkHMjxalEIDQj7TlMr46C290rbB9o=";
           };
-          alfaSlabOne = pkgs.fetchurl {
-            url = "https://fonts.gstatic.com/s/alfaslabone/v21/6NUQ8FmMKwSEKjnm5-4v-4Jh2dJhew.woff2";
-            hash = "sha256-SKEQx/2oH5khpkN+GoE9zqVt9an1L3eMey8hUeNuTyw=";
-          };
-          alfaSlabOneLicense = pkgs.fetchurl {
-            url = "https://raw.githubusercontent.com/google/fonts/ec626514f79f831f1ab848a82114a0ce7e2d6372/ofl/alfaslabone/OFL.txt";
-            hash = "sha256-4xWryCp4cQxyQuLy5lKWUf1jHU1Q5q2Y6hlPm1TD1wE=";
-          };
-          alfaSlabOneMetadata = pkgs.fetchurl {
-            url = "https://raw.githubusercontent.com/google/fonts/ec626514f79f831f1ab848a82114a0ce7e2d6372/ofl/alfaslabone/METADATA.pb";
-            hash = "sha256-Aw6JNJCYZYAjE0h7i2rjQueaBsEC/3QO+mz9tbJsuXw=";
-          };
+          libreCaslonTextRegularWoff2 = pkgs.runCommand "LibreCaslonText-Regular.woff2"
+            {
+              nativeBuildInputs = [ pkgs.woff2 ];
+            }
+            ''
+              cp ${libreCaslonText}/fonts/TTF/LibreCaslonText-Regular.ttf LibreCaslonText-Regular.ttf
+              chmod u+w LibreCaslonText-Regular.ttf
+              woff2_compress LibreCaslonText-Regular.ttf
+              install -m 0444 LibreCaslonText-Regular.woff2 "$out"
+            '';
         in
         rec {
           default = pkgs.buildNpmPackage {
@@ -91,11 +93,10 @@
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Regular-Pi.woff2 ${ibmPlexRegularPi}
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Medium-Latin1.woff2 ${ibmPlexMediumLatin1}
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Medium-Pi.woff2 ${ibmPlexMediumPi}
-              cmp public/vendor/alfa-slab-one/fonts/AlfaSlabOne-Regular-Latin.woff2 ${alfaSlabOne}
+              cmp public/vendor/libre-caslon-text/fonts/LibreCaslonText-Regular.woff2 ${libreCaslonTextRegularWoff2}
               cmp \
-                <(sed 's/\r$//; s/[[:blank:]]*$//' public/vendor/alfa-slab-one/LICENSE.OFL-1.1.txt) \
-                <(sed 's/\r$//; s/[[:blank:]]*$//' ${alfaSlabOneLicense})
-              cmp public/vendor/alfa-slab-one/METADATA.pb ${alfaSlabOneMetadata}
+                <(sed 's/\r$//; s/[[:blank:]]*$//' public/vendor/libre-caslon-text/LICENSE.OFL-1.1.txt) \
+                <(sed 's/\r$//; s/[[:blank:]]*$//' ${libreCaslonText}/OFL.txt)
               cmp \
                 <(tr -s '[:space:]' '\n' < public/vendor/ibm-plex-sans/LICENSE.OFL-1.1.txt) \
                 <(tr -s '[:space:]' '\n' < ${ibmPlexLicense})
@@ -114,6 +115,8 @@
               runHook postInstall
             '';
           };
+
+          libre-caslon-text-regular = libreCaslonTextRegularWoff2;
 
           release = pkgs.runCommand "spicefe-public.zip"
             {

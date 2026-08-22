@@ -347,10 +347,11 @@ subsets (Regular and Medium) are pinned to IBM's
 [`@ibm/plex-sans@1.1.0`](https://github.com/IBM/plex/releases/tag/%40ibm%2Fplex-sans%401.1.0)
 release and served from the same static origin. CSS tries an installed IBM Plex
 Sans first, so the font files are not downloaded when the device already has
-them. The welcome headline uses the self-hosted Latin subset of
-[Alfa Slab One](https://fonts.google.com/specimen/Alfa+Slab+One) Regular, pinned
-to the official Google Fonts `v21` asset with its license and metadata. CSS
-checks for a locally installed copy first, and Chinese uses a local serif
+them. The welcome headline uses self-hosted
+[Libre Caslon Text](https://github.com/impallari/Libre-Caslon-Text) Regular,
+pinned to an exact upstream revision as a non-flake Nix input. Nix converts the
+upstream TTF to WOFF2 reproducibly and verifies the checked-in browser asset.
+CSS checks for a locally installed copy first, and Chinese uses a local serif
 fallback. Other scripts use local system fallbacks, and no font CDN or live
 third-party request is used.
 
@@ -398,6 +399,6 @@ BSD-licensed [`spice2x/substream`](https://github.com/spice2x/substream)
 reference client. The site identity uses the official spice2x icon, and the
 optional game artwork comes from `bicarus-dev/bemani_fan_site_icons`. The UI
 treatment is adapted from open-source Untitled UI React and uses IBM Plex Sans;
-the welcome headline uses Alfa Slab One. See
+the welcome headline uses Libre Caslon Text. See
 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for licenses, revisions, and
 the BEMANI artwork caveat.
