@@ -16,7 +16,7 @@
 <body>
   <div id="app">
     <header class="topbar">
-      <button id="settings-button" class="icon-button" type="button" aria-label="Open connection settings" title="Connection settings">
+      <button id="settings-button" class="icon-button" type="button" aria-label="Open connection settings" title="Connection settings" data-i18n-aria-label="nav.openSettings" data-i18n-title="nav.settings">
         <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"/></svg>
       </button>
 
@@ -26,12 +26,12 @@
       </div>
 
       <label class="quick-profile">
-        <span class="sr-only">Connection profile</span>
+        <span class="sr-only" data-i18n="nav.profile">Connection profile</span>
         <img id="quick-profile-icon" class="profile-icon" alt="">
-        <select id="quick-profile" aria-label="Connection profile"></select>
+        <select id="quick-profile" aria-label="Connection profile" data-i18n-aria-label="nav.profile"></select>
       </label>
 
-      <div id="connection-statuses" class="connection-statuses" aria-label="Connection status" aria-live="polite">
+      <div id="connection-statuses" class="connection-statuses" aria-label="Connection status" aria-live="polite" data-i18n-aria-label="nav.status">
         <span id="api-status" class="connection-status" data-state="idle">
           <span class="status-dot" aria-hidden="true"></span>
           <span class="status-copy">
@@ -42,80 +42,80 @@
         <span id="video-status" class="connection-status" data-state="idle">
           <span class="status-dot" aria-hidden="true"></span>
           <span class="status-copy">
-            <span class="status-channel">Video</span>
+            <span class="status-channel" data-i18n="nav.video">Video</span>
             <strong id="video-status-label" class="status-value">Idle</strong>
           </span>
         </span>
       </div>
 
-      <button id="connect-button" class="primary-button" type="button">Connect</button>
+      <button id="connect-button" class="primary-button" type="button" data-i18n="button.connect">Connect</button>
 
-      <button id="fullscreen-button" class="icon-button" type="button" aria-label="Toggle fullscreen" title="Fullscreen">
+      <button id="fullscreen-button" class="icon-button" type="button" aria-label="Toggle fullscreen" title="Fullscreen" data-i18n-aria-label="nav.fullscreen" data-i18n-title="nav.fullscreenTitle">
         <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
       </button>
     </header>
 
     <aside id="compat-banner" class="compat-banner" hidden>
       <div>
-        <strong id="compat-title">Browser compatibility mode needed</strong>
-        <span id="compat-copy">Safari and Firefox cannot open plain LAN connections from an HTTPS page.</span>
+        <strong id="compat-title" data-i18n="compat.title">Browser compatibility mode needed</strong>
+        <span id="compat-copy" data-i18n="compat.copy">Safari and Firefox cannot open plain LAN connections from an HTTPS page.</span>
       </div>
-      <button id="compat-button" type="button">Open HTTP mode</button>
-      <button id="compat-dismiss" class="quiet-button" type="button" aria-label="Dismiss compatibility message">Dismiss</button>
+      <button id="compat-button" type="button" data-i18n="button.openHttp">Open HTTP mode</button>
+      <button id="compat-dismiss" class="quiet-button" type="button" aria-label="Dismiss compatibility message" data-i18n="button.dismiss" data-i18n-aria-label="compat.dismiss">Dismiss</button>
     </aside>
 
     <main id="stage" class="stage" data-view-mode="contain">
       <div class="stage-backdrop" aria-hidden="true"></div>
       <canvas id="h264-view" class="stream-view" hidden></canvas>
-      <video id="mse-view" class="stream-view" autoplay muted playsinline hidden aria-label="Spice subscreen stream"></video>
-      <img id="mjpeg-view" class="stream-view" alt="Spice subscreen stream" hidden>
+      <video id="mse-view" class="stream-view" autoplay muted playsinline hidden aria-label="Spice subscreen stream" data-i18n-aria-label="stream.aria"></video>
+      <img id="mjpeg-view" class="stream-view" alt="Spice subscreen stream" hidden data-i18n-alt="stream.aria">
 
       <section id="empty-state" class="empty-state">
         <div class="empty-symbol" aria-hidden="true">
           <span></span><span></span><span></span>
         </div>
-        <p class="eyebrow">LAN SUBSCREEN CLIENT</p>
-        <h1>Put the game’s second screen<br>in your hands.</h1>
-        <p>Connect directly to spice2x. Video and touch stay between this device and your gaming PC.</p>
-        <button id="empty-configure" class="primary-button large" type="button">Set up a connection</button>
+        <p class="eyebrow" data-i18n="home.eyebrow">LAN SUBSCREEN CLIENT</p>
+        <h1><span data-i18n="home.titleFirst">Put the game’s second screen</span><br><span data-i18n="home.titleSecond">in your hands.</span></h1>
+        <p data-i18n="home.copy">Connect directly to spice2x. Video and touch stay between this device and your gaming PC.</p>
+        <button id="empty-configure" class="primary-button large" type="button" data-i18n="home.configure">Set up a connection</button>
       </section>
 
       <div id="stream-message" class="stream-message" hidden aria-live="polite">
         <span class="spinner" aria-hidden="true"></span>
-        <strong id="stream-message-title">Connecting</strong>
-        <span id="stream-message-copy">Opening the video stream…</span>
+        <strong id="stream-message-title" data-i18n="stream.connecting">Connecting</strong>
+        <span id="stream-message-copy" data-i18n="stream.opening">Opening the video stream…</span>
       </div>
 
       <div id="api-warning" class="api-warning" hidden role="status" aria-live="polite">
         <span class="status-dot" aria-hidden="true"></span>
-        <strong id="api-warning-title">Video is live; control is unavailable</strong>
-        <span id="api-warning-copy">Touch and resize are disabled; video can continue independently.</span>
+        <strong id="api-warning-title" data-i18n="warning.title">Video is live; control is unavailable</strong>
+        <span id="api-warning-copy" data-i18n="warning.copy">Touch and resize are disabled; video can continue independently.</span>
       </div>
 
       <div id="touch-marker" class="touch-marker" hidden aria-hidden="true"></div>
 
       <footer id="stage-hud" class="stage-hud" hidden>
         <div class="hud-metric">
-          <span>VIDEO</span>
+          <span data-i18n="hud.video">VIDEO</span>
           <strong id="video-metric">—</strong>
         </div>
         <div class="hud-metric optional-metric">
-          <span>LATENCY MODE</span>
-          <strong>LIVE</strong>
+          <span data-i18n="hud.latency">LATENCY MODE</span>
+          <strong data-i18n="hud.live">LIVE</strong>
         </div>
         <span class="hud-spacer"></span>
         <label class="hud-control">
-          <span>Game resize</span>
+          <span data-i18n="hud.resize">Game resize</span>
           <select id="resize-scene" disabled>
-            <option value="" selected>Choose…</option>
-            <option value="0">Off</option>
-            <option value="1">Scene 1</option>
-            <option value="2">Scene 2</option>
-            <option value="3">Scene 3</option>
-            <option value="4">Scene 4</option>
+            <option value="" selected data-i18n="common.choose">Choose…</option>
+            <option value="0" data-i18n="common.off">Off</option>
+            <option value="1" data-i18n="hud.scene" data-i18n-scene="1">Scene 1</option>
+            <option value="2" data-i18n="hud.scene" data-i18n-scene="2">Scene 2</option>
+            <option value="3" data-i18n="hud.scene" data-i18n-scene="3">Scene 3</option>
+            <option value="4" data-i18n="hud.scene" data-i18n-scene="4">Scene 4</option>
           </select>
         </label>
-        <button id="view-mode-button" class="hud-button" type="button" title="Change how the video fits the screen">Fit</button>
+        <button id="view-mode-button" class="hud-button" type="button" title="Change how the video fits the screen" data-i18n="display.contain" data-i18n-title="hud.viewModeTitle">Fit</button>
       </footer>
     </main>
   </div>
@@ -124,115 +124,124 @@
     <form id="profile-form" method="dialog">
       <header class="dialog-header">
         <div>
-          <p class="eyebrow">CONNECTION LIBRARY</p>
-          <h2>Spice instances</h2>
+          <p class="eyebrow" data-i18n="settings.eyebrow">CONNECTION LIBRARY</p>
+          <h2 data-i18n="settings.title">Spice instances</h2>
         </div>
-        <button id="close-settings" class="icon-button" type="button" aria-label="Close settings">
-          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></svg>
-        </button>
+        <div class="dialog-header-actions">
+          <label class="language-picker">
+            <span class="sr-only" data-i18n="language.label">Language</span>
+            <select id="language-select" aria-label="Language" data-i18n-aria-label="language.label">
+              <option value="en">EN</option>
+              <option value="zh-CN">中文</option>
+            </select>
+          </label>
+          <button id="close-settings" class="icon-button" type="button" aria-label="Close settings" data-i18n-aria-label="button.closeSettings">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></svg>
+          </button>
+        </div>
       </header>
 
       <div class="profile-actions">
         <label class="wide-field">
-          <span>Saved instance</span>
+          <span data-i18n="settings.savedInstance">Saved instance</span>
           <span class="profile-select">
             <img id="profile-picker-icon" class="profile-icon" alt="">
             <select id="profile-picker"></select>
           </span>
         </label>
-        <button id="new-profile" class="secondary-button" type="button">New</button>
-        <button id="delete-profile" class="danger-button" type="button">Delete</button>
+        <button id="new-profile" class="secondary-button" type="button" data-i18n="button.new">New</button>
+        <button id="delete-profile" class="danger-button" type="button" data-i18n="button.delete">Delete</button>
       </div>
 
       <div class="form-grid">
         <label class="field span-two">
-          <span>Profile name</span>
-          <input id="profile-name" name="profile-name" type="text" maxlength="48" required placeholder="Gaming PC">
+          <span data-i18n="settings.profileName">Profile name</span>
+          <input id="profile-name" name="profile-name" type="text" maxlength="48" required placeholder="Gaming PC" data-i18n-placeholder="settings.profilePlaceholder">
         </label>
 
         <div class="field span-two">
-          <span>Game icon</span>
+          <span data-i18n="settings.gameIcon">Game icon</span>
           <input id="game-icon-id" name="game-icon-id" type="hidden" value="spice2x">
           <button id="game-icon-button" class="game-icon-button" type="button" aria-haspopup="dialog" aria-controls="icon-dialog">
             <img id="game-icon-preview" class="profile-icon large" alt="">
             <span id="game-icon-label">spice2x</span>
             <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m8 10 4 4 4-4"/></svg>
           </button>
-          <small>Saved with this connection and shown beside its PC name.</small>
+          <small data-i18n="settings.gameIconHelp">Saved with this connection and shown beside its PC name.</small>
         </div>
 
         <label class="field host-field">
-          <span>Host PC address</span>
+          <span data-i18n="settings.host">Host PC address</span>
           <input id="host" name="host" type="text" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" required placeholder="192.168.1.100">
-          <small>Use a private IP address or a <code>.local</code> name.</small>
+          <small data-i18n="settings.hostHelp">Use a private IP address or a .local name.</small>
         </label>
 
         <label class="field port-field">
-          <span>API port</span>
+          <span data-i18n="settings.apiPort">API port</span>
           <input id="api-port" name="api-port" type="number" inputmode="numeric" min="1" max="65533" required value="1337">
-          <small>Video uses port +2.</small>
+          <small data-i18n="settings.videoPortHelp">Video uses port +2.</small>
         </label>
 
         <label class="field span-two">
-          <span>Password</span>
+          <span data-i18n="settings.password">Password</span>
           <span class="password-input">
-            <input id="password" name="password" type="password" autocomplete="off" placeholder="Optional API password">
-            <button id="show-password" class="inline-button" type="button">Show</button>
+            <input id="password" name="password" type="password" autocomplete="off" placeholder="Optional API password" data-i18n-placeholder="settings.passwordPlaceholder">
+            <button id="show-password" class="inline-button" type="button" data-i18n="button.show">Show</button>
           </span>
-          <small>Saved as plain text in this browser’s local storage. The video endpoint itself is not authenticated.</small>
+          <small data-i18n="settings.passwordHelp">Saved as plain text in this browser’s local storage. The video endpoint itself is not authenticated.</small>
         </label>
       </div>
 
       <fieldset>
-        <legend>Stream</legend>
+        <legend data-i18n="settings.stream">Stream</legend>
         <div class="stream-options">
           <label class="field">
-            <span>Format</span>
+            <span data-i18n="settings.format">Format</span>
             <select id="format">
-              <option value="auto" selected>Auto · H.264 first</option>
-              <option value="h264">H.264 only</option>
+              <option value="auto" selected data-i18n="settings.formatAuto">Auto · H.264 first</option>
+              <option value="h264" data-i18n="settings.formatH264">H.264 only</option>
               <option value="mjpg">MJPEG</option>
             </select>
           </label>
           <label class="field">
-            <span>Screen</span>
+            <span data-i18n="settings.screen">Screen</span>
             <select id="screen">
-              <option value="" selected>Auto · prefer subscreen</option>
-              <option value="0">Screen 0</option>
-              <option value="1">Screen 1</option>
-              <option value="2">Screen 2</option>
-              <option value="3">Screen 3</option>
+              <option value="" selected data-i18n="settings.screenAuto">Auto · prefer subscreen</option>
+              <option value="0" data-i18n="settings.screenNumber" data-i18n-screen="0">Screen 0</option>
+              <option value="1" data-i18n="settings.screenNumber" data-i18n-screen="1">Screen 1</option>
+              <option value="2" data-i18n="settings.screenNumber" data-i18n-screen="2">Screen 2</option>
+              <option value="3" data-i18n="settings.screenNumber" data-i18n-screen="3">Screen 3</option>
             </select>
           </label>
           <label class="field compact-field">
-            <span>FPS</span>
+            <span data-i18n="settings.fps">FPS</span>
             <input id="fps" type="number" inputmode="numeric" min="1" max="60" value="30">
           </label>
           <label class="field compact-field">
-            <span>Quality</span>
+            <span data-i18n="settings.quality">Quality</span>
             <input id="quality" type="number" inputmode="numeric" min="1" max="100" value="70">
           </label>
           <label class="field">
-            <span>Display</span>
+            <span data-i18n="settings.display">Display</span>
             <select id="view-mode">
-              <option value="contain" selected>Fit</option>
-              <option value="cover">Fill</option>
-              <option value="fill">Stretch</option>
+              <option value="contain" selected data-i18n="display.contain">Fit</option>
+              <option value="cover" data-i18n="display.cover">Fill</option>
+              <option value="fill" data-i18n="display.fill">Stretch</option>
             </select>
           </label>
         </div>
       </fieldset>
 
       <section id="transport-note" class="transport-note">
-        <strong>Direct connection</strong>
-        <p>No relay is used. Allow local-network access when your browser asks, and permit the WebSocket and stream ports (API port +1 and +2) through Windows Firewall.</p>
-        <button id="dialog-compat-button" class="text-button" type="button" hidden>Open this app in HTTP compatibility mode</button>
+        <strong data-i18n="settings.direct">Direct connection</strong>
+        <p id="transport-copy" data-i18n="settings.directCopy">No relay is used. Allow local-network access when your browser asks, and permit the WebSocket and stream ports (API port +1 and +2) through Windows Firewall.</p>
+        <button id="dialog-compat-button" class="text-button" type="button" hidden data-i18n="button.openHttpLong">Open this app in HTTP compatibility mode</button>
       </section>
 
       <footer class="dialog-footer">
         <span id="save-status" aria-live="polite"></span>
-        <button id="save-profile" class="secondary-button" type="button">Save</button>
-        <button id="save-connect" class="primary-button" type="submit">Save &amp; connect</button>
+        <button id="save-profile" class="secondary-button" type="button" data-i18n="button.save">Save</button>
+        <button id="save-connect" class="primary-button" type="submit" data-i18n="button.saveConnect">Save &amp; connect</button>
       </footer>
     </form>
   </dialog>
@@ -241,29 +250,29 @@
     <form method="dialog">
       <header class="dialog-header">
         <div>
-          <p class="eyebrow">PROFILE APPEARANCE</p>
-          <h2>Choose a game icon</h2>
+          <p class="eyebrow" data-i18n="icon.eyebrow">PROFILE APPEARANCE</p>
+          <h2 data-i18n="icon.title">Choose a game icon</h2>
         </div>
-        <button class="icon-button" value="close" aria-label="Close icon picker">
+        <button class="icon-button" value="close" aria-label="Close icon picker" data-i18n-aria-label="icon.close">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></svg>
         </button>
       </header>
       <label class="icon-search">
-        <span class="sr-only">Search game icons</span>
-        <input id="game-icon-search" type="search" autocomplete="off" placeholder="Search IIDX, GITADORA, SDVX, pop'n…">
+        <span class="sr-only" data-i18n="icon.searchLabel">Search game icons</span>
+        <input id="game-icon-search" type="search" autocomplete="off" placeholder="Search IIDX, GITADORA, SDVX, pop'n…" data-i18n-placeholder="icon.searchPlaceholder">
       </label>
       <p id="game-icon-results" class="icon-results" aria-live="polite"></p>
-      <div id="game-icon-groups" class="icon-groups" role="listbox" aria-label="Supported game icons by series"></div>
+      <div id="game-icon-groups" class="icon-groups" role="listbox" aria-label="Supported game icons by series" data-i18n-aria-label="icon.groupsAria"></div>
     </form>
   </dialog>
 
   <dialog id="delete-dialog" class="confirm-dialog">
     <form method="dialog">
-      <h2>Delete this instance?</h2>
-      <p id="delete-copy">The saved connection information will be removed from this device.</p>
+      <h2 data-i18n="delete.title">Delete this instance?</h2>
+      <p id="delete-copy" data-i18n="delete.defaultCopy">The saved connection information will be removed from this device.</p>
       <footer>
-        <button value="cancel" class="secondary-button">Cancel</button>
-        <button id="confirm-delete" value="confirm" class="danger-button">Delete</button>
+        <button value="cancel" class="secondary-button" data-i18n="button.cancel">Cancel</button>
+        <button id="confirm-delete" value="confirm" class="danger-button" data-i18n="button.delete">Delete</button>
       </footer>
     </form>
   </dialog>

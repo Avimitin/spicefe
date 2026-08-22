@@ -33,6 +33,10 @@ the LAN.
   game icon from categorized, subscreen-capable releases shown beside the PC
   name
 - explicit Connect, Disconnect, and Switch behavior; a reload never reconnects
+- English and Simplified Chinese UI with browser-language detection and a saved
+  manual language choice
+- disconnect immediately clears the final decoded frame and every playback
+  backend
 - responsive phone, tablet, and desktop UI
 
 Audio, clipboard sharing, simultaneous subscreens, WAN relay, and legacy

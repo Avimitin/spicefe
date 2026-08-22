@@ -102,3 +102,17 @@ test('resets both channels to idle after disconnect', () => {
   assert.equal(result.streamMessage, null);
   assert.equal(result.apiWarning, null);
 });
+
+test('renders independent connection diagnostics in Simplified Chinese', () => {
+  const result = connectionPresentation(snapshot({
+    apiState: 'live',
+    videoState: 'error',
+    videoError: 'No video frames arrived from that screen',
+  }), 'zh-CN');
+
+  assert.equal(result.api.label, '已连接');
+  assert.equal(result.video.label, '失败');
+  assert.equal(result.streamMessage.title, '视频流连接失败');
+  assert.match(result.streamMessage.copy, /端口 1338/);
+  assert.match(result.streamMessage.copy, /未从该画面收到视频帧/);
+});

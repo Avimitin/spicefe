@@ -91,8 +91,8 @@ export function sanitizeProfile(input = {}) {
 }
 
 export class ProfileStore {
-  constructor(storage) {
-    if (arguments.length > 0) {
+  constructor(storage, options = {}) {
+    if (arguments.length > 0 && storage !== undefined) {
       this.storage = storage;
     } else {
       try {
@@ -101,6 +101,8 @@ export class ProfileStore {
         this.storage = null;
       }
     }
+    this.defaultProfileName = String(options.defaultProfileName ?? '').trim().slice(0, 48)
+      || 'Gaming PC';
     this.profiles = [];
     this.selectedId = null;
     this.load();
@@ -126,7 +128,7 @@ export class ProfileStore {
     }
 
     if (this.profiles.length === 0) {
-      const initial = newProfile();
+      const initial = newProfile({ name: this.defaultProfileName });
       this.profiles = [initial];
       this.selectedId = initial.id;
       this.persist();
@@ -173,7 +175,7 @@ export class ProfileStore {
   }
 
   create(overrides = {}) {
-    const profile = newProfile(overrides);
+    const profile = newProfile({ name: this.defaultProfileName, ...overrides });
     this.profiles.push(profile);
     this.selectedId = profile.id;
     this.persist();
@@ -188,7 +190,7 @@ export class ProfileStore {
 
     this.profiles.splice(position, 1);
     if (this.profiles.length === 0) {
-      this.profiles.push(newProfile());
+      this.profiles.push(newProfile({ name: this.defaultProfileName }));
     }
 
     if (this.selectedId === id) {
@@ -211,7 +213,7 @@ export class ProfileStore {
     }
     this.profiles = [...unique.values()];
     if (this.profiles.length === 0) {
-      this.profiles = [newProfile()];
+      this.profiles = [newProfile({ name: this.defaultProfileName })];
     }
     const requested = String(selectedId ?? '');
     this.selectedId = this.profiles.some((profile) => profile.id === requested)

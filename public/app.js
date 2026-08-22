@@ -1,9 +1,9 @@
 import { compatibilityUrl, isPrivateLanName, likelyNeedsHttpMode } from './lib/endpoints.js';
 import { GAME_ICON_GROUPS, GAME_ICONS, gameIconById } from './lib/game-icons.js';
 import { connectionPresentation } from './lib/connection-status.js';
+import { createI18n, localizeError } from './lib/i18n.js';
 import {
   decodeProfileTransfer,
-  newProfile,
   ProfileStore,
   PROFILE_TRANSFER_KEY,
   sanitizeProfile,
@@ -12,7 +12,11 @@ import { SpiceSession } from './lib/spice-session.js';
 import { TouchController } from './lib/touch-controller.js';
 
 const element = (id) => document.getElementById(id);
-const store = new ProfileStore();
+const i18n = createI18n();
+const t = (key, parameters) => i18n.t(key, parameters);
+const store = new ProfileStore(undefined, {
+  defaultProfileName: t('settings.profilePlaceholder'),
+});
 
 const stage = element('stage');
 const canvas = element('h264-view');
@@ -37,11 +41,37 @@ const resizeScene = element('resize-scene');
 const touchMarker = element('touch-marker');
 const compatBanner = element('compat-banner');
 const toast = element('toast');
+const languageSelect = element('language-select');
 
 let toastTimer = null;
 let currentMetric = null;
 let lastMetricPaint = 0;
 let bannerDismissed = false;
+
+function translationParameters(node) {
+  const parameters = {};
+  for (const name of ['scene', 'screen']) {
+    const value = node.getAttribute(`data-i18n-${name}`);
+    if (value !== null) {
+      parameters[name] = value;
+    }
+  }
+  return parameters;
+}
+
+function applyDocumentTranslations() {
+  document.documentElement.lang = i18n.locale;
+  for (const node of document.querySelectorAll('[data-i18n]')) {
+    node.textContent = t(node.dataset.i18n, translationParameters(node));
+  }
+  for (const attribute of ['aria-label', 'title', 'placeholder', 'alt']) {
+    for (const node of document.querySelectorAll(`[data-i18n-${attribute}]`)) {
+      node.setAttribute(attribute, t(node.getAttribute(`data-i18n-${attribute}`)));
+    }
+  }
+  languageSelect.value = i18n.locale;
+}
+
 function showToast(message, timeout = 4500) {
   toast.textContent = message;
   toast.hidden = false;
@@ -124,13 +154,15 @@ function renderIconGroups(query = '') {
   const needle = query.trim().toLocaleLowerCase();
   const matchingGroups = GAME_ICON_GROUPS.map((group) => ({
     group,
+    groupLabel: t(`icon.group.${group.id}`),
     icons: group.icons.filter((icon) => !needle
       || group.label.toLocaleLowerCase().includes(needle)
+      || t(`icon.group.${group.id}`).toLocaleLowerCase().includes(needle)
       || icon.label.toLocaleLowerCase().includes(needle)
       || icon.id.toLocaleLowerCase().includes(needle)),
   })).filter(({ icons }) => icons.length > 0);
 
-  const sections = matchingGroups.map(({ group, icons }) => {
+  const sections = matchingGroups.map(({ group, groupLabel, icons }) => {
     const section = document.createElement('section');
     const heading = document.createElement('h3');
     const grid = document.createElement('div');
@@ -140,7 +172,7 @@ function renderIconGroups(query = '') {
     section.setAttribute('role', 'group');
     section.setAttribute('aria-labelledby', headingId);
     heading.id = headingId;
-    heading.textContent = group.label;
+    heading.textContent = groupLabel;
     grid.className = 'icon-category-grid';
     grid.append(...icons.map((icon) => createIconOption(icon, selectedId)));
     section.append(heading, grid);
@@ -150,7 +182,7 @@ function renderIconGroups(query = '') {
   if (sections.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'icon-empty';
-    empty.textContent = 'No supported game icons match this search.';
+    empty.textContent = t('icon.empty');
     sections.push(empty);
   }
 
@@ -158,8 +190,11 @@ function renderIconGroups(query = '') {
 
   const matchingCount = matchingGroups.reduce((count, { icons }) => count + icons.length, 0);
   const scope = matchingCount === GAME_ICONS.length
-    ? `${matchingCount} supported icons in ${GAME_ICON_GROUPS.length} categories`
-    : `${matchingCount} of ${GAME_ICONS.length} supported icons match`;
+    ? t('icon.scopeAll', {
+      count: matchingCount,
+      categories: GAME_ICON_GROUPS.length,
+    })
+    : t('icon.scopeMatch', { count: matchingCount, total: GAME_ICONS.length });
   element('game-icon-results').textContent = scope;
 }
 
@@ -182,6 +217,7 @@ function fillForm(profile) {
   element('fps').value = String(profile.fps);
   element('quality').value = String(profile.quality);
   element('view-mode').value = profile.viewMode;
+  element('view-mode-button').textContent = t(`display.${profile.viewMode}`);
   renderSelectedProfileIcons(profile);
   stage.dataset.viewMode = profile.viewMode;
   touch.setViewMode(profile.viewMode);
@@ -212,13 +248,13 @@ function saveForm() {
   try {
     profile = profileFromForm();
     if (!profile.host) {
-      element('host').setCustomValidity('Enter the gaming PC address');
+      element('host').setCustomValidity(t('validation.hostRequired'));
       element('host').reportValidity();
       element('host').setCustomValidity('');
       return null;
     }
   } catch (error) {
-    element('host').setCustomValidity(error.message);
+    element('host').setCustomValidity(localizeError(i18n.locale, error));
     element('host').reportValidity();
     element('host').setCustomValidity('');
     return null;
@@ -227,7 +263,7 @@ function saveForm() {
   const stored = store.upsert(profile);
   renderProfileLists();
   fillForm(stored);
-  element('save-status').textContent = 'Saved on this device';
+  element('save-status').textContent = t('settings.saved');
   return stored;
 }
 
@@ -241,6 +277,7 @@ function selectProfile(id) {
   fillForm(profile);
   renderConnectionButton();
   renderCompatibility();
+  renderTransportNote();
 }
 
 const session = new SpiceSession(canvas, video, image);
@@ -265,7 +302,7 @@ const touch = new TouchController(stage, {
 });
 
 session.onapi = (api) => touch.setApi(api);
-session.onnotice = (message) => showToast(message);
+session.onnotice = (key, parameters) => showToast(t(key, parameters));
 session.onframe = (metric) => {
   currentMetric = metric;
   const now = performance.now();
@@ -280,10 +317,12 @@ session.onframe = (metric) => {
 function renderConnectionButton() {
   const selected = store.selected();
   if (!session?.wanted) {
-    connectButton.textContent = 'Connect';
+    connectButton.textContent = t('button.connect');
     return;
   }
-  connectButton.textContent = session.profile?.id === selected.id ? 'Disconnect' : 'Switch';
+  connectButton.textContent = t(
+    session.profile?.id === selected.id ? 'button.disconnect' : 'button.switch',
+  );
 }
 
 function renderChannelStatus(node, label, presentation) {
@@ -293,7 +332,7 @@ function renderChannelStatus(node, label, presentation) {
   label.textContent = presentation.label;
 }
 
-function renderSnapshot(snapshot) {
+function renderSnapshot(snapshot, announce = true) {
   renderConnectionButton();
   emptyState.hidden = snapshot.wanted;
   stageHud.hidden = snapshot.videoState !== 'live';
@@ -301,7 +340,17 @@ function renderSnapshot(snapshot) {
   touch.setEnabled(snapshot.videoState === 'live' && snapshot.apiState === 'live');
   touch.setCanvasSize(snapshot.touchCanvas);
 
-  const presentation = connectionPresentation(snapshot);
+  if (!snapshot.wanted) {
+    currentMetric = null;
+    lastMetricPaint = 0;
+    element('video-metric').textContent = '—';
+    resizeScene.value = '';
+    touchMarker.hidden = true;
+  } else if (snapshot.videoState === 'connecting' && currentMetric === null) {
+    element('video-metric').textContent = t('metric.waiting');
+  }
+
+  const presentation = connectionPresentation(snapshot, i18n.locale);
   renderChannelStatus(apiStatus, element('api-status-label'), presentation.api);
   renderChannelStatus(videoStatus, element('video-status-label'), presentation.video);
 
@@ -319,8 +368,8 @@ function renderSnapshot(snapshot) {
     element('api-warning-copy').textContent = presentation.apiWarning.copy;
   }
 
-  if (snapshot.apiError?.code === 'password') {
-    showToast('The API password is incorrect. Update the saved instance and reconnect.', 7000);
+  if (announce && snapshot.apiError?.code === 'password') {
+    showToast(t('toast.password'), 7000);
   }
   if (location.protocol === 'https:'
     && (snapshot.videoError || snapshot.apiError?.code === 'transport')) {
@@ -346,7 +395,7 @@ function connectSelected() {
 
   currentMetric = null;
   lastMetricPaint = 0;
-  element('video-metric').textContent = 'Waiting for frame';
+  element('video-metric').textContent = t('metric.waiting');
   resizeScene.value = '';
   stage.dataset.viewMode = profile.viewMode;
   touch.setViewMode(profile.viewMode);
@@ -393,12 +442,20 @@ function renderCompatibility(force = false) {
   compatBanner.hidden = bannerDismissed || (!force && !recommended && !wasForcedBack);
   element('dialog-compat-button').hidden = !isHttps;
   if (wasForcedBack) {
-    element('compat-title').textContent = 'This host forced HTTPS back on';
-    element('compat-copy').textContent = 'Use a custom domain with Force HTTPS disabled, or open this site on EdgeOne over HTTP.';
+    element('compat-title').textContent = t('compat.forcedTitle');
+    element('compat-copy').textContent = t('compat.forcedCopy');
   } else {
-    element('compat-title').textContent = 'Browser compatibility mode needed';
-    element('compat-copy').textContent = 'Safari and Firefox cannot open plain spice2x LAN connections from an HTTPS page.';
+    element('compat-title').textContent = t('compat.title');
+    element('compat-copy').textContent = t('compat.copy');
   }
+}
+
+function renderTransportNote() {
+  const host = store.selected().host || '192.168.0.1';
+  const publicLooking = location.protocol === 'https:' && !isPrivateLanName(host);
+  element('transport-copy').textContent = t(
+    publicLooking ? 'settings.directCopyPublic' : 'settings.directCopy',
+  );
 }
 
 element('settings-button').addEventListener('click', openSettings);
@@ -410,7 +467,9 @@ quickProfile.addEventListener('change', () => selectProfile(quickProfile.value))
 profilePicker.addEventListener('change', () => selectProfile(profilePicker.value));
 
 element('new-profile').addEventListener('click', () => {
-  const profile = store.create(newProfile({ name: `Gaming PC ${store.list().length + 1}` }));
+  const profile = store.create({
+    name: t('profile.newName', { number: store.list().length + 1 }),
+  });
   renderProfileLists();
   selectProfile(profile.id);
   element('profile-name').select();
@@ -418,7 +477,7 @@ element('new-profile').addEventListener('click', () => {
 
 element('delete-profile').addEventListener('click', () => {
   const profile = store.selected();
-  element('delete-copy').textContent = `“${profile.name}” and its saved connection information will be removed from this device.`;
+  element('delete-copy').textContent = t('delete.copy', { name: profile.name });
   deleteDialog.showModal();
 });
 
@@ -437,7 +496,7 @@ deleteDialog.addEventListener('close', () => {
 
 element('save-profile').addEventListener('click', () => {
   if (saveForm()) {
-    showToast('Connection profile saved');
+    showToast(t('toast.profileSaved'));
   }
 });
 
@@ -450,7 +509,7 @@ form.addEventListener('submit', (event) => {
   closeSettings();
   currentMetric = null;
   lastMetricPaint = 0;
-  element('video-metric').textContent = 'Waiting for frame';
+  element('video-metric').textContent = t('metric.waiting');
   resizeScene.value = '';
   session.connect(profile);
 });
@@ -459,7 +518,7 @@ element('show-password').addEventListener('click', () => {
   const password = element('password');
   const showing = password.type === 'text';
   password.type = showing ? 'password' : 'text';
-  element('show-password').textContent = showing ? 'Show' : 'Hide';
+  element('show-password').textContent = t(showing ? 'button.show' : 'button.hide');
 });
 
 element('game-icon-button').addEventListener('click', () => {
@@ -474,26 +533,24 @@ iconSearch.addEventListener('input', () => {
 });
 
 element('view-mode').addEventListener('change', () => {
-  stage.dataset.viewMode = element('view-mode').value;
-  touch.setViewMode(element('view-mode').value);
+  const mode = element('view-mode').value;
+  stage.dataset.viewMode = mode;
+  touch.setViewMode(mode);
+  element('view-mode-button').textContent = t(`display.${mode}`);
 });
 
-const VIEW_MODES = [
-  { value: 'contain', label: 'Fit' },
-  { value: 'cover', label: 'Fill' },
-  { value: 'fill', label: 'Stretch' },
-];
+const VIEW_MODES = ['contain', 'cover', 'fill'];
 
 element('view-mode-button').addEventListener('click', () => {
   const current = stage.dataset.viewMode || 'contain';
-  const next = VIEW_MODES[(VIEW_MODES.findIndex((mode) => mode.value === current) + 1)
+  const next = VIEW_MODES[(VIEW_MODES.indexOf(current) + 1)
     % VIEW_MODES.length];
-  stage.dataset.viewMode = next.value;
-  touch.setViewMode(next.value);
-  element('view-mode').value = next.value;
-  element('view-mode-button').textContent = next.label;
+  stage.dataset.viewMode = next;
+  touch.setViewMode(next);
+  element('view-mode').value = next;
+  element('view-mode-button').textContent = t(`display.${next}`);
   const profile = store.selected();
-  store.upsert({ ...profile, viewMode: next.value });
+  store.upsert({ ...profile, viewMode: next });
 });
 
 resizeScene.addEventListener('change', async () => {
@@ -503,10 +560,12 @@ resizeScene.addEventListener('change', async () => {
   try {
     await session.setResizeScene(resizeScene.value);
     showToast(resizeScene.value === '0'
-      ? 'Game screen resize disabled'
-      : `Game screen resize scene ${resizeScene.value} selected`);
+      ? t('toast.resizeOff')
+      : t('toast.resizeScene', { scene: resizeScene.value }));
   } catch (error) {
-    showToast(`Resize: ${error.message}`);
+    showToast(t('toast.resizeError', {
+      message: localizeError(i18n.locale, error),
+    }));
     resizeScene.value = '';
   }
 });
@@ -533,6 +592,31 @@ element('compat-dismiss').addEventListener('click', () => {
   compatBanner.hidden = true;
 });
 
+function renderLocalizedUi() {
+  applyDocumentTranslations();
+  renderConnectionButton();
+  renderCompatibility();
+  renderTransportNote();
+  renderSnapshot(session.snapshot, false);
+  element('view-mode-button').textContent = t(`display.${stage.dataset.viewMode || 'contain'}`);
+  element('show-password').textContent = t(
+    element('password').type === 'text' ? 'button.hide' : 'button.show',
+  );
+  if (element('save-status').textContent) {
+    element('save-status').textContent = t('settings.saved');
+  }
+  if (iconDialog.open) {
+    renderIconGroups(iconSearch.value);
+  }
+}
+
+languageSelect.addEventListener('change', () => {
+  i18n.setLocale(languageSelect.value);
+  clearTimeout(toastTimer);
+  toast.hidden = true;
+  renderLocalizedUi();
+});
+
 // WebKit emits separate gesture events even with touch-action: none.
 for (const eventName of ['gesturestart', 'gesturechange', 'gestureend']) {
   document.addEventListener(eventName, (event) => event.preventDefault(), { passive: false });
@@ -550,16 +634,11 @@ window.addEventListener('online', () => {
   }
 });
 
-if (location.protocol === 'https:' && !isPrivateLanName(store.selected().host || '192.168.0.1')) {
-  // Public-looking names need targetAddressSpace support and may not work for WebSockets.
-  element('transport-note').querySelector('p').append(
-    ' A literal private IP is the most compatible choice on HTTPS.',
-  );
-}
-
+applyDocumentTranslations();
 renderProfileLists();
 fillForm(store.selected());
 renderCompatibility();
+renderTransportNote();
 renderSnapshot(session.snapshot);
 
 if (store.selected().host === '') {

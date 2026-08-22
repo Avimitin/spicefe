@@ -119,6 +119,8 @@ export class SpiceSession {
     this.stopMjpeg();
     this.api?.close();
     this.api = null;
+    this.onapi(null);
+    this.clearStreamViews();
 
     this.videoState = 'idle';
     this.apiState = 'idle';
@@ -129,6 +131,15 @@ export class SpiceSession {
     this.gameInfo = null;
     this.touchCanvas = null;
     this.emitState();
+  }
+
+  clearStreamViews() {
+    this.canvas.hidden = true;
+    this.video.hidden = true;
+    this.image.hidden = true;
+    // Resizing a canvas clears its backing buffer, including the final decoded frame.
+    this.canvas.width = 0;
+    this.canvas.height = 0;
   }
 
   startVideo() {
@@ -162,7 +173,7 @@ export class SpiceSession {
       return;
     } else {
       if (wantsH264) {
-        this.onnotice('H.264 decoding is unavailable; using the higher-bandwidth MJPEG stream');
+        this.onnotice('notice.h264UnavailableMjpeg');
       }
       this.videoFormat = 'mjpg';
       this.videoBackend = null;
@@ -274,7 +285,7 @@ export class SpiceSession {
       && this.profile.format === 'auto'
       && error?.status === 404) {
       this.fellBackToMjpeg = true;
-      this.onnotice('This spice2x build has no H.264 encoder; using MJPEG');
+      this.onnotice('notice.h264MissingMjpeg');
       this.stopH264();
       this.startVideo();
       return;
@@ -287,13 +298,13 @@ export class SpiceSession {
       this.stopH264();
       const fallbackBackend = this.nextH264Backend();
       if (fallbackBackend) {
-        this.onnotice('Trying the browser’s alternate H.264 playback path');
+        this.onnotice('notice.h264Alternate');
         this.startVideo();
         return;
       }
       if (this.profile.format === 'auto') {
         this.fellBackToMjpeg = true;
-        this.onnotice('H.264 could not be decoded; using MJPEG');
+        this.onnotice('notice.h264DecodeMjpeg');
         this.startVideo();
         return;
       }

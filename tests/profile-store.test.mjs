@@ -89,6 +89,18 @@ test('adds the spice2x icon when loading a profile saved before icon support', (
   assert.equal(store.selected().iconId, 'spice2x');
 });
 
+test('supports a localized name for newly generated default profiles', () => {
+  const storage = new MemoryStorage();
+  const store = new ProfileStore(storage, { defaultProfileName: '游戏 PC' });
+  assert.equal(store.selected().name, '游戏 PC');
+
+  store.remove(store.selectedId);
+  assert.equal(store.selected().name, '游戏 PC');
+
+  store.replaceAll([], null);
+  assert.equal(store.selected().name, '游戏 PC');
+});
+
 test('profile transfer preserves multiple instances, unicode, and passwords across schemes', () => {
   const first = sanitizeProfile({
     id: 'portable',
