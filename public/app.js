@@ -1,5 +1,5 @@
 import { compatibilityUrl, isPrivateLanName, likelyNeedsHttpMode } from './lib/endpoints.js';
-import { GAME_ICONS, gameIconById } from './lib/game-icons.js';
+import { GAME_ICON_GROUPS, GAME_ICONS, gameIconById } from './lib/game-icons.js';
 import { connectionPresentation } from './lib/connection-status.js';
 import {
   decodeProfileTransfer,
@@ -24,7 +24,7 @@ const deleteDialog = element('delete-dialog');
 const form = element('profile-form');
 const quickProfile = element('quick-profile');
 const profilePicker = element('profile-picker');
-const iconGrid = element('game-icon-grid');
+const iconGroups = element('game-icon-groups');
 const iconSearch = element('game-icon-search');
 const connectButton = element('connect-button');
 const emptyState = element('empty-state');
@@ -42,10 +42,6 @@ let toastTimer = null;
 let currentMetric = null;
 let lastMetricPaint = 0;
 let bannerDismissed = false;
-let visibleIconLimit = 30;
-
-const ICON_PAGE_SIZE = 30;
-
 function showToast(message, timeout = 4500) {
   toast.textContent = message;
   toast.hidden = false;
@@ -98,57 +94,73 @@ function setFormGameIcon(iconId) {
   element('game-icon-label').textContent = icon.label;
 }
 
-function renderIconGrid(query = '') {
+function createIconOption(icon, selectedId) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'game-icon-option';
+  button.dataset.iconId = icon.id;
+  button.setAttribute('role', 'option');
+  button.setAttribute('aria-selected', String(icon.id === selectedId));
+  button.title = icon.label;
+
+  const preview = document.createElement('img');
+  preview.src = icon.src;
+  preview.alt = '';
+  preview.loading = 'lazy';
+  preview.decoding = 'async';
+
+  const label = document.createElement('span');
+  label.textContent = icon.label;
+  button.append(preview, label);
+  button.addEventListener('click', () => {
+    setFormGameIcon(icon.id);
+    iconDialog.close();
+  });
+  return button;
+}
+
+function renderIconGroups(query = '') {
   const selectedId = element('game-icon-id').value;
   const needle = query.trim().toLocaleLowerCase();
-  const matching = GAME_ICONS.filter((icon) => !needle
-    || icon.label.toLocaleLowerCase().includes(needle)
-    || icon.id.toLocaleLowerCase().includes(needle));
+  const matchingGroups = GAME_ICON_GROUPS.map((group) => ({
+    group,
+    icons: group.icons.filter((icon) => !needle
+      || group.label.toLocaleLowerCase().includes(needle)
+      || icon.label.toLocaleLowerCase().includes(needle)
+      || icon.id.toLocaleLowerCase().includes(needle)),
+  })).filter(({ icons }) => icons.length > 0);
 
-  const visible = matching.slice(0, visibleIconLimit);
-  const choices = visible.map((icon) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'game-icon-option';
-    button.dataset.iconId = icon.id;
-    button.setAttribute('role', 'option');
-    button.setAttribute('aria-selected', String(icon.id === selectedId));
-    button.title = icon.label;
+  const sections = matchingGroups.map(({ group, icons }) => {
+    const section = document.createElement('section');
+    const heading = document.createElement('h3');
+    const grid = document.createElement('div');
+    const headingId = `game-icon-group-${group.id}`;
 
-    const preview = document.createElement('img');
-    preview.src = icon.src;
-    preview.alt = '';
-    preview.loading = 'lazy';
-    preview.decoding = 'async';
-
-    const label = document.createElement('span');
-    label.textContent = icon.label;
-    button.append(preview, label);
-    button.addEventListener('click', () => {
-      setFormGameIcon(icon.id);
-      iconDialog.close();
-    });
-    return button;
+    section.className = 'icon-category';
+    section.setAttribute('role', 'group');
+    section.setAttribute('aria-labelledby', headingId);
+    heading.id = headingId;
+    heading.textContent = group.label;
+    grid.className = 'icon-category-grid';
+    grid.append(...icons.map((icon) => createIconOption(icon, selectedId)));
+    section.append(heading, grid);
+    return section;
   });
 
-  if (visible.length < matching.length) {
-    const more = document.createElement('button');
-    more.type = 'button';
-    more.className = 'game-icon-more';
-    more.textContent = `Show ${Math.min(ICON_PAGE_SIZE, matching.length - visible.length)} more`;
-    more.addEventListener('click', () => {
-      visibleIconLimit += ICON_PAGE_SIZE;
-      renderIconGrid(query);
-    });
-    choices.push(more);
+  if (sections.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'icon-empty';
+    empty.textContent = 'No supported game icons match this search.';
+    sections.push(empty);
   }
 
-  iconGrid.replaceChildren(...choices);
+  iconGroups.replaceChildren(...sections);
 
-  const scope = matching.length === GAME_ICONS.length
-    ? `${matching.length} icons total`
-    : `${matching.length} of ${GAME_ICONS.length} icons match`;
-  element('game-icon-results').textContent = `Showing ${visible.length} · ${scope}`;
+  const matchingCount = matchingGroups.reduce((count, { icons }) => count + icons.length, 0);
+  const scope = matchingCount === GAME_ICONS.length
+    ? `${matchingCount} supported icons in ${GAME_ICON_GROUPS.length} categories`
+    : `${matchingCount} of ${GAME_ICONS.length} supported icons match`;
+  element('game-icon-results').textContent = scope;
 }
 
 function renderProfileLists() {
@@ -452,15 +464,13 @@ element('show-password').addEventListener('click', () => {
 
 element('game-icon-button').addEventListener('click', () => {
   iconSearch.value = '';
-  visibleIconLimit = ICON_PAGE_SIZE;
-  renderIconGrid();
+  renderIconGroups();
   iconDialog.showModal();
   iconSearch.focus();
 });
 
 iconSearch.addEventListener('input', () => {
-  visibleIconLimit = ICON_PAGE_SIZE;
-  renderIconGrid(iconSearch.value);
+  renderIconGroups(iconSearch.value);
 });
 
 element('view-mode').addEventListener('change', () => {

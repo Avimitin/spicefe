@@ -30,7 +30,8 @@ the LAN.
 - Fit, Fill, and Stretch display modes with correct touch coordinate mapping
 - spice2x image-resize scene selection (Off and scenes 1–4)
 - multiple named connection profiles in `localStorage`, each with a selectable
-  game icon shown beside the PC name
+  game icon from categorized, subscreen-capable releases shown beside the PC
+  name
 - explicit Connect, Disconnect, and Switch behavior; a reload never reconnects
 - responsive phone, tablet, and desktop UI
 
@@ -197,10 +198,12 @@ downloaded or run.
 
 The favicon and default profile artwork are the unmodified official spice2x
 icon from pinned revision `b9c8afb`; its GPLv3 license ships with the site.
-The searchable profile picker also includes the 111 browser-ready images from
+The searchable profile picker also includes an 11-image whitelist from
 [`bicarus-dev/bemani_fan_site_icons`](https://github.com/bicarus-dev/bemani_fan_site_icons)
-at pinned revision `225e494`. Icons are rendered in batches so opening the
-picker does not immediately fetch the complete collection.
+at pinned revision `225e494`: beatmania IIDX 27–33, GITADORA GALAXY WAVE
+DELTA, SOUND VOLTEX 6–7, and pop'n music High Cheer. The picker groups those
+icons by game, and the Nix build reconstructs the deployed icon directory from
+the whitelist so no other upstream artwork is shipped.
 
 The BEMANI icon repository provides no license and says the artwork was
 gathered from the KONAMI BEMANI fan site. Operators must obtain any permission

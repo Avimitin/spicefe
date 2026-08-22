@@ -54,9 +54,10 @@ The complete license and source record ship in `public/vendor/spice2x/`.
 
 The optional connection-profile artwork is copied from
 [`bicarus-dev/bemani_fan_site_icons`](https://github.com/bicarus-dev/bemani_fan_site_icons),
-revision `225e494eebe3db5cd9b2ce04349b87606df97be3`. Only the 111 browser-ready
-files in upstream `img/` are included; the redundant Windows ICO conversions
-are omitted.
+revision `225e494eebe3db5cd9b2ce04349b87606df97be3`. Only 11 browser-ready files
+for known subscreen-capable releases are included: beatmania IIDX 27–33,
+GITADORA GALAXY WAVE DELTA, SOUND VOLTEX 6–7, and pop'n music High Cheer. All
+other upstream images and the redundant Windows ICO conversions are omitted.
 
 At that revision, the upstream repository provides no license or other grant
 of rights and says the images were gathered from the KONAMI BEMANI fan site.

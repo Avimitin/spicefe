@@ -273,7 +273,6 @@ code {
 .inline-button,
 .hud-button,
 .game-icon-button,
-.game-icon-more,
 .game-icon-option,
 .text-button {
   cursor: pointer;
@@ -978,14 +977,28 @@ fieldset legend {
   font-size: 11px;
 }
 
-.icon-grid {
-  display: grid;
+.icon-groups {
   min-height: 180px;
-  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
-  gap: 8px;
   padding: 0 24px 24px;
   overflow: auto;
   overscroll-behavior: contain;
+}
+
+.icon-category + .icon-category {
+  margin-top: 20px;
+}
+
+.icon-category h3 {
+  margin: 0 0 8px;
+  color: var(--text);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.icon-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 8px;
 }
 
 .game-icon-option {
@@ -1033,18 +1046,10 @@ fieldset legend {
   -webkit-line-clamp: 2;
 }
 
-.game-icon-more {
-  min-height: 42px;
-  grid-column: 1 / -1;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--panel-raised);
-  color: var(--text);
-  font-weight: 700;
-}
-
-.game-icon-more:hover {
-  border-color: #4c5567;
+.icon-empty {
+  margin: 24px 0;
+  color: var(--muted);
+  text-align: center;
 }
 
 .confirm-dialog p {
@@ -1199,10 +1204,13 @@ fieldset legend {
     grid-template-columns: minmax(0, 1fr) 112px;
   }
 
-  .icon-grid {
-    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  .icon-groups {
     padding-right: 14px;
     padding-left: 14px;
+  }
+
+  .icon-category-grid {
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
   }
 
   .icon-search,

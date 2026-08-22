@@ -20,6 +20,19 @@
         "aarch64-darwin"
       ];
       forAllSystems = nixpkgs.lib.genAttrs systems;
+      bemaniIconFiles = [
+        "ac_iidx27.png"
+        "ac_iidx28.png"
+        "ac_iidx29.png"
+        "ac_iidx30.png"
+        "ac_iidx31.png"
+        "ac_iidx32.png"
+        "ac_iidx33.png"
+        "ac_gitadora_gw_delta.png"
+        "ac_sdvx6.png"
+        "ac_sdvx7.jpg"
+        "ac_popn_highcheers.jpg"
+      ];
     in
     {
       packages = forAllSystems (system:
@@ -38,7 +51,6 @@
               runHook preInstall
               cmp public/vendor/jmuxer.min.js node_modules/jmuxer/dist/jmuxer.min.js
               cmp public/vendor/jmuxer.LICENSE.txt node_modules/jmuxer/LICENSE
-              diff --brief --recursive public/vendor/bemani-fan-site-icons/img ${bemaniIcons}/img
               cmp public/vendor/bemani-fan-site-icons/UPSTREAM_README.md ${bemaniIcons}/README.md
               cmp public/assets/spice2x.ico ${spice2xSource}/src/spice2x/build/icon.ico
               cmp public/vendor/spice2x/LICENSE.GPL-3.0.txt ${spice2xSource}/LICENSE
@@ -46,6 +58,14 @@
               cmp THIRD_PARTY_NOTICES.md public/THIRD_PARTY_NOTICES.md
               mkdir -p "$out"
               cp -R public/. "$out/"
+              rm -r "$out/vendor/bemani-fan-site-icons/img"
+              mkdir -p "$out/vendor/bemani-fan-site-icons/img"
+              for icon_file in ${pkgs.lib.escapeShellArgs bemaniIconFiles}; do
+                install -m 0444 \
+                  "${bemaniIcons}/img/$icon_file" \
+                  "$out/vendor/bemani-fan-site-icons/img/$icon_file"
+              done
+              diff --brief --recursive public "$out"
               runHook postInstall
             '';
           };
