@@ -1422,6 +1422,16 @@ code {
   line-height: 1.5;
 }
 
+.setup-list .required-version {
+  display: inline-block;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent-bright);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .version-link {
   display: inline-flex;
   min-height: 34px;
@@ -1618,13 +1628,6 @@ code {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.6;
-}
-
-.spicecfg-demo figcaption small {
-  display: block;
-  margin-top: 12px;
-  color: var(--faint);
-  font-size: 10px;
 }
 
 .spicecfg-image-link {
@@ -2449,13 +2452,6 @@ code {
   font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
-}
-
-.spicecfg-demo figcaption small {
-  margin-top: 12px;
-  color: var(--faint);
-  font-size: 12px;
-  line-height: 18px;
 }
 
 .spicecfg-image-link {
@@ -3443,12 +3439,6 @@ body {
   margin-bottom: 5px;
   color: var(--faint);
   font-size: 11px;
-}
-
-.spicecfg-demo figcaption small {
-  margin-top: 8px;
-  font-size: 11px;
-  line-height: 16px;
 }
 
 .spicecfg-image-link {
