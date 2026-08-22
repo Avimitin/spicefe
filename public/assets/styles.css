@@ -3939,6 +3939,17 @@ body {
     padding-bottom: env(safe-area-inset-bottom);
   }
 
+  .settings-dialog .stream-settings {
+    margin-bottom: 16px;
+  }
+
+  .settings-dialog .dialog-footer {
+    height: 64px;
+    min-height: 64px;
+    flex: 0 0 64px;
+    margin-top: auto;
+  }
+
   .stream-options {
     grid-template-columns: 1fr 1fr;
   }
