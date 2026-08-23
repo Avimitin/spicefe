@@ -18,6 +18,10 @@
 | :---: | :---: |
 | [![spicefe welcome page](./docs/screenshots/welcome.png)](./docs/screenshots/welcome.png) | [![spicefe library showing independent Host, API, and Video states](./docs/screenshots/server-library.png)](./docs/screenshots/server-library.png) |
 
+| Card management | Insert cards while streaming |
+| :---: | :---: |
+| [![spicefe virtual e-amusement card management page](./docs/screenshots/card-library.png)](./docs/screenshots/card-library.png) | [![spicefe card insertion menu over a live subscreen stream](./docs/screenshots/card-insert.png)](./docs/screenshots/card-insert.png) |
+
 **Live GITADORA GALAXY WAVE DELTA subscreen**
 
 [![GITADORA GALAXY WAVE DELTA subscreen streaming through spicefe](./docs/screenshots/gitadora-stream.png)](./docs/screenshots/gitadora-stream.png)

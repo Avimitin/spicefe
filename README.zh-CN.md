@@ -17,6 +17,10 @@
 | :---: | :---: |
 | [![spicefe 欢迎页](./docs/screenshots/welcome.png)](./docs/screenshots/welcome.png) | [![分别显示主机、API 与视频状态的 spicefe 服务器库](./docs/screenshots/server-library.png)](./docs/screenshots/server-library.png) |
 
+| 卡片管理 | 串流中插卡 |
+| :---: | :---: |
+| [![spicefe 虚拟 e-amusement 卡片管理页](./docs/screenshots/card-library.png)](./docs/screenshots/card-library.png) | [![实时副屏串流上方的 spicefe 插卡菜单](./docs/screenshots/card-insert.png)](./docs/screenshots/card-insert.png) |
+
 **GITADORA GALAXY WAVE DELTA 实时副屏**
 
 [![通过 spicefe 串流的 GITADORA GALAXY WAVE DELTA 副屏](./docs/screenshots/gitadora-stream.png)](./docs/screenshots/gitadora-stream.png)
