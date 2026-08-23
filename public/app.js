@@ -77,7 +77,7 @@ const welcomePageLink = element('welcome-page-link');
 const libraryPageLink = element('library-page-link');
 const cardPageLink = element('card-page-link');
 const browserSetupPageLink = element('browser-setup-page-link');
-const selfHostPageLink = element('self-host-page-link');
+const usageGuidePageLink = element('usage-guide-page-link');
 const brandIcon = element('brand-icon');
 const settingsButton = element('settings-button');
 const connectButton = element('connect-button');
@@ -85,7 +85,8 @@ const connectButtonLabel = element('connect-button-label');
 const emptyState = element('empty-state');
 const serverLibrary = element('server-library');
 const browserSetup = element('browser-setup');
-const selfHost = element('self-host');
+const usageGuidePage = element('usage-guide-page');
+const selfHostGuide = element('self-host-guide');
 const cardLibrary = element('card-library');
 const serverList = element('server-list');
 const cardList = element('card-list');
@@ -103,6 +104,11 @@ const streamMessage = element('stream-message');
 const stageHud = element('stage-hud');
 const hudShowButton = element('hud-show-button');
 const hudCloseButton = element('hud-close-button');
+
+// Keep the long deployment guide next to the browser guide in source while
+// presenting connection setup and self-hosting as one continuous usage page.
+element('self-host-guide-slot').replaceWith(selfHostGuide);
+selfHostGuide.hidden = false;
 const activeServer = element('active-server');
 const connectionStatuses = element('connection-statuses');
 const apiStatus = element('api-status');
@@ -223,8 +229,11 @@ function requestedBrowsePage() {
   if (requested === 'browser-setup') {
     return 'browser-setup';
   }
+  if (requested === 'guide') {
+    return 'guide';
+  }
   if (requested === 'self-host') {
-    return 'self-host';
+    return 'guide';
   }
   return undefined;
 }
@@ -1010,7 +1019,7 @@ function renderPageNavigation(view) {
   libraryPageLink.href = browsePagePath('servers');
   cardPageLink.href = browsePagePath('cards');
   browserSetupPageLink.href = browsePagePath('browser-setup');
-  selfHostPageLink.href = browsePagePath('self-host');
+  usageGuidePageLink.href = browsePagePath('guide');
 
   if (view === 'welcome') {
     welcomePageLink.setAttribute('aria-current', 'page');
@@ -1032,10 +1041,10 @@ function renderPageNavigation(view) {
   } else {
     browserSetupPageLink.removeAttribute('aria-current');
   }
-  if (view === 'self-host') {
-    selfHostPageLink.setAttribute('aria-current', 'page');
+  if (view === 'guide') {
+    usageGuidePageLink.setAttribute('aria-current', 'page');
   } else {
-    selfHostPageLink.removeAttribute('aria-current');
+    usageGuidePageLink.removeAttribute('aria-current');
   }
 
   libraryPageLink.setAttribute('aria-disabled', String(!hasServers));
@@ -1050,10 +1059,23 @@ function navigateToBrowsePage(requestedPage) {
   browsePage = mainView(store.list(), { wanted: false }, requestedPage);
   updateBrowsePageHistory(browsePage);
   setPageMenuOpen(false);
+  if (browsePage === 'guide') {
+    usageGuidePage.scrollTop = 0;
+  }
   if (session.wanted) {
     session.disconnect();
   } else {
     renderSnapshot(session.snapshot, false);
+  }
+}
+
+function scrollWithinPage(container, target, { behavior = 'smooth', updateHash = false } = {}) {
+  const top = target.getBoundingClientRect().top
+    - container.getBoundingClientRect().top
+    + container.scrollTop;
+  container.scrollTo({ top: Math.max(0, top), behavior });
+  if (updateHash && location.hash !== `#${target.id}`) {
+    history.pushState(null, '', `${location.pathname}${location.search}#${target.id}`);
   }
 }
 
@@ -1080,7 +1102,7 @@ function renderMainView(snapshot) {
   serverLibrary.hidden = view !== 'servers';
   cardLibrary.hidden = view !== 'cards';
   browserSetup.hidden = view !== 'browser-setup';
-  selfHost.hidden = view !== 'self-host';
+  usageGuidePage.hidden = view !== 'guide';
 
   const streaming = view === 'stream';
   const tickerStreaming = streaming && snapshot.profile?.tickerEnabled;
@@ -1238,7 +1260,7 @@ function renderCompatibility(force = false, view = renderedMainView) {
   const isHttps = location.protocol === 'https:';
   const recommended = isHttps && likelyNeedsBrowserSetup();
   compatBanner.hidden = view === 'browser-setup'
-    || view === 'self-host'
+    || view === 'guide'
     || view === 'cards'
     || bannerDismissed
     || (!force && !recommended);
@@ -1441,9 +1463,9 @@ element('library-connection-help').addEventListener('click', (event) => {
   navigateToBrowsePage('browser-setup');
 });
 
-selfHostPageLink.addEventListener('click', (event) => {
+usageGuidePageLink.addEventListener('click', (event) => {
   event.preventDefault();
-  navigateToBrowsePage('self-host');
+  navigateToBrowsePage('guide');
 });
 
 document.addEventListener('pointerdown', (event) => {
@@ -1490,15 +1512,28 @@ element('card-menu-manage').addEventListener('click', () => {
 });
 
 settingsButton.addEventListener('click', () => openSettings());
+element('settings-guide-link').addEventListener('click', (event) => {
+  event.preventDefault();
+  closeSettings();
+  navigateToBrowsePage('guide');
+});
 element('empty-configure').addEventListener('click', createProfileAndEdit);
 element('empty-create-card').addEventListener('click', () => {
   navigateToBrowsePage('cards');
   startNewCard();
   renderCardCollection();
 });
+element('showcase-scroll-link').addEventListener('click', (event) => {
+  event.preventDefault();
+  scrollWithinPage(emptyState, element('showcase'), { updateHash: true });
+});
+element('showcase-guide-link').addEventListener('click', (event) => {
+  event.preventDefault();
+  navigateToBrowsePage('guide');
+});
 element('guide-self-host').addEventListener('click', (event) => {
   event.preventDefault();
-  navigateToBrowsePage('self-host');
+  scrollWithinPage(usageGuidePage, selfHostGuide, { updateHash: true });
 });
 element('add-server').addEventListener('click', createProfileAndEdit);
 element('add-card').addEventListener('click', () => startNewCard());
@@ -1875,7 +1910,8 @@ element('browser-setup-done').addEventListener('click', () => {
 
 element('browser-deployment-link').addEventListener('click', (event) => {
   event.preventDefault();
-  navigateToBrowsePage('self-host');
+  navigateToBrowsePage('guide');
+  requestAnimationFrame(() => scrollWithinPage(usageGuidePage, selfHostGuide));
 });
 
 element('self-host-done').addEventListener('click', () => {
@@ -1959,5 +1995,10 @@ renderProfileLists();
 fillForm(store.selected());
 renderCompatibility();
 renderSnapshot(session.snapshot);
+if (browsePage === 'welcome' && location.hash === '#showcase') {
+  requestAnimationFrame(() => scrollWithinPage(emptyState, element('showcase'), { behavior: 'auto' }));
+} else if (browsePage === 'guide' && location.hash === '#self-host-guide') {
+  requestAnimationFrame(() => scrollWithinPage(usageGuidePage, selfHostGuide, { behavior: 'auto' }));
+}
 document.fonts?.ready?.then(() => measureServerNames());
 document.fonts?.ready?.then(() => measureCreditCardNames());

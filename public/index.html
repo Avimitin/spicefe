@@ -40,9 +40,9 @@
               <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.4c0 4.7 3.1 8.2 7.5 9.6 4.4-1.4 7.5-4.9 7.5-9.6V6zM9.5 12l1.7 1.7 3.5-4"/></svg>
               <span data-i18n="nav.browserSetup">Browser setup</span>
             </a>
-            <a id="self-host-page-link" class="page-menu-link" href="?page=self-host">
+            <a id="usage-guide-page-link" class="page-menu-link" href="?page=guide">
               <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4h16v6H4zM4 14h16v6H4zM8 7h.01M8 17h.01M12 7h5M12 17h5"/></svg>
-              <span data-i18n="nav.selfHost">Self-hosting</span>
+              <span data-i18n="nav.guide">Usage guide</span>
             </a>
           </nav>
         </div>
@@ -168,7 +168,10 @@
           <h1><span data-i18n="home.titleFirst">Your arcade subscreen</span><br><span data-i18n="home.titleSecond">is already in your hands.</span></h1>
           <p data-i18n="home.copy">Turn your phone or tablet into a responsive touch display—no extra screen required.</p>
           <div class="welcome-actions">
-            <button id="empty-configure" class="primary-button large" type="button" data-i18n="home.configure">Set up a connection</button>
+            <button id="empty-configure" class="primary-button large welcome-connect-button" type="button">
+              <svg class="welcome-connect-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 15h4M15 12h5M17.5 9.5 20 12l-2.5 2.5"/></svg>
+              <span data-i18n="home.configure">Set up a connection</span>
+            </button>
             <button id="empty-create-card" class="welcome-card-button" type="button" aria-label="Create a new e-amusement card" data-i18n-aria-label="home.createCardLabel">
               <svg class="welcome-card-icon" aria-hidden="true" viewBox="0 0 24 24">
                 <rect x="2" y="4" width="20" height="16" rx="3" fill="#171717"/>
@@ -179,10 +182,105 @@
               <span data-i18n="home.createCard">Create card</span>
             </button>
           </div>
-          <a class="guide-jump" href="#usage-guide"><span data-i18n="guide.jump">Read the setup guide</span><span aria-hidden="true">↓</span></a>
+          <a id="showcase-scroll-link" class="guide-jump" href="#showcase"><span data-i18n="home.scrollMore">Scroll for more</span><span aria-hidden="true">↓</span></a>
         </div>
 
-        <section id="usage-guide" class="usage-guide" aria-labelledby="usage-guide-title">
+        <section id="showcase" class="welcome-showcase" aria-labelledby="showcase-title">
+          <div class="showcase-shell">
+            <header class="showcase-header">
+              <p class="eyebrow" data-i18n="showcase.eyebrow">BUILT FOR THE ARCADE</p>
+              <h2 id="showcase-title" data-i18n="showcase.title">Everything the cabinet needs, on the screen you already own.</h2>
+              <p data-i18n="showcase.copy">Save every gaming PC, understand each connection at a glance, carry your cards, and play with a responsive touch subscreen.</p>
+            </header>
+
+            <div class="showcase-feature-list">
+              <article class="showcase-feature">
+                <div class="showcase-feature-copy">
+                  <p class="showcase-feature-label" data-i18n="showcase.libraryLabel">CONNECTION LIBRARY</p>
+                  <h3 data-i18n="showcase.libraryTitle">Every cabinet, ready at a glance.</h3>
+                  <p data-i18n="showcase.libraryCopy">Save multiple gaming PCs with their own game art. Separate Host, API, and Video states tell you exactly what is ready before you connect.</p>
+                </div>
+                <figure class="showcase-feature-media">
+                  <img src="./assets/showcase/server-library.png" loading="lazy" decoding="async" alt="spicefe library showing several saved gaming PCs and their connection states" data-i18n-alt="showcase.libraryAlt">
+                </figure>
+              </article>
+
+              <article class="showcase-feature">
+                <div class="showcase-feature-copy">
+                  <p class="showcase-feature-label" data-i18n="showcase.cardsLabel">CARDS, READY</p>
+                  <h3 data-i18n="showcase.cardsTitle">Bring your e-amusement cards with you.</h3>
+                  <p data-i18n="showcase.cardsCopy">Build a card library with memorable names and artwork. Everything stays in this browser, ready for the next game.</p>
+                </div>
+                <figure class="showcase-feature-media">
+                  <img src="./assets/showcase/card-library.png" loading="lazy" decoding="async" alt="spicefe e-amusement card library and card editor" data-i18n-alt="showcase.cardsAlt">
+                </figure>
+              </article>
+
+              <article class="showcase-feature">
+                <div class="showcase-feature-copy">
+                  <p class="showcase-feature-label" data-i18n="showcase.insertLabel">ONE-TAP INSERT</p>
+                  <h3 data-i18n="showcase.insertTitle">Stay in the game when you change cards.</h3>
+                  <p data-i18n="showcase.insertCopy">The card picker lives directly over the stream. Choose a player, tap a saved card, and return to the subscreen without breaking your flow.</p>
+                </div>
+                <figure class="showcase-feature-media showcase-feature-media-portrait">
+                  <img src="./assets/showcase/card-insert.png" loading="lazy" decoding="async" alt="spicefe card insertion menu over a live arcade subscreen" data-i18n-alt="showcase.insertAlt">
+                </figure>
+              </article>
+
+              <article class="showcase-feature">
+                <div class="showcase-feature-copy">
+                  <p class="showcase-feature-label" data-i18n="showcase.streamLabel">TOUCH SUBSCREEN</p>
+                  <h3 data-i18n="showcase.streamTitle">Your phone becomes the missing arcade display.</h3>
+                  <p data-i18n="showcase.streamCopy">Stream the live H.264 subscreen over your LAN and send touch input straight back to spice2x, with a layout that adapts to phones, tablets, and desktops.</p>
+                </div>
+                <figure class="showcase-feature-media">
+                  <img src="./assets/showcase/gitadora-stream.png" loading="lazy" decoding="async" alt="GITADORA GALAXY WAVE DELTA subscreen streaming in spicefe" data-i18n-alt="showcase.streamAlt">
+                </figure>
+              </article>
+            </div>
+
+            <section class="showcase-video-section" aria-labelledby="showcase-video-title">
+              <header class="showcase-video-header">
+                <p class="eyebrow" data-i18n="showcase.tickerLabel">CLASSIC IIDX</p>
+                <h2 id="showcase-video-title" data-i18n="showcase.tickerTitle">The old 16-segment ticker, alive again.</h2>
+                <p data-i18n="showcase.tickerCopy">For IIDX generations built around the original nine-character display, spicefe turns ticker data into a faithful, scalable hardware-inspired view.</p>
+              </header>
+              <div class="showcase-video-points">
+                <article>
+                  <span class="showcase-point-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg></span>
+                  <h3 data-i18n="showcase.tickerNativeTitle">Native ticker data</h3>
+                  <p data-i18n="showcase.tickerNativeCopy">Reads the text reported by spice2x instead of capturing a video screen.</p>
+                </article>
+                <article>
+                  <span class="showcase-point-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M15 8l4 4-4 4M9 8l-4 4 4 4"/></svg></span>
+                  <h3 data-i18n="showcase.tickerMotionTitle">Authentic motion</h3>
+                  <p data-i18n="showcase.tickerMotionCopy">Long messages advance through nine-character windows like the original machine.</p>
+                </article>
+                <article>
+                  <span class="showcase-point-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM8 21h8M12 18v3"/></svg></span>
+                  <h3 data-i18n="showcase.tickerScaleTitle">Made to fit</h3>
+                  <p data-i18n="showcase.tickerScaleCopy">The framed display keeps its proportions from a small phone to a large monitor.</p>
+                </article>
+              </div>
+              <figure class="showcase-video-frame">
+                <video src="./assets/showcase/iidx-16-segment-display.mp4" controls playsinline preload="metadata" aria-label="IIDX 16-segment ticker display demonstration" data-i18n-aria-label="showcase.tickerVideoAria"></video>
+              </figure>
+            </section>
+
+            <footer class="showcase-cta">
+              <div>
+                <strong data-i18n="showcase.ctaTitle">Ready to build your subscreen?</strong>
+                <p data-i18n="showcase.ctaCopy">Follow the complete connection and self-hosting guide.</p>
+              </div>
+              <a id="showcase-guide-link" class="primary-button guide-footer-link" href="?page=guide" data-i18n="showcase.ctaButton">Open usage guide</a>
+            </footer>
+          </div>
+        </section>
+      </section>
+
+      <section id="usage-guide-page" class="browser-setup usage-guide-page" hidden aria-labelledby="usage-guide-title">
+        <div id="usage-guide-page-shell" class="browser-setup-shell usage-guide-page-shell">
+          <section id="usage-guide" class="usage-guide" aria-labelledby="usage-guide-title">
           <section class="setup-notice usage-guide-notice" aria-labelledby="setup-notice-title">
             <header class="setup-notice-header">
               <strong id="setup-notice-title" class="setup-notice-title" data-i18n="setup.title">Before you connect</strong>
@@ -277,9 +375,11 @@
               <strong data-i18n="guide.selfHostTitle">Want to self-host?</strong>
               <p data-i18n="guide.selfHostCopy">Serve spicefe from your own LAN with the no-install Windows helper or Nix.</p>
             </div>
-            <a id="guide-self-host" class="primary-button guide-footer-link" href="?page=self-host" data-i18n="guide.selfHostButton">View deployment guide</a>
+            <a id="guide-self-host" class="primary-button guide-footer-link" href="#self-host-guide" data-i18n="guide.selfHostButton">Continue to self-hosting</a>
           </footer>
-        </section>
+          </section>
+          <div id="self-host-guide-slot"></div>
+        </div>
       </section>
 
       <section id="server-library" class="server-library" hidden aria-labelledby="server-library-title">
@@ -576,7 +676,7 @@
                 <li data-i18n="browserSetup.localStep2">Double-click serve.bat. If Windows Firewall asks, allow Private networks only.</li>
                 <li data-i18n="browserSetup.localStep3">On the phone or tablet, manually enter one of the cyan http://PC-IP:45000/ addresses printed in the server window.</li>
               </ol>
-              <a id="browser-deployment-link" class="official-doc-link" href="?page=self-host"><span data-i18n="browserSetup.fullDeployment">Open the full deployment guide</span><span aria-hidden="true">→</span></a>
+              <a id="browser-deployment-link" class="official-doc-link" href="?page=guide#self-host-guide"><span data-i18n="browserSetup.fullDeployment">Open the full deployment guide</span><span aria-hidden="true">→</span></a>
             </section>
           </div>
 
@@ -591,7 +691,7 @@
         </div>
       </section>
 
-      <section id="self-host" class="browser-setup self-host" hidden aria-labelledby="self-host-title">
+      <section id="self-host-guide" class="self-host self-host-guide" hidden aria-labelledby="self-host-title">
         <div class="browser-setup-shell self-host-shell">
           <header class="browser-setup-header">
             <p class="eyebrow" data-i18n="selfHost.eyebrow">LOCAL DEPLOYMENT</p>
@@ -772,6 +872,12 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run</code></pre>
           </button>
         </div>
       </header>
+
+      <a id="settings-guide-link" class="settings-guide-link" href="?page=guide">
+        <svg class="settings-guide-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5.5c2.8-.8 5.4-.3 8 1.5v12c-2.6-1.8-5.2-2.3-8-1.5zM20 5.5c-2.8-.8-5.4-.3-8 1.5v12c2.6-1.8 5.2-2.3 8-1.5z"/></svg>
+        <span data-i18n="settings.guideLink">Open usage guide</span>
+        <svg class="settings-guide-arrow" aria-hidden="true" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+      </a>
 
       <div class="form-grid">
         <label class="field span-two">

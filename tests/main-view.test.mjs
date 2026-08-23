@@ -31,10 +31,11 @@ test('browser setup remains available with or without saved servers', () => {
   assert.equal(mainView([blank], { wanted: false }, 'browser-setup'), 'browser-setup');
 });
 
-test('self-hosting guide remains available with or without saved servers', () => {
-  assert.equal(browseView([saved], 'self-host'), 'self-host');
-  assert.equal(mainView([saved], { wanted: false }, 'self-host'), 'self-host');
-  assert.equal(mainView([blank], { wanted: false }, 'self-host'), 'self-host');
+test('the combined usage guide remains available with or without saved servers', () => {
+  assert.equal(browseView([saved], 'guide'), 'guide');
+  assert.equal(mainView([saved], { wanted: false }, 'guide'), 'guide');
+  assert.equal(mainView([blank], { wanted: false }, 'guide'), 'guide');
+  assert.equal(browseView([saved], 'self-host'), 'guide');
 });
 
 test('card management remains available with or without saved servers', () => {
@@ -93,4 +94,51 @@ test('the connection editor leaves server selection to the library', () => {
     /<footer class="dialog-footer">[\s\S]*id="delete-profile"[^>]*hidden[\s\S]*id="save-profile"/,
   );
   assert.match(script, /delete-profile'\)\.hidden = editingProfileIsNew/);
+});
+
+test('the welcome page leads into README showcases while setup has its own page', () => {
+  const markup = readFileSync(
+    new URL('../public/index.html', import.meta.url),
+    'utf8',
+  );
+  const script = readFileSync(
+    new URL('../public/app.js', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(markup, /id="empty-state"[\s\S]*href="#showcase"[\s\S]*id="showcase"/);
+  assert.match(markup, /id="usage-guide-page"[^>]*hidden/);
+  assert.match(markup, /id="usage-guide-page-link"[^>]*href="\?page=guide"/);
+  assert.match(markup, /\.\/assets\/showcase\/server-library\.png/);
+  assert.match(markup, /\.\/assets\/showcase\/card-library\.png/);
+  assert.match(markup, /\.\/assets\/showcase\/card-insert\.png/);
+  assert.match(markup, /\.\/assets\/showcase\/gitadora-stream\.png/);
+  assert.match(markup, /\.\/assets\/showcase\/iidx-16-segment-display\.mp4/);
+  assert.doesNotMatch(markup, /docs\/screenshots\/welcome\.png/);
+  assert.match(markup, /id="self-host-guide"/);
+  assert.match(script, /self-host-guide-slot'\)\.replaceWith\(selfHostGuide\)/);
+});
+
+test('connection entry points expose the usage guide and a clear primary icon', () => {
+  const markup = readFileSync(
+    new URL('../public/index.html', import.meta.url),
+    'utf8',
+  );
+  const script = readFileSync(
+    new URL('../public/app.js', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(
+    markup,
+    /id="empty-configure"[\s\S]*class="welcome-connect-icon"[\s\S]*data-i18n="home\.configure"/,
+  );
+  assert.match(
+    markup,
+    /id="settings-guide-link"[^>]*href="\?page=guide"[\s\S]*data-i18n="settings\.guideLink"[\s\S]*id="profile-name"/,
+  );
+  assert.match(
+    script,
+    /settings-guide-link'\)\.addEventListener\('click',[\s\S]*navigateToBrowsePage\('guide'\)/,
+  );
 });

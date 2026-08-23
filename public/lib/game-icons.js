@@ -45,9 +45,6 @@ export const GAME_ICON_GROUPS = Object.freeze([
     bemaniIcon('ac_iidx31.png', 'beatmania IIDX 31'),
     bemaniIcon('ac_iidx32.png', 'beatmania IIDX 32'),
     bemaniIcon('ac_iidx33.png', 'beatmania IIDX 33'),
-    bemaniIcon('gs_iidx_infinitas.png', 'beatmania IIDX INFINITAS'),
-    bemaniIcon('gs_iidx_infinitas2.png', 'beatmania IIDX INFINITAS · alternate'),
-    bemaniIcon('mobile_iidx.png', 'beatmania IIDX ULTIMATE MOBILE'),
   ]),
   iconGroup('gitadora', 'GITADORA', [
     bemaniIcon('ac_gitadora_gw_delta.png', 'GITADORA GALAXY WAVE DELTA'),

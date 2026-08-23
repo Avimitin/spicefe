@@ -15,15 +15,15 @@
 
 | 欢迎页 | 已保存服务器诊断 |
 | :---: | :---: |
-| [![spicefe 欢迎页](./docs/screenshots/welcome.png)](./docs/screenshots/welcome.png) | [![分别显示主机、API 与视频状态的 spicefe 服务器库](./docs/screenshots/server-library.png)](./docs/screenshots/server-library.png) |
+| [![spicefe 欢迎页](./docs/screenshots/welcome.png)](./docs/screenshots/welcome.png) | [![分别显示主机、API 与视频状态的 spicefe 服务器库](./public/assets/showcase/server-library.png)](./public/assets/showcase/server-library.png) |
 
 | 卡片管理 | 串流中插卡 |
 | :---: | :---: |
-| [![spicefe 虚拟 e-amusement 卡片管理页](./docs/screenshots/card-library.png)](./docs/screenshots/card-library.png) | [![实时副屏串流上方的 spicefe 插卡菜单](./docs/screenshots/card-insert.png)](./docs/screenshots/card-insert.png) |
+| [![spicefe 虚拟 e-amusement 卡片管理页](./public/assets/showcase/card-library.png)](./public/assets/showcase/card-library.png) | [![实时副屏串流上方的 spicefe 插卡菜单](./public/assets/showcase/card-insert.png)](./public/assets/showcase/card-insert.png) |
 
 **GITADORA GALAXY WAVE DELTA 实时副屏**
 
-[![通过 spicefe 串流的 GITADORA GALAXY WAVE DELTA 副屏](./docs/screenshots/gitadora-stream.png)](./docs/screenshots/gitadora-stream.png)
+[![通过 spicefe 串流的 GITADORA GALAXY WAVE DELTA 副屏](./public/assets/showcase/gitadora-stream.png)](./public/assets/showcase/gitadora-stream.png)
 
 **旧版 beatmania IIDX 米字屏**
 
@@ -393,11 +393,11 @@ License 1.1，可用于商业及非商业应用；站点中附带完整许可证
 站点图标及连接配置的默认图标，是来自固定版本 `b9c8afb` 的未经修改的 spice2x
 官方图标；站点中同时提供其 GPLv3 许可证。连接图标选择器还包含
 [`bicarus-dev/bemani_fan_site_icons`](https://github.com/bicarus-dev/bemani_fan_site_icons)
-固定版本 `225e494` 中的 25 个白名单图像：上游提供的全部 21 个 beatmania IIDX
-图像（18 个覆盖 18–33、包含预发行与场测版本的街机图标，以及 INFINITAS 和
-ULTIMATE MOBILE 图像）、GITADORA GALAXY WAVE DELTA、SOUND VOLTEX 6–7 及
-pop'n music High Cheer。选择器按游戏分类；Nix 构建会依据白名单重新生成部署用
-图标目录，不会发布上游的其他图像。
+固定版本 `225e494` 中的 22 个白名单图像：上游提供的全部 18 个 beatmania IIDX
+街机图标（覆盖 18–33，并包含预发行与场测版本）、GITADORA GALAXY WAVE DELTA、
+SOUND VOLTEX 6–7 及 pop'n music High Cheer；不包含 INFINITAS 和 ULTIMATE
+MOBILE。选择器按游戏分类；Nix 构建会依据白名单重新生成部署用图标目录，不会发布
+上游的其他图像。
 
 BEMANI 图标仓库没有提供许可证，并说明这些图像收集自 KONAMI BEMANI 粉丝
 站点。站点运营者必须自行取得重新分发或公开提供这些图像所需的许可。本项目

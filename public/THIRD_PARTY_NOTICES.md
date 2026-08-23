@@ -142,11 +142,11 @@ checksum are recorded in `public/vendor/frankerfacez/SOURCE.md`.
 
 The optional connection-profile artwork is copied from
 [`bicarus-dev/bemani_fan_site_icons`](https://github.com/bicarus-dev/bemani_fan_site_icons),
-revision `225e494eebe3db5cd9b2ce04349b87606df97be3`. The 25 browser-ready files
-include every available beatmania IIDX image (18 arcade release images plus
-INFINITAS and ULTIMATE MOBILE artwork), GITADORA GALAXY WAVE DELTA, SOUND
-VOLTEX 6–7, and pop'n music High Cheer. All other upstream images and the
-redundant Windows ICO conversions are omitted.
+revision `225e494eebe3db5cd9b2ce04349b87606df97be3`. The 22 browser-ready files
+include all 18 available beatmania IIDX arcade images, GITADORA GALAXY WAVE
+DELTA, SOUND VOLTEX 6–7, and pop'n music High Cheer. INFINITAS, ULTIMATE
+MOBILE, all other upstream images, and the redundant Windows ICO conversions
+are omitted.
 
 At that revision, the upstream repository provides no license or other grant
 of rights and says the images were gathered from the KONAMI BEMANI fan site.

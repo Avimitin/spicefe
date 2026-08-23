@@ -4,8 +4,11 @@ export function configuredProfiles(profiles) {
 }
 
 export function browseView(profiles, requestedView) {
+  if (requestedView === 'self-host') {
+    return 'guide';
+  }
   if (requestedView === 'browser-setup'
-    || requestedView === 'self-host'
+    || requestedView === 'guide'
     || requestedView === 'cards') {
     return requestedView;
   }

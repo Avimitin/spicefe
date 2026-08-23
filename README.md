@@ -16,15 +16,15 @@
 
 | Welcome | Saved server diagnostics |
 | :---: | :---: |
-| [![spicefe welcome page](./docs/screenshots/welcome.png)](./docs/screenshots/welcome.png) | [![spicefe library showing independent Host, API, and Video states](./docs/screenshots/server-library.png)](./docs/screenshots/server-library.png) |
+| [![spicefe welcome page](./docs/screenshots/welcome.png)](./docs/screenshots/welcome.png) | [![spicefe library showing independent Host, API, and Video states](./public/assets/showcase/server-library.png)](./public/assets/showcase/server-library.png) |
 
 | Card management | Insert cards while streaming |
 | :---: | :---: |
-| [![spicefe virtual e-amusement card management page](./docs/screenshots/card-library.png)](./docs/screenshots/card-library.png) | [![spicefe card insertion menu over a live subscreen stream](./docs/screenshots/card-insert.png)](./docs/screenshots/card-insert.png) |
+| [![spicefe virtual e-amusement card management page](./public/assets/showcase/card-library.png)](./public/assets/showcase/card-library.png) | [![spicefe card insertion menu over a live subscreen stream](./public/assets/showcase/card-insert.png)](./public/assets/showcase/card-insert.png) |
 
 **Live GITADORA GALAXY WAVE DELTA subscreen**
 
-[![GITADORA GALAXY WAVE DELTA subscreen streaming through spicefe](./docs/screenshots/gitadora-stream.png)](./docs/screenshots/gitadora-stream.png)
+[![GITADORA GALAXY WAVE DELTA subscreen streaming through spicefe](./public/assets/showcase/gitadora-stream.png)](./public/assets/showcase/gitadora-stream.png)
 
 **Old beatmania IIDX 16-segment display**
 
@@ -450,15 +450,14 @@ the full license and provenance record ship with the site.
 
 The favicon and default profile artwork are the unmodified official spice2x
 icon from pinned revision `b9c8afb`; its GPLv3 license ships with the site.
-The profile icon picker also includes a 25-image whitelist from
+The profile icon picker also includes a 22-image whitelist from
 [`bicarus-dev/bemani_fan_site_icons`](https://github.com/bicarus-dev/bemani_fan_site_icons)
-at pinned revision `225e494`: all 21 available beatmania IIDX images (18 arcade
-release images plus INFINITAS and ULTIMATE MOBILE artwork), GITADORA GALAXY
-WAVE DELTA, SOUND VOLTEX 6–7, and pop'n music High Cheer. The arcade set spans
-releases 18–33 and includes the supplied pre-release and location-test
-variants. The picker groups those icons by game, and the Nix build reconstructs
-the deployed icon directory from the whitelist so no other upstream artwork is
-shipped.
+at pinned revision `225e494`: all 18 available beatmania IIDX arcade images,
+GITADORA GALAXY WAVE DELTA, SOUND VOLTEX 6–7, and pop'n music High Cheer. The
+IIDX set spans releases 18–33 and includes the supplied pre-release and
+location-test variants; INFINITAS and ULTIMATE MOBILE are omitted. The picker
+groups those icons by game, and the Nix build reconstructs the deployed icon
+directory from the whitelist so no other upstream artwork is shipped.
 
 The BEMANI icon repository provides no license and says the artwork was
 gathered from the KONAMI BEMANI fan site. Operators must obtain any permission
