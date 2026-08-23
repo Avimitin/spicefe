@@ -122,6 +122,30 @@ test('serializes native card insertion with a reader and uppercase card ID', asy
   api.close();
 });
 
+test('reads and normalizes the native nine-character IIDX ticker', async () => {
+  const api = new SpiceApi(profile(), { WebSocketImpl: FakeWebSocket, requestTimeout: 1000 });
+  api.connect();
+  const socket = FakeWebSocket.instances.at(-1);
+  socket.open();
+
+  const pending = api.tickerGet();
+  const request = JSON.parse(new TextDecoder().decode(socket.sent[0]));
+  assert.deepEqual(request, {
+    id: 1,
+    module: 'iidx',
+    function: 'ticker_get',
+    params: [],
+  });
+
+  socket.receive(new TextEncoder().encode(JSON.stringify({
+    id: 1,
+    errors: [],
+    data: ['IIDX 18'],
+  }) + '\0'));
+  assert.equal(await pending, 'IIDX 18  ');
+  api.close();
+});
+
 test('rejects invalid card insertion before sending it', async () => {
   const api = new SpiceApi(profile(), { WebSocketImpl: FakeWebSocket, requestTimeout: 1000 });
   api.connect();

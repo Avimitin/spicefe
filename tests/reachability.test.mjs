@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   deriveReachability,
   probeSpiceApi,
+  probeSpiceTicker,
   probeSpiceVideo,
   REACHABILITY_INTERVAL_MS,
 } from '../public/lib/reachability.js';
@@ -68,6 +69,26 @@ test('API probe sends the same read-only game-info query used by a session', asy
     message: null,
   });
   assert.equal(api.closed, true);
+});
+
+test('ticker probe checks the read-only IIDX display function instead of video', async () => {
+  let request;
+  const probe = await probeSpiceTicker(profile, {
+    now: () => 5678,
+    createApi: () => fakeApi({
+      connect(api) {
+        queueMicrotask(() => api.onstate('open'));
+      },
+      requested(module, func, params) {
+        request = { module, func, params };
+      },
+    }),
+  });
+
+  assert.deepEqual(request, { module: 'iidx', func: 'ticker_get', params: [] });
+  assert.equal(probe.state, 'ready');
+  assert.equal(probe.responded, true);
+  assert.equal(probe.checkedAt, 5678);
 });
 
 test('API authentication failure marks the channel failed but confirms the host response', async () => {

@@ -15,6 +15,17 @@ import {
 const EXPECTED_GROUPS = [
   ['default', ['spice2x']],
   ['iidx', [
+    'ac_IIDX18',
+    'ac_IIDX19',
+    'ac_IIDX20',
+    'ac_iidx21',
+    'ac_IIDX22',
+    'ac_IIDX23',
+    'ac_IIDX23_pre',
+    'ac_IIDX24',
+    'ac_iidx24_loc',
+    'ac_iidx25',
+    'ac_iidx26',
     'ac_iidx27',
     'ac_iidx28',
     'ac_iidx29',
@@ -22,18 +33,21 @@ const EXPECTED_GROUPS = [
     'ac_iidx31',
     'ac_iidx32',
     'ac_iidx33',
+    'gs_iidx_infinitas',
+    'gs_iidx_infinitas2',
+    'mobile_iidx',
   ]],
   ['gitadora', ['ac_gitadora_gw_delta']],
   ['sdvx', ['ac_sdvx6', 'ac_sdvx7']],
   ['popn', ['ac_popn_highcheers']],
 ];
 
-test('catalog contains only the subscreen whitelist and groups it by game', () => {
+test('catalog includes every upstream IIDX icon and keeps other games whitelisted', () => {
   const directory = new URL('../public/vendor/bemani-fan-site-icons/img/', import.meta.url);
   const vendoredFiles = readdirSync(directory).sort();
   const catalogFiles = GAME_ICONS.slice(1).map((icon) => icon.file).sort();
 
-  assert.equal(vendoredFiles.length, 11);
+  assert.equal(vendoredFiles.length, 25);
   assert.deepEqual(catalogFiles, vendoredFiles);
   assert.deepEqual(
     GAME_ICON_GROUPS.map((group) => [group.id, group.icons.map((icon) => icon.id)]),
@@ -48,6 +62,7 @@ test('catalog entries resolve to local static assets and readable labels', () =>
     assert.ok(statSync(fileURLToPath(icon.src)).isFile(), icon.src);
   }
   assert.match(gameIconById('ac_iidx33').label, /IIDX 33/);
+  assert.match(gameIconById('ac_IIDX18').label, /Resort Anthem/);
   assert.match(gameIconById('ac_gitadora_gw_delta').label, /GALAXY WAVE DELTA/);
   assert.match(gameIconById('ac_popn_highcheers').label, /High Cheer/);
 });

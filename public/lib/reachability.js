@@ -21,7 +21,7 @@ function result(state, responded, error, now, extras = {}) {
   };
 }
 
-export function probeSpiceApi(profile, options = {}) {
+function probeSpiceRequest(profile, request, options = {}) {
   const timeoutMs = options.timeoutMs ?? REACHABILITY_TIMEOUT_MS;
   const now = options.now ?? Date.now;
   const createApi = options.createApi
@@ -74,7 +74,7 @@ export function probeSpiceApi(profile, options = {}) {
       if (state === 'open' && !queryStarted) {
         queryStarted = true;
         serverResponded = true;
-        api.request('info', 'avs', []).then(
+        api.request(request.module, request.func, request.params).then(
           () => finish('ready', null),
           (error) => finish('error', error),
         );
@@ -89,6 +89,22 @@ export function probeSpiceApi(profile, options = {}) {
       finish('error');
     }
   });
+}
+
+export function probeSpiceApi(profile, options = {}) {
+  return probeSpiceRequest(profile, {
+    module: 'info',
+    func: 'avs',
+    params: [],
+  }, options);
+}
+
+export function probeSpiceTicker(profile, options = {}) {
+  return probeSpiceRequest(profile, {
+    module: 'iidx',
+    func: 'ticker_get',
+    params: [],
+  }, options);
 }
 
 export async function probeSpiceVideo(profile, options = {}) {

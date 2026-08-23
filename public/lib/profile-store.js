@@ -60,6 +60,7 @@ export function newProfile(overrides = {}) {
     fps: 30,
     quality: 70,
     viewMode: 'contain',
+    tickerEnabled: false,
     ...overrides,
   });
 }
@@ -86,6 +87,7 @@ export function sanitizeProfile(input = {}) {
     fps: clampInteger(input.fps, 30, 1, 60),
     quality: clampInteger(input.quality, 70, 1, 100),
     viewMode,
+    tickerEnabled: input.tickerEnabled === true,
   };
 }
 

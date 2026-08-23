@@ -73,7 +73,25 @@
         "bitcountSingle": "bitcountSingle",
         "libreCaslonText": "libreCaslonText",
         "nixpkgs": "nixpkgs",
+        "sixteenFont": "sixteenFont",
         "spice2xSource": "spice2xSource"
+      }
+    },
+    "sixteenFont": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1613663694,
+        "narHash": "sha256-PBxjxv1On4qctsWEb9hyCMDTEtIz1PZUeb/xTe8fEkM=",
+        "owner": "StuffJackMakes",
+        "repo": "Sixteen-Font",
+        "rev": "84cf1630b762243f70faa243bf2d3c03073dc2ce",
+        "type": "github"
+      },
+      "original": {
+        "owner": "StuffJackMakes",
+        "repo": "Sixteen-Font",
+        "rev": "84cf1630b762243f70faa243bf2d3c03073dc2ce",
+        "type": "github"
       }
     },
     "spice2xSource": {

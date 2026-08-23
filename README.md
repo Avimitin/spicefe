@@ -27,9 +27,9 @@
 [![GITADORA GALAXY WAVE DELTA subscreen streaming through spicefe](./docs/screenshots/gitadora-stream.png)](./docs/screenshots/gitadora-stream.png)
 
 `spicefe` is a globally hostable, static LAN client for the spice2x subscreen
-stream. Open the page on a phone, tablet, or another modern browser, select a
-saved gaming PC, and the browser connects directly to spice2x for video and
-touch input.
+stream and old beatmania IIDX cabinet ticker. Open the page on a phone, tablet,
+or another modern browser, select a saved gaming PC, and the browser connects
+directly to spice2x for video and touch input or a nine-character ticker.
 
 There is no relay and no companion web server to run on the gaming PC. The
 static host only delivers this application; stream and input traffic stay on
@@ -39,6 +39,9 @@ the LAN.
 
 - H.264 video with WebCodecs first and a Media Source Extensions fallback
 - automatic MJPEG fallback when H.264 is unavailable
+- an optional, responsive red-on-black nine-character display for older
+  beatmania IIDX releases, read through spice2x `iidx.ticker_get()` without
+  opening the video endpoint
 - separate Welcome and Saved Servers pages with top-bar navigation; first-time
   users start on Welcome, while returning users with saved servers start in the library
 - per-server Host, control-API, and video-server indicators with independent
@@ -69,7 +72,7 @@ The API port entered in the UI is the spice2x base port:
 
 | Purpose | Browser endpoint for API port 1337 | Protection |
 | --- | --- | --- |
-| Touch, game info, and card insertion | `ws://PC:1338` | Optional spice2x password; legacy RC4 |
+| Touch, game info, card insertion, and IIDX ticker | `ws://PC:1338` | Optional spice2x password; legacy RC4 |
 | H.264 or MJPEG video | `http://PC:1339` | None |
 
 The CDN never proxies either connection. H.264 is decoded directly with
@@ -78,13 +81,14 @@ frame for each display refresh. Otherwise, the pinned pure-JavaScript jMuxer
 package repackages Annex-B into fragmented MP4 in the client for MSE; it does
 not transcode the video.
 
-The saved-server page checks both services in parallel. It briefly opens the
-configured API WebSocket and sends the same read-only `info/avs` query used when
-establishing a full session. It also sends a `HEAD` request to the configured
-video endpoint; spice2x answers before allocating a capture screen, so the check
-does not start an encoder or claim a capture screen. Checks run when the list
-opens, every minute while it remains visible, and after the browser regains
-network access.
+The saved-server page briefly opens the configured API WebSocket and sends the
+same read-only `info/avs` query used when establishing a full session. Normal
+video profiles also send a `HEAD` request to the configured video endpoint;
+spice2x answers before allocating a capture screen, so the check does not start
+an encoder or claim a capture screen. Ticker profiles never contact the video
+endpoint and instead follow the API check with a read-only `iidx/ticker_get`
+request. Checks run when the list opens, every minute while it remains visible,
+and after the browser regains network access.
 
 Any response from either service confirms that the host is reachable over the
 LAN. API authentication can therefore be red while Host remains green. When
@@ -101,6 +105,27 @@ resizes it to at most 384×384 on the device, and saves only that result in brow
 top of the picker under **Custom Icons** and can be reused by multiple server
 profiles. Up to 24 custom icons are kept. Removing one makes profiles that
 referenced it display the default spice2x icon instead.
+
+## Old IIDX 16-segment display
+
+When creating or editing a connection, enable **Enable 16 Segment Display** for
+an older beatmania IIDX release with the cabinet ticker. This choice is saved
+with the profile and can be turned off later. Stream-quality settings are hidden
+in this mode because spicefe opens only the control API, then polls the native
+read-only `iidx.ticker_get()` function at 10 Hz.
+
+Select **Preview display** beside the option to test the same renderer without a
+server or game. Short text stays still; longer text moves through the nine
+positions one character every 0.5 seconds and wraps after a blank separator.
+Choose **Screenshot view** to hide every control, then tap anywhere to bring
+the controls back. The preview is entirely local and does not attempt a
+spice2x connection.
+
+The view deliberately exposes exactly nine character positions, matching
+spice2x and the original cabinet hardware. It keeps a fixed 27:5 aspect ratio,
+scales with the available screen, and renders pure red characters on a pure
+black panel with a restrained fluorescent glow. Recent IIDX releases may offer
+only a subscreen; use normal video mode for those releases.
 
 ## Virtual cards
 
@@ -120,8 +145,8 @@ line and scroll within their fixed name area. Card numbers use the locally
 served Bitcount Single variable font, with the device's monospace font as a
 fallback.
 
-While video is live, select the card icon in the top bar, choose Player 1 or
-Player 2, then select a card. spicefe sends the native
+While a video or ticker session is live, select the card icon in the top bar,
+choose Player 1 or Player 2, then select a card. spicefe sends the native
 `card.insert(reader, card_id)` request over the active control-API connection
 and closes the menu automatically.
 
@@ -130,17 +155,23 @@ and closes the menu automatically.
 Install the [latest spice2x release](https://github.com/spice2x/spice2x.github.io/releases).
 The minimum supported build is
 [`spice2x-26-08-20`](https://github.com/spice2x/spice2x.github.io/releases/tag/26-08-20),
-which introduced the required subscreen stream and CORS support. Then launch
-the game with options equivalent to:
+which introduced the required subscreen stream and CORS support. For subscreen
+video, launch the game with options equivalent to:
 
 ```text
 spice64.exe ... -api 1337 -apipass choose-a-lan-password -apistream
 ```
 
+The old IIDX ticker needs the API but not the video server:
+
+```text
+spice64.exe ... -api 1337 -apipass choose-a-lan-password
+```
+
 The password is optional, though recommended by spice2x. Permit inbound TCP to
-ports 1338 and 1339 in Windows Firewall. The browser does not use the raw TCP
-listener on 1337, but spice2x still requires `-api` to create the two adjacent
-listeners.
+port 1338 for the browser API, plus port 1339 when using video. The browser does
+not use the raw TCP listener on 1337, but spice2x still requires `-api` to create
+the browser-facing listener.
 
 On the client device, enter the PC's private IPv4 address when possible, such
 as `192.168.1.50`. Both devices must be on the same LAN and client isolation
@@ -403,17 +434,27 @@ third-party request is used. Virtual card numbers use
 [Bitcount Single](https://github.com/petrvanblokland/TYPETR-Bitcount), pinned
 to an exact revision and reproducibly converted from the requested variable TTF
 to WOFF2 by Nix; the asset is served locally with a system monospace fallback.
+The old IIDX ticker uses the monospaced face of
+[Sixteen by Jack Sivak](https://stuffjackmakes.com/sixteen-font/), pinned to an
+exact upstream revision as a non-flake Nix input and served locally without a
+font CDN. Nine dim all-on glyphs are stacked beneath the active text to expose
+the unlit segments. Sixteen is separately licensed under the SIL Open Font
+License 1.1, which permits use in commercial and noncommercial applications;
+the full license and provenance record ship with the site.
 
 ## Artwork provenance
 
 The favicon and default profile artwork are the unmodified official spice2x
 icon from pinned revision `b9c8afb`; its GPLv3 license ships with the site.
-The profile icon picker also includes an 11-image whitelist from
+The profile icon picker also includes a 25-image whitelist from
 [`bicarus-dev/bemani_fan_site_icons`](https://github.com/bicarus-dev/bemani_fan_site_icons)
-at pinned revision `225e494`: beatmania IIDX 27–33, GITADORA GALAXY WAVE
-DELTA, SOUND VOLTEX 6–7, and pop'n music High Cheer. The picker groups those
-icons by game, and the Nix build reconstructs the deployed icon directory from
-the whitelist so no other upstream artwork is shipped.
+at pinned revision `225e494`: all 21 available beatmania IIDX images (18 arcade
+release images plus INFINITAS and ULTIMATE MOBILE artwork), GITADORA GALAXY
+WAVE DELTA, SOUND VOLTEX 6–7, and pop'n music High Cheer. The arcade set spans
+releases 18–33 and includes the supplied pre-release and location-test
+variants. The picker groups those icons by game, and the Nix build reconstructs
+the deployed icon directory from the whitelist so no other upstream artwork is
+shipped.
 
 The BEMANI icon repository provides no license and says the artwork was
 gathered from the KONAMI BEMANI fan site. Operators must obtain any permission

@@ -117,3 +117,31 @@ test('renders independent connection diagnostics in Simplified Chinese', () => {
   assert.match(result.streamMessage.copy, /控制 API 已连接/);
   assert.match(result.streamMessage.copy, /未从该画面收到视频帧/);
 });
+
+test('presents ticker failures as a display issue instead of a video issue', () => {
+  const result = connectionPresentation(snapshot({
+    profile: { apiPort: 1337, tickerEnabled: true },
+    apiState: 'live',
+    videoState: 'error',
+    videoError: { code: 'remote', message: 'unknown function ticker_get' },
+  }));
+
+  assert.equal(result.video.label, 'Failed');
+  assert.match(result.video.detail, /16-segment display failed/i);
+  assert.equal(result.streamMessage.title, '16-segment display unavailable');
+  assert.match(result.streamMessage.copy, /older|supports|release/i);
+  assert.doesNotMatch(result.streamMessage.copy, /video/i);
+  assert.equal(result.apiWarning, null);
+});
+
+test('localizes live ticker status in Simplified Chinese', () => {
+  const result = connectionPresentation(snapshot({
+    profile: { apiPort: 1337, tickerEnabled: true },
+    apiState: 'live',
+    videoState: 'live',
+  }), 'zh-CN');
+
+  assert.equal(result.video.label, '实时');
+  assert.equal(result.video.detail, '正在更新米字屏');
+  assert.equal(result.streamMessage, null);
+});

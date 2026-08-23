@@ -27,6 +27,17 @@ function iconGroup(id, label, icons) {
 export const GAME_ICON_GROUPS = Object.freeze([
   iconGroup('default', 'Default', [DEFAULT_GAME_ICON]),
   iconGroup('iidx', 'beatmania IIDX', [
+    bemaniIcon('ac_IIDX18.png', 'beatmania IIDX 18 Resort Anthem'),
+    bemaniIcon('ac_IIDX19.png', 'beatmania IIDX 19 Lincle'),
+    bemaniIcon('ac_IIDX20.png', 'beatmania IIDX 20 tricoro'),
+    bemaniIcon('ac_iidx21.png', 'beatmania IIDX 21 SPADA'),
+    bemaniIcon('ac_IIDX22.png', 'beatmania IIDX 22 PENDUAL'),
+    bemaniIcon('ac_IIDX23.png', 'beatmania IIDX 23 copula'),
+    bemaniIcon('ac_IIDX23_pre.png', 'beatmania IIDX 23 copula · pre-release'),
+    bemaniIcon('ac_IIDX24.png', 'beatmania IIDX 24 SINOBUZ'),
+    bemaniIcon('ac_iidx24_loc.png', 'beatmania IIDX 24 SINOBUZ · location test'),
+    bemaniIcon('ac_iidx25.png', 'beatmania IIDX 25 CANNON BALLERS'),
+    bemaniIcon('ac_iidx26.png', 'beatmania IIDX 26 Rootage'),
     bemaniIcon('ac_iidx27.png', 'beatmania IIDX 27'),
     bemaniIcon('ac_iidx28.png', 'beatmania IIDX 28'),
     bemaniIcon('ac_iidx29.png', 'beatmania IIDX 29'),
@@ -34,6 +45,9 @@ export const GAME_ICON_GROUPS = Object.freeze([
     bemaniIcon('ac_iidx31.png', 'beatmania IIDX 31'),
     bemaniIcon('ac_iidx32.png', 'beatmania IIDX 32'),
     bemaniIcon('ac_iidx33.png', 'beatmania IIDX 33'),
+    bemaniIcon('gs_iidx_infinitas.png', 'beatmania IIDX INFINITAS'),
+    bemaniIcon('gs_iidx_infinitas2.png', 'beatmania IIDX INFINITAS · alternate'),
+    bemaniIcon('mobile_iidx.png', 'beatmania IIDX ULTIMATE MOBILE'),
   ]),
   iconGroup('gitadora', 'GITADORA', [
     bemaniIcon('ac_gitadora_gw_delta.png', 'GITADORA GALAXY WAVE DELTA'),

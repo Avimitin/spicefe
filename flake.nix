@@ -13,13 +13,17 @@
     url = "github:impallari/Libre-Caslon-Text/c31e21f7e8cf91f18d90f778ce20e66c68219c74";
     flake = false;
   };
+  inputs.sixteenFont = {
+    url = "github:StuffJackMakes/Sixteen-Font/84cf1630b762243f70faa243bf2d3c03073dc2ce";
+    flake = false;
+  };
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   inputs.spice2xSource = {
     url = "github:spice2x/spice2x.github.io/b9c8afbbc12452edc3f4ac50cc1eda9ed0ee7f61";
     flake = false;
   };
 
-  outputs = { self, bemaniIcons, bitcountSingle, libreCaslonText, nixpkgs, spice2xSource }:
+  outputs = { self, bemaniIcons, bitcountSingle, libreCaslonText, nixpkgs, sixteenFont, spice2xSource }:
     let
       systems = [
         "x86_64-linux"
@@ -29,6 +33,17 @@
       ];
       forAllSystems = nixpkgs.lib.genAttrs systems;
       bemaniIconFiles = [
+        "ac_IIDX18.png"
+        "ac_IIDX19.png"
+        "ac_IIDX20.png"
+        "ac_iidx21.png"
+        "ac_IIDX22.png"
+        "ac_IIDX23.png"
+        "ac_IIDX23_pre.png"
+        "ac_IIDX24.png"
+        "ac_iidx24_loc.png"
+        "ac_iidx25.png"
+        "ac_iidx26.png"
         "ac_iidx27.png"
         "ac_iidx28.png"
         "ac_iidx29.png"
@@ -36,6 +51,9 @@
         "ac_iidx31.png"
         "ac_iidx32.png"
         "ac_iidx33.png"
+        "gs_iidx_infinitas.png"
+        "gs_iidx_infinitas2.png"
+        "mobile_iidx.png"
         "ac_gitadora_gw_delta.png"
         "ac_sdvx6.png"
         "ac_sdvx7.jpg"
@@ -95,6 +113,10 @@
               woff2_compress BitcountSingle-Variable.ttf
               install -m 0444 BitcountSingle-Variable.woff2 "$out"
             '';
+          sixteenMonoWoff2 = pkgs.runCommand "Sixteen-Mono.woff2" { }
+            ''
+              install -m 0444 ${sixteenFont}/public/woff2/Sixteen-Mono.woff2 "$out"
+            '';
         in
         rec {
           default = pkgs.buildNpmPackage {
@@ -117,6 +139,13 @@
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Medium-Pi.woff2 ${ibmPlexMediumPi}
               cmp public/vendor/libre-caslon-text/fonts/LibreCaslonText-Regular.woff2 ${libreCaslonTextRegularWoff2}
               cmp public/vendor/bitcount-single/fonts/BitcountSingle-Variable.woff2 ${bitcountSingleVariableWoff2}
+              cmp public/vendor/sixteen-font/fonts/Sixteen-Mono.woff2 ${sixteenMonoWoff2}
+              # Upstream's license file accidentally omits the initial C in Copyright.
+              cmp \
+                <(awk '{ for (i = 1; i <= NF; i++) print $i }' \
+                  public/vendor/sixteen-font/LICENSE.OFL-1.1.txt) \
+                <(sed '1s/^opyright/Copyright/' ${sixteenFont}/Sixteen-LICENSE.txt \
+                  | awk '{ for (i = 1; i <= NF; i++) print $i }')
               cmp public/vendor/e-amusement/ea_logo.png ${eaLogo}
               cmp public/vendor/frankerfacez/konmai.png ${konmaiLogo}
               cmp \
@@ -150,6 +179,8 @@
           libre-caslon-text-regular = libreCaslonTextRegularWoff2;
 
           bitcount-single-variable = bitcountSingleVariableWoff2;
+
+          iidx-segment-display = sixteenMonoWoff2;
 
           release = pkgs.runCommand "spicefe-public.zip"
             {

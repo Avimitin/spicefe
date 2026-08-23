@@ -1,5 +1,6 @@
 import { streamUrl } from './endpoints.js';
 import { H264Player } from './h264-player.js';
+import { BLANK_IIDX_TICKER } from './iidx-ticker.js';
 import { MseH264Player } from './mse-h264-player.js';
 import { SpiceApi } from './spice-api.js';
 
@@ -24,6 +25,8 @@ export class SpiceSession {
   static STREAM_RETRY_MAX_MS = 15000;
   static API_RETRY_MAX_MS = 15000;
   static PING_MS = 10000;
+  static TICKER_POLL_MS = 100;
+  static TICKER_RETRY_MS = 1000;
 
   constructor(canvas, video, image) {
     this.canvas = canvas;
@@ -50,6 +53,8 @@ export class SpiceSession {
     this.stallTimer = null;
     this.stallDeadline = 0;
     this.pingTimer = null;
+    this.tickerTimer = null;
+    this.tickerText = BLANK_IIDX_TICKER;
     this.mjpegActive = false;
     this.fellBackToMjpeg = false;
     this.failedH264Backends = new Set();
@@ -58,6 +63,7 @@ export class SpiceSession {
     this.onnotice = () => {};
     this.onframe = () => {};
     this.onapi = () => {};
+    this.onticker = () => {};
 
     this.webCodecsPlayer.onresponse = () => this.videoResponse('webcodecs');
     this.webCodecsPlayer.onframe = (metric) => this.videoFrame(metric, 'webcodecs');
@@ -82,6 +88,8 @@ export class SpiceSession {
       apiError: this.apiError,
       gameInfo: this.gameInfo,
       touchCanvas: this.touchCanvas ? { ...this.touchCanvas } : null,
+      displayMode: this.profile?.tickerEnabled ? 'ticker' : 'video',
+      tickerText: this.tickerText,
       connected: this.videoState === 'live' && this.apiState === 'live',
     };
   }
@@ -103,8 +111,13 @@ export class SpiceSession {
     this.apiRetryDelay = 1000;
     this.fellBackToMjpeg = false;
     this.failedH264Backends.clear();
+    if (this.profile.tickerEnabled) {
+      this.videoFormat = 'ticker';
+    }
     this.emitState();
-    this.startVideo();
+    if (!this.profile.tickerEnabled) {
+      this.startVideo();
+    }
     this.startApi();
   }
 
@@ -112,11 +125,13 @@ export class SpiceSession {
     this.wanted = false;
     clearTimeout(this.streamRetryTimer);
     clearTimeout(this.apiRetryTimer);
+    clearTimeout(this.tickerTimer);
     this.stopStallWatchdog();
     clearInterval(this.pingTimer);
     this.streamRetryTimer = null;
     this.apiRetryTimer = null;
     this.pingTimer = null;
+    this.tickerTimer = null;
 
     this.stopH264();
     this.stopMjpeg();
@@ -134,6 +149,8 @@ export class SpiceSession {
     this.apiError = null;
     this.gameInfo = null;
     this.touchCanvas = null;
+    this.tickerText = BLANK_IIDX_TICKER;
+    this.onticker(this.tickerText);
     this.emitState();
   }
 
@@ -147,7 +164,7 @@ export class SpiceSession {
   }
 
   startVideo() {
-    if (!this.wanted) {
+    if (!this.wanted || this.profile?.tickerEnabled) {
       return;
     }
     clearTimeout(this.streamRetryTimer);
@@ -365,6 +382,17 @@ export class SpiceSession {
     if (!this.wanted) {
       return;
     }
+    if (this.profile?.tickerEnabled) {
+      if (this.api?.connected && this.tickerTimer === null) {
+        this.tickerTimer = setTimeout(
+          () => this.pollTicker(this.api),
+          0,
+        );
+      } else if (!this.api?.connected && !this.apiRetryTimer) {
+        this.startApi();
+      }
+      return;
+    }
     this.stopH264();
     this.stopMjpeg();
     this.stopStallWatchdog();
@@ -379,8 +407,16 @@ export class SpiceSession {
       return;
     }
     clearTimeout(this.apiRetryTimer);
+    clearTimeout(this.tickerTimer);
     this.apiRetryTimer = null;
+    this.tickerTimer = null;
     this.api?.close();
+
+    if (this.profile?.tickerEnabled) {
+      this.videoState = 'connecting';
+      this.videoResponded = false;
+      this.videoError = null;
+    }
 
     const api = new SpiceApi(this.profile);
     this.api = api;
@@ -411,12 +447,14 @@ export class SpiceSession {
 
     if (state === 'error') {
       this.apiState = 'error';
+      this.failTickerWithApi();
       this.emitState();
       return;
     }
 
     if (state === 'closed') {
       this.apiState = 'error';
+      this.failTickerWithApi();
       this.emitState();
       if (this.apiError?.code !== 'password') {
         this.scheduleApiRetry();
@@ -435,7 +473,11 @@ export class SpiceSession {
       this.apiState = 'live';
       this.apiError = null;
       this.apiRetryDelay = 1000;
-      this.startPing(api);
+      if (this.profile.tickerEnabled) {
+        this.startTicker(api);
+      } else {
+        this.startPing(api);
+      }
       this.emitState();
     } catch (error) {
       if (this.api !== api || !this.wanted) {
@@ -443,6 +485,7 @@ export class SpiceSession {
       }
       this.apiError = error;
       this.apiState = 'error';
+      this.failTickerWithApi(error);
       this.emitState();
       if (error?.code !== 'password') {
         this.scheduleApiRetry();
@@ -455,7 +498,9 @@ export class SpiceSession {
       return;
     }
     clearInterval(this.pingTimer);
+    clearTimeout(this.tickerTimer);
     this.pingTimer = null;
+    this.tickerTimer = null;
     this.apiRetryTimer = setTimeout(() => this.startApi(), this.apiRetryDelay);
     this.apiRetryDelay = Math.min(this.apiRetryDelay * 2, SpiceSession.API_RETRY_MAX_MS);
   }
@@ -467,5 +512,67 @@ export class SpiceSession {
         api.request('info', 'avs').catch(() => {});
       }
     }, SpiceSession.PING_MS);
+  }
+
+  failTickerWithApi(error = this.apiError) {
+    if (!this.profile?.tickerEnabled) {
+      return;
+    }
+    clearTimeout(this.tickerTimer);
+    this.tickerTimer = null;
+    this.videoState = 'error';
+    this.videoError = error || new Error('The control API disconnected from the 16-segment display');
+  }
+
+  startTicker(api) {
+    clearTimeout(this.tickerTimer);
+    this.tickerTimer = null;
+    this.videoState = 'connecting';
+    this.videoResponded = false;
+    this.videoError = null;
+    void this.pollTicker(api);
+  }
+
+  async pollTicker(api) {
+    this.tickerTimer = null;
+    if (!this.wanted || !this.profile?.tickerEnabled || this.api !== api || !api.connected) {
+      return;
+    }
+
+    try {
+      const text = await api.tickerGet();
+      if (!this.wanted || this.api !== api || !this.profile?.tickerEnabled) {
+        return;
+      }
+      const becameLive = this.videoState !== 'live';
+      const changed = text !== this.tickerText;
+      this.tickerText = text;
+      this.videoState = 'live';
+      this.videoResponded = true;
+      this.videoError = null;
+      if (changed || becameLive) {
+        this.onticker(text);
+      }
+      if (becameLive) {
+        this.emitState();
+      }
+      this.tickerTimer = setTimeout(
+        () => this.pollTicker(api),
+        SpiceSession.TICKER_POLL_MS,
+      );
+    } catch (error) {
+      if (!this.wanted || this.api !== api || !this.profile?.tickerEnabled) {
+        return;
+      }
+      this.videoState = 'error';
+      this.videoError = error;
+      this.emitState();
+      if (api.connected) {
+        this.tickerTimer = setTimeout(
+          () => this.pollTicker(api),
+          SpiceSession.TICKER_RETRY_MS,
+        );
+      }
+    }
   }
 }

@@ -20,14 +20,22 @@ import {
 } from './lib/game-icons.js';
 import { connectionPresentation } from './lib/connection-status.js';
 import { createI18n, localizeError } from './lib/i18n.js';
+import {
+  iidxTickerDisplayGlyphs,
+  iidxTickerPreviewFrame,
+  IIDX_TICKER_LENGTH,
+  IIDX_TICKER_PREVIEW_STEP_MS,
+} from './lib/iidx-ticker.js';
 import { configuredProfiles, mainView } from './lib/main-view.js';
 import {
+  newProfile,
   ProfileStore,
   sanitizeProfile,
 } from './lib/profile-store.js';
 import {
   deriveReachability,
   probeSpiceApi,
+  probeSpiceTicker,
   probeSpiceVideo,
   REACHABILITY_INTERVAL_MS,
 } from './lib/reachability.js';
@@ -49,12 +57,16 @@ const stage = element('stage');
 const canvas = element('h264-view');
 const video = element('mse-view');
 const image = element('mjpeg-view');
+const tickerView = element('ticker-view');
+const tickerText = element('ticker-text');
+const tickerPreviewDialog = element('ticker-preview-dialog');
+const tickerPreviewInput = element('ticker-preview-input');
+const tickerPreviewText = element('ticker-preview-text');
 const settingsDialog = element('settings-dialog');
 const iconDialog = element('icon-dialog');
 const deleteDialog = element('delete-dialog');
 const form = element('profile-form');
 const streamSettings = element('stream-settings');
-const profilePicker = element('profile-picker');
 const iconGroups = element('game-icon-groups');
 const customIconInput = element('custom-icon-upload');
 const customIconStatus = element('custom-icon-status');
@@ -95,6 +107,7 @@ const activeServer = element('active-server');
 const connectionStatuses = element('connection-statuses');
 const apiStatus = element('api-status');
 const videoStatus = element('video-status');
+const displayStatusChannel = element('display-status-channel');
 const apiWarning = element('api-warning');
 const touchMarker = element('touch-marker');
 const compatBanner = element('compat-banner');
@@ -115,6 +128,10 @@ let editingCardId = null;
 let cardDraft = null;
 let selectedCardReader = 0;
 let cardInsertPending = false;
+let tickerPreviewOffset = 0;
+let tickerPreviewTimer = null;
+let editingProfile = null;
+let editingProfileIsNew = false;
 
 function syncServerNameOverflow(name) {
   const text = name.querySelector('.server-name-text');
@@ -214,24 +231,10 @@ function requestedBrowsePage() {
 
 let browsePage = requestedBrowsePage();
 
-function setSelectOptions(select, profiles, selectedId) {
-  select.replaceChildren(...profiles.map((profile) => {
-    const option = document.createElement('option');
-    option.value = profile.id;
-    option.textContent = profile.host ? `${profile.name} · ${profile.host}` : profile.name;
-    option.selected = profile.id === selectedId;
-    return option;
-  }));
-}
-
 function setProfileIcon(imageElement, iconId) {
   const icon = gameIconById(iconId);
   imageElement.src = icon.src;
   imageElement.title = icon.label;
-}
-
-function renderSelectedProfileIcons(profile) {
-  setProfileIcon(element('profile-picker-icon'), profile.iconId);
 }
 
 function setFormGameIcon(iconId) {
@@ -519,9 +522,6 @@ async function insertStreamCard(card) {
 }
 
 function renderProfileLists() {
-  const profiles = store.list();
-  setSelectOptions(profilePicker, profiles, store.selectedId);
-  renderSelectedProfileIcons(store.selected());
   renderSnapshot(session.snapshot, false);
 }
 
@@ -536,14 +536,15 @@ function fillForm(profile) {
   element('fps').value = String(profile.fps);
   element('quality').value = String(profile.quality);
   element('view-mode').value = profile.viewMode;
+  element('ticker-enabled').checked = profile.tickerEnabled;
+  syncTickerModeControls();
   element('view-mode-button').textContent = t(`display.${profile.viewMode}`);
-  renderSelectedProfileIcons(profile);
   stage.dataset.viewMode = profile.viewMode;
   touch.setViewMode(profile.viewMode);
 }
 
 function profileFromForm() {
-  const selected = store.get(profilePicker.value) || store.selected();
+  const selected = editingProfile || store.selected();
   return sanitizeProfile({
     id: selected.id,
     name: element('profile-name').value,
@@ -556,7 +557,65 @@ function profileFromForm() {
     fps: element('fps').value,
     quality: element('quality').value,
     viewMode: element('view-mode').value,
+    tickerEnabled: element('ticker-enabled').checked,
   });
+}
+
+function syncTickerModeControls() {
+  const enabled = element('ticker-enabled').checked;
+  streamSettings.hidden = enabled;
+  if (enabled) {
+    streamSettings.open = false;
+  }
+}
+
+function syncProfileEditorMode() {
+  element('delete-profile').hidden = editingProfileIsNew;
+}
+
+function renderTickerPreviewText() {
+  const text = iidxTickerPreviewFrame(tickerPreviewInput.value, tickerPreviewOffset);
+  const readable = text.trim();
+  tickerPreviewText.textContent = iidxTickerDisplayGlyphs(text);
+  element('ticker-preview-display').setAttribute('aria-label', readable
+    ? t('ticker.previewAriaText', { text: readable })
+    : t('ticker.previewAriaBlank'));
+}
+
+function stopTickerPreviewMarquee() {
+  clearInterval(tickerPreviewTimer);
+  tickerPreviewTimer = null;
+}
+
+function startTickerPreviewMarquee() {
+  stopTickerPreviewMarquee();
+  tickerPreviewOffset = 0;
+  renderTickerPreviewText();
+  if (Array.from(tickerPreviewInput.value).length <= IIDX_TICKER_LENGTH) {
+    return;
+  }
+  tickerPreviewTimer = setInterval(() => {
+    tickerPreviewOffset += 1;
+    renderTickerPreviewText();
+  }, IIDX_TICKER_PREVIEW_STEP_MS);
+}
+
+function setTickerPreviewClean(clean) {
+  tickerPreviewDialog.dataset.clean = String(clean);
+}
+
+function openTickerPreview() {
+  setTickerPreviewClean(false);
+  settingsDialog.close();
+  tickerPreviewDialog.showModal();
+  startTickerPreviewMarquee();
+  requestAnimationFrame(() => tickerPreviewInput.select());
+}
+
+function closeTickerPreview() {
+  if (tickerPreviewDialog.open) {
+    tickerPreviewDialog.close();
+  }
 }
 
 function saveForm() {
@@ -580,6 +639,9 @@ function saveForm() {
   }
 
   const stored = store.upsert(profile);
+  editingProfile = stored;
+  editingProfileIsNew = false;
+  syncProfileEditorMode();
   renderProfileLists();
   fillForm(stored);
   element('save-status').textContent = t('settings.saved');
@@ -591,7 +653,6 @@ function selectProfile(id) {
   if (!profile) {
     return;
   }
-  profilePicker.value = id;
   fillForm(profile);
   renderSnapshot(session.snapshot, false);
   renderCompatibility();
@@ -620,6 +681,13 @@ const touch = new TouchController(stage, {
 
 session.onapi = (api) => touch.setApi(api);
 session.onnotice = (key, parameters) => showToast(t(key, parameters));
+session.onticker = (text) => {
+  tickerText.textContent = iidxTickerDisplayGlyphs(text);
+  const readable = text.trim();
+  tickerView.setAttribute('aria-label', readable
+    ? t('ticker.ariaText', { text: readable })
+    : t('ticker.ariaBlank'));
+};
 session.onframe = (metric) => {
   currentMetric = metric;
   const now = performance.now();
@@ -650,7 +718,9 @@ function createChannelStatus(channel, presentation) {
   dot.setAttribute('aria-hidden', 'true');
   copy.className = 'status-copy';
   channelLabel.className = 'status-channel';
-  channelLabel.textContent = channel === 'api' ? 'API' : t('nav.video');
+  channelLabel.textContent = channel === 'api'
+    ? 'API'
+    : t(channel === 'ticker' ? 'nav.ticker' : 'nav.video');
   value.className = 'status-value';
   copy.append(channelLabel, value);
   node.append(dot, copy);
@@ -700,12 +770,16 @@ function probeError(channel, kind) {
   return localizeError(
     i18n.locale,
     channel.message,
-    kind === 'api' ? 'status.apiDefaultError' : 'status.videoDefaultError',
+    kind === 'api'
+      ? 'status.apiDefaultError'
+      : kind === 'ticker' ? 'status.tickerDefaultError' : 'status.videoDefaultError',
   );
 }
 
 function probeChannelPresentation(channel, kind) {
-  const key = kind === 'api' ? 'probe.api' : 'probe.video';
+  const key = kind === 'api'
+    ? 'probe.api'
+    : kind === 'ticker' ? 'probe.ticker' : 'probe.video';
   if (channel.state === 'checking') {
     return {
       state: 'connecting',
@@ -751,7 +825,9 @@ function reachabilityPresentation(profile) {
     return {
       state: 'checking',
       label: t('reachability.checking'),
-      detail: t('reachability.checkingDetail'),
+      detail: t(profile.tickerEnabled
+        ? 'reachability.checkingTickerDetail'
+        : 'reachability.checkingDetail'),
     };
   }
 
@@ -767,7 +843,9 @@ function reachabilityPresentation(profile) {
   return {
     state: 'unreachable',
     label: t('reachability.noResponse'),
-    detail: t('reachability.noResponseDetail', { time }),
+    detail: t(profile.tickerEnabled
+      ? 'reachability.noResponseTickerDetail'
+      : 'reachability.noResponseDetail', { time }),
   };
 }
 
@@ -781,6 +859,7 @@ function createServerCard(profile, snapshot) {
       video: probeChannelPresentation(saved.video, 'video'),
     };
   const availability = reachabilityPresentation(profile);
+  const outputChannel = profile.tickerEnabled ? 'ticker' : 'video';
   const card = document.createElement('article');
   const artwork = document.createElement('div');
   const artworkImage = document.createElement('img');
@@ -850,7 +929,7 @@ function createServerCard(profile, snapshot) {
   statuses.setAttribute('aria-label', t('library.statusFor', { name: profile.name }));
   statuses.append(
     createChannelStatus('api', presentation.api),
-    createChannelStatus('video', presentation.video),
+    createChannelStatus(outputChannel, presentation.video),
   );
 
   actions.className = 'server-card-actions';
@@ -1004,6 +1083,7 @@ function renderMainView(snapshot) {
   selfHost.hidden = view !== 'self-host';
 
   const streaming = view === 'stream';
+  const tickerStreaming = streaming && snapshot.profile?.tickerEnabled;
   activeServer.hidden = !streaming;
   connectionStatuses.hidden = !streaming;
   languagePicker.hidden = streaming;
@@ -1012,6 +1092,14 @@ function renderMainView(snapshot) {
   cardControls.hidden = !streaming;
   pageMenuButton.hidden = streaming;
   brandIcon.hidden = !streaming;
+  tickerView.hidden = !tickerStreaming;
+  stage.dataset.outputMode = tickerStreaming ? 'ticker' : 'video';
+  displayStatusChannel.textContent = t(snapshot.profile?.tickerEnabled
+    ? 'nav.ticker'
+    : 'nav.video');
+  if (snapshot.profile?.tickerEnabled) {
+    session.onticker(snapshot.tickerText);
+  }
   setPageMenuOpen(false);
   if (!streaming) {
     setCardMenuOpen(false);
@@ -1049,10 +1137,13 @@ function renderSnapshot(snapshot, announce = true) {
   renderConnectionButton();
   const view = renderMainView(snapshot);
   renderServerList(snapshot);
-  const hudAvailable = snapshot.videoState === 'live';
+  const tickerMode = snapshot.profile?.tickerEnabled === true;
+  const hudAvailable = snapshot.videoState === 'live' && !tickerMode;
   stageHud.hidden = !hudAvailable || hudDismissed;
   hudShowButton.hidden = !hudAvailable || !hudDismissed;
-  touch.setEnabled(snapshot.videoState === 'live' && snapshot.apiState === 'live');
+  touch.setEnabled(
+    snapshot.videoState === 'live' && snapshot.apiState === 'live' && !tickerMode,
+  );
   touch.setCanvasSize(snapshot.touchCanvas);
 
   if (!snapshot.wanted) {
@@ -1060,6 +1151,8 @@ function renderSnapshot(snapshot, announce = true) {
     lastMetricPaint = 0;
     element('video-metric').textContent = '—';
     touchMarker.hidden = true;
+  } else if (tickerMode) {
+    element('video-metric').textContent = t('metric.ticker');
   } else if (snapshot.videoState === 'connecting' && currentMetric === null) {
     element('video-metric').textContent = t('metric.waiting');
   }
@@ -1086,7 +1179,8 @@ function renderSnapshot(snapshot, announce = true) {
     showToast(t('toast.password'), 7000);
   }
   if (location.protocol === 'https:'
-    && (snapshot.videoError || snapshot.apiError?.code === 'transport')) {
+    && (snapshot.apiError?.code === 'transport'
+      || (!snapshot.profile?.tickerEnabled && snapshot.videoError))) {
     bannerDismissed = false;
     renderCompatibility(true);
   }
@@ -1111,16 +1205,20 @@ function connectSelected() {
 
   currentMetric = null;
   lastMetricPaint = 0;
-  element('video-metric').textContent = t('metric.waiting');
+  element('video-metric').textContent = t(
+    profile.tickerEnabled ? 'metric.ticker' : 'metric.waiting',
+  );
   stage.dataset.viewMode = profile.viewMode;
   touch.setViewMode(profile.viewMode);
   useLibraryPageForConnection();
   session.connect(profile);
 }
 
-function openSettings() {
-  fillForm(store.selected());
-  profilePicker.value = store.selectedId;
+function openSettings(profile = store.selected(), options = {}) {
+  editingProfile = { ...profile };
+  editingProfileIsNew = options.isNew ?? !profile.host;
+  fillForm(editingProfile);
+  syncProfileEditorMode();
   element('save-status').textContent = '';
   if (!settingsDialog.open) {
     streamSettings.open = false;
@@ -1132,6 +1230,8 @@ function closeSettings() {
   if (settingsDialog.open) {
     settingsDialog.close();
   }
+  editingProfile = null;
+  editingProfileIsNew = false;
 }
 
 function renderCompatibility(force = false, view = renderedMainView) {
@@ -1147,7 +1247,8 @@ function renderCompatibility(force = false, view = renderedMainView) {
 }
 
 function reachabilitySignature(profile) {
-  return `${profile.host}\u0000${profile.apiPort}\u0000${profile.password}\u0000${profile.format}`;
+  return `${profile.host}\u0000${profile.apiPort}\u0000${profile.password}\u0000${profile.format}`
+    + `\u0000${profile.tickerEnabled}`;
 }
 
 function sessionProbeChannel(state, error, kind, responseObserved = false) {
@@ -1174,7 +1275,8 @@ function sessionProbeChannel(state, error, kind, responseObserved = false) {
       ...unknownProbeChannel(),
       state: 'error',
       responded: responseObserved
-        || (kind === 'api' && ['password', 'protocol', 'remote'].includes(reason)),
+        || ((kind === 'api' || kind === 'ticker')
+          && ['password', 'protocol', 'remote'].includes(reason)),
       checkedAt: Date.now(),
       reason,
       message: error?.message || String(error || ''),
@@ -1200,7 +1302,7 @@ function recordSessionReachability(snapshot) {
     video: sessionProbeChannel(
       snapshot.videoState,
       snapshot.videoError,
-      'video',
+      profile.tickerEnabled ? 'ticker' : 'video',
       snapshot.videoResponded,
     ),
   });
@@ -1252,9 +1354,18 @@ async function probeProfileReachability(profile, force = false) {
   const apiPromise = probeSpiceApi(profile).then(
     (probe) => updateChannel('api', probe),
   );
-  const videoPromise = probeSpiceVideo(profile).then(
-    (probe) => updateChannel('video', probe),
-  );
+  const videoPromise = profile.tickerEnabled
+    ? apiPromise.then((apiProbe) => {
+      if (apiProbe.state !== 'ready') {
+        return updateChannel('video', { ...apiProbe });
+      }
+      return probeSpiceTicker(profile).then(
+        (probe) => updateChannel('video', probe),
+      );
+    })
+    : probeSpiceVideo(profile).then(
+      (probe) => updateChannel('video', probe),
+    );
   const promise = Promise.all([apiPromise, videoPromise]).finally(() => {
     if (reachabilityInFlight.get(profile.id)?.token === token) {
       reachabilityInFlight.delete(profile.id);
@@ -1286,12 +1397,16 @@ function refreshReachability(force = false) {
 }
 
 function createProfileAndEdit() {
-  const profile = store.create({
-    name: t('profile.newName', { number: store.list().length + 1 }),
+  const profiles = store.list();
+  const configuredCount = configuredProfiles(profiles).length;
+  const reusableDraft = profiles.find((profile) => !profile.host);
+  const profile = reusableDraft || newProfile({
+    name: t('settings.profilePlaceholder'),
   });
-  renderProfileLists();
-  selectProfile(profile.id);
-  openSettings();
+  if (configuredCount > 0) {
+    profile.name = t('profile.newName', { number: configuredCount + 1 });
+  }
+  openSettings(profile, { isNew: true });
   element('profile-name').select();
 }
 
@@ -1374,8 +1489,8 @@ element('card-menu-manage').addEventListener('click', () => {
   navigateToBrowsePage('cards');
 });
 
-settingsButton.addEventListener('click', openSettings);
-element('empty-configure').addEventListener('click', openSettings);
+settingsButton.addEventListener('click', () => openSettings());
+element('empty-configure').addEventListener('click', createProfileAndEdit);
 element('empty-create-card').addEventListener('click', () => {
   navigateToBrowsePage('cards');
   startNewCard();
@@ -1402,13 +1517,13 @@ hudShowButton.addEventListener('click', () => {
   hudCloseButton.focus();
 });
 
-profilePicker.addEventListener('change', () => selectProfile(profilePicker.value));
-
-element('new-profile').addEventListener('click', createProfileAndEdit);
-
 element('delete-profile').addEventListener('click', () => {
-  const profile = store.selected();
+  if (!editingProfile || editingProfileIsNew) {
+    return;
+  }
+  const profile = editingProfile;
   element('delete-copy').textContent = t('delete.copy', { name: profile.name });
+  deleteDialog.returnValue = '';
   deleteDialog.showModal();
 });
 
@@ -1416,15 +1531,18 @@ deleteDialog.addEventListener('close', () => {
   if (deleteDialog.returnValue !== 'confirm') {
     return;
   }
-  const deleting = store.selectedId;
+  const deleting = editingProfile?.id;
+  if (!deleting) {
+    return;
+  }
   reachability.delete(deleting);
   reachabilityInFlight.delete(deleting);
   if (session.wanted && session.profile?.id === deleting) {
     session.disconnect();
   }
-  const next = store.remove(deleting);
+  store.remove(deleting);
+  closeSettings();
   renderProfileLists();
-  selectProfile(next.id);
 });
 
 function cardImageErrorMessage(error) {
@@ -1594,7 +1712,9 @@ form.addEventListener('submit', (event) => {
   closeSettings();
   currentMetric = null;
   lastMetricPaint = 0;
-  element('video-metric').textContent = t('metric.waiting');
+  element('video-metric').textContent = t(
+    profile.tickerEnabled ? 'metric.ticker' : 'metric.waiting',
+  );
   useLibraryPageForConnection();
   session.connect(profile);
 });
@@ -1604,6 +1724,40 @@ element('show-password').addEventListener('click', () => {
   const showing = password.type === 'text';
   password.type = showing ? 'password' : 'text';
   element('show-password').textContent = t(showing ? 'button.show' : 'button.hide');
+});
+
+element('ticker-enabled').addEventListener('change', syncTickerModeControls);
+
+element('ticker-preview-button').addEventListener('click', openTickerPreview);
+tickerPreviewInput.addEventListener('input', startTickerPreviewMarquee);
+element('ticker-preview-clean').addEventListener('click', (event) => {
+  event.stopPropagation();
+  setTickerPreviewClean(true);
+  element('ticker-preview-stage').focus({ preventScroll: true });
+});
+element('ticker-preview-close').addEventListener('click', closeTickerPreview);
+element('ticker-preview-stage').addEventListener('click', () => {
+  if (tickerPreviewDialog.dataset.clean === 'true') {
+    setTickerPreviewClean(false);
+    tickerPreviewInput.focus({ preventScroll: true });
+  }
+});
+tickerPreviewDialog.addEventListener('cancel', (event) => {
+  event.preventDefault();
+  if (tickerPreviewDialog.dataset.clean === 'true') {
+    setTickerPreviewClean(false);
+    tickerPreviewInput.focus({ preventScroll: true });
+  } else {
+    closeTickerPreview();
+  }
+});
+tickerPreviewDialog.addEventListener('close', () => {
+  stopTickerPreviewMarquee();
+  setTickerPreviewClean(false);
+  if (!settingsDialog.open) {
+    settingsDialog.showModal();
+  }
+  requestAnimationFrame(() => element('ticker-preview-button').focus());
 });
 
 element('game-icon-button').addEventListener('click', () => {
@@ -1731,6 +1885,7 @@ element('self-host-done').addEventListener('click', () => {
 
 function renderLocalizedUi() {
   applyDocumentTranslations();
+  renderTickerPreviewText();
   renderConnectionButton();
   renderCompatibility();
   renderSnapshot(session.snapshot, false);

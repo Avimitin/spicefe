@@ -91,6 +91,29 @@ SIL Open Font License 1.1, Copyright 1980 The Bitcount Project Authors. The
 license, upstream FONTLOG, hashes, and provenance record ship in
 `public/vendor/bitcount-single/`.
 
+## Sixteen
+
+The old beatmania IIDX ticker view uses the **Sixteen Mono** regular face by
+**Jack Sivak**, from
+[`StuffJackMakes/Sixteen-Font`](https://github.com/StuffJackMakes/Sixteen-Font),
+revision `84cf1630b762243f70faa243bf2d3c03073dc2ce`. The checked-in WOFF2 is
+unmodified and verified byte for byte against the pinned non-flake Nix input.
+
+Sixteen is licensed separately under the SIL Open Font License 1.1, Copyright
+© 2020 Jack Sivak, with Reserved Font Name "Sixteen". The complete license,
+source URLs, font-selection details, and checksums ship in
+`public/vendor/sixteen-font/`. The font is not covered by spicefe's MIT
+license.
+
+## DJ IIDX decorative artwork
+
+The old beatmania IIDX ticker enclosure includes DJ IIDX artwork supplied by
+the spicefe repository owner. The browser asset is a size-optimized rendering
+of the supplied image and is used only for visual identification and
+decoration. No ownership or endorsement is implied. Its dimensions, checksum,
+and transformation record ship in `public/vendor/iidx-dj-logo/`. The artwork
+is not covered by spicefe's MIT license.
+
 ## spice2x icon
 
 The site icon and default connection-profile icon are copied without
@@ -119,10 +142,11 @@ checksum are recorded in `public/vendor/frankerfacez/SOURCE.md`.
 
 The optional connection-profile artwork is copied from
 [`bicarus-dev/bemani_fan_site_icons`](https://github.com/bicarus-dev/bemani_fan_site_icons),
-revision `225e494eebe3db5cd9b2ce04349b87606df97be3`. Only 11 browser-ready files
-for known subscreen-capable releases are included: beatmania IIDX 27–33,
-GITADORA GALAXY WAVE DELTA, SOUND VOLTEX 6–7, and pop'n music High Cheer. All
-other upstream images and the redundant Windows ICO conversions are omitted.
+revision `225e494eebe3db5cd9b2ce04349b87606df97be3`. The 25 browser-ready files
+include every available beatmania IIDX image (18 arcade release images plus
+INFINITAS and ULTIMATE MOBILE artwork), GITADORA GALAXY WAVE DELTA, SOUND
+VOLTEX 6–7, and pop'n music High Cheer. All other upstream images and the
+redundant Windows ICO conversions are omitted.
 
 At that revision, the upstream repository provides no license or other grant
 of rights and says the images were gathered from the KONAMI BEMANI fan site.

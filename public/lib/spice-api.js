@@ -1,4 +1,5 @@
 import { apiWebSocketUrl } from './endpoints.js';
+import { normalizeIidxTickerText } from './iidx-ticker.js';
 import { RC4 } from './rc4.js';
 
 export class SpiceApiError extends Error {
@@ -148,6 +149,11 @@ export class SpiceApi {
       return Promise.reject(new SpiceApiError('Card ID must contain exactly 16 hexadecimal characters', 'validation'));
     }
     return this.request('card', 'insert', [reader, number]);
+  }
+
+  async tickerGet() {
+    const data = await this.request('iidx', 'ticker_get', []);
+    return normalizeIidxTickerText(data[0]);
   }
 
   enqueue(entry) {

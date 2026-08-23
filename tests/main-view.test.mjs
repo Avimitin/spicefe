@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import { browseView, configuredProfiles, mainView } from '../public/lib/main-view.js';
@@ -59,4 +60,37 @@ test('connection diagnostics remain on the server list until video is live', () 
     wanted: true,
     videoState: 'live',
   }, 'welcome'), 'stream');
+});
+
+test('ticker profiles remain in the library until their first display value arrives', () => {
+  const ticker = { ...saved, tickerEnabled: true };
+  assert.equal(mainView([ticker], {
+    wanted: true,
+    profile: ticker,
+    videoState: 'connecting',
+  }, 'servers'), 'servers');
+  assert.equal(mainView([ticker], {
+    wanted: true,
+    profile: ticker,
+    videoState: 'live',
+  }, 'servers'), 'stream');
+});
+
+test('the connection editor leaves server selection to the library', () => {
+  const markup = readFileSync(
+    new URL('../public/index.html', import.meta.url),
+    'utf8',
+  );
+  const script = readFileSync(
+    new URL('../public/app.js', import.meta.url),
+    'utf8',
+  );
+
+  assert.doesNotMatch(markup, /id="profile-picker"/);
+  assert.doesNotMatch(markup, /id="new-profile"/);
+  assert.match(
+    markup,
+    /<footer class="dialog-footer">[\s\S]*id="delete-profile"[^>]*hidden[\s\S]*id="save-profile"/,
+  );
+  assert.match(script, /delete-profile'\)\.hidden = editingProfileIsNew/);
 });

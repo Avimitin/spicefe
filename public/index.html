@@ -67,7 +67,7 @@
         <span id="video-status" class="connection-status" data-state="idle">
           <span class="status-dot" aria-hidden="true"></span>
           <span class="status-copy">
-            <span class="status-channel" data-i18n="nav.video">Video</span>
+            <span id="display-status-channel" class="status-channel" data-i18n="nav.video">Video</span>
             <strong id="video-status-label" class="status-value">Idle</strong>
           </span>
         </span>
@@ -145,6 +145,21 @@
       <canvas id="h264-view" class="stream-view" hidden></canvas>
       <video id="mse-view" class="stream-view" autoplay muted playsinline hidden aria-label="Spice subscreen stream" data-i18n-aria-label="stream.aria"></video>
       <img id="mjpeg-view" class="stream-view" alt="Spice subscreen stream" hidden data-i18n-alt="stream.aria">
+      <div id="ticker-view" class="ticker-view" role="img" aria-label="IIDX 16-segment display" data-i18n-aria-label="ticker.aria" hidden>
+        <div class="ticker-hardware" aria-hidden="true">
+          <div class="ticker-logo-panel">
+            <img class="ticker-logo" src="./vendor/iidx-dj-logo/iidx-dj-logo.png" alt="" decoding="async">
+          </div>
+          <div class="ticker-info-panel">
+            <div class="ticker-caption">
+              <img class="ticker-caption-image" src="./vendor/iidx-caption/iidx-caption.png" alt="" decoding="async">
+            </div>
+            <div class="ticker-display-panel">
+              <span id="ticker-text" class="ticker-text">°°°°°°°°°</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <section id="empty-state" class="empty-state">
         <div class="welcome-hero">
@@ -748,8 +763,8 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run</code></pre>
     <form id="profile-form" method="dialog">
       <header class="dialog-header">
         <div>
-          <p class="eyebrow" data-i18n="settings.eyebrow">CONNECTION LIBRARY</p>
-          <h2 data-i18n="settings.title">Spice instances</h2>
+          <p class="eyebrow" data-i18n="settings.eyebrow">SERVER PROFILE</p>
+          <h2 data-i18n="settings.title">Connection settings</h2>
         </div>
         <div class="dialog-header-actions">
           <button id="close-settings" class="icon-button" type="button" aria-label="Close settings" data-i18n-aria-label="button.closeSettings">
@@ -758,25 +773,13 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run</code></pre>
         </div>
       </header>
 
-      <div class="profile-actions">
-        <label class="wide-field">
-          <span data-i18n="settings.savedInstance">Saved instance</span>
-          <span class="profile-select">
-            <img id="profile-picker-icon" class="profile-icon" alt="">
-            <select id="profile-picker"></select>
-          </span>
-        </label>
-        <button id="new-profile" class="secondary-button" type="button" data-i18n="button.new">New</button>
-        <button id="delete-profile" class="danger-button" type="button" data-i18n="button.delete">Delete</button>
-      </div>
-
       <div class="form-grid">
         <label class="field span-two">
           <span data-i18n="settings.profileName">Profile name</span>
           <input id="profile-name" name="profile-name" type="text" maxlength="48" required placeholder="Gaming PC" data-i18n-placeholder="settings.profilePlaceholder">
         </label>
 
-        <div class="field span-two">
+        <div class="field game-icon-field span-two">
           <span data-i18n="settings.gameIcon">Game icon</span>
           <input id="game-icon-id" name="game-icon-id" type="hidden" value="spice2x">
           <button id="game-icon-button" class="game-icon-button" type="button" aria-haspopup="dialog" aria-controls="icon-dialog">
@@ -805,6 +808,24 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run</code></pre>
             <button id="show-password" class="inline-button" type="button" data-i18n="button.show">Show</button>
           </span>
         </label>
+
+        <div class="segment-display-option span-two">
+          <div class="segment-display-heading">
+            <span class="segment-display-label" data-i18n="settings.displayOption">Display option</span>
+            <button id="ticker-preview-button" class="ticker-preview-button" type="button" aria-haspopup="dialog" aria-controls="ticker-preview-dialog">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+              <span data-i18n="ticker.previewButton">Preview display</span>
+            </button>
+          </div>
+          <label class="segment-display-control">
+            <input id="ticker-enabled" name="ticker-enabled" type="checkbox">
+            <span class="segment-display-checkbox" aria-hidden="true">
+              <svg viewBox="0 0 12 10"><path d="m1 5 3 3 7-7"/></svg>
+            </span>
+            <strong data-i18n="settings.tickerEnabled">Enable 16 Segment Display</strong>
+          </label>
+          <small data-i18n="settings.tickerHelp">Use this only with older beatmania IIDX releases that drive the cabinet’s 16-segment display. Recent IIDX releases may provide only a subscreen.</small>
+        </div>
       </div>
 
       <details id="stream-settings" class="stream-settings">
@@ -849,10 +870,45 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run</code></pre>
 
       <footer class="dialog-footer">
         <span id="save-status" aria-live="polite"></span>
+        <button id="delete-profile" class="danger-button" type="button" data-i18n="button.delete" hidden>Delete</button>
         <button id="save-profile" class="secondary-button" type="button" data-i18n="button.save">Save</button>
         <button id="save-connect" class="primary-button" type="submit" data-i18n="button.saveConnect">Save &amp; connect</button>
       </footer>
     </form>
+  </dialog>
+
+  <dialog id="ticker-preview-dialog" class="ticker-preview-dialog" aria-labelledby="ticker-preview-title">
+    <div id="ticker-preview-stage" class="ticker-preview-stage" tabindex="-1">
+      <header class="ticker-preview-toolbar">
+        <div class="ticker-preview-title">
+          <span data-i18n="ticker.previewEyebrow">OFFLINE PREVIEW</span>
+          <strong id="ticker-preview-title" data-i18n="ticker.previewTitle">16 Segment Display</strong>
+        </div>
+        <label class="ticker-preview-input-field">
+          <span data-i18n="ticker.previewText">Preview text</span>
+          <input id="ticker-preview-input" type="text" value="WELCOME TO IIDX" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        </label>
+        <button id="ticker-preview-clean" class="secondary-button" type="button" title="Hide controls for a clean screenshot; tap anywhere to restore them" data-i18n="ticker.screenshotView" data-i18n-title="ticker.screenshotHelp">Screenshot view</button>
+        <button id="ticker-preview-close" class="icon-button" type="button" aria-label="Close display preview" data-i18n-aria-label="ticker.previewClose">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></svg>
+        </button>
+      </header>
+      <div id="ticker-preview-display" class="ticker-view ticker-preview-display" role="img" aria-label="IIDX 16-segment display preview: WELCOME T">
+        <div class="ticker-hardware" aria-hidden="true">
+          <div class="ticker-logo-panel">
+            <img class="ticker-logo" src="./vendor/iidx-dj-logo/iidx-dj-logo.png" alt="" decoding="async">
+          </div>
+          <div class="ticker-info-panel">
+            <div class="ticker-caption">
+              <img class="ticker-caption-image" src="./vendor/iidx-caption/iidx-caption.png" alt="" decoding="async">
+            </div>
+            <div class="ticker-display-panel">
+              <span id="ticker-preview-text" class="ticker-text">WELCOME°T</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </dialog>
 
   <dialog id="icon-dialog" class="icon-dialog">

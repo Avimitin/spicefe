@@ -39,6 +39,7 @@ test('sanitizes profile ranges and drops connection state', () => {
     fps: 0,
     quality: 500,
     iconId: '../../not-an-icon',
+    tickerEnabled: 'false',
     connected: true,
   });
   assert.equal(profile.name, 'PC');
@@ -46,6 +47,7 @@ test('sanitizes profile ranges and drops connection state', () => {
   assert.equal(profile.fps, 1);
   assert.equal(profile.quality, 100);
   assert.equal(profile.iconId, 'spice2x');
+  assert.equal(profile.tickerEnabled, false);
   assert.equal('connected' in profile, false);
 });
 
@@ -58,6 +60,7 @@ test('persists several instances and their connection information only', () => {
     host: '192.168.8.10',
     password: 'local-secret',
     iconId: 'ac_iidx33',
+    tickerEnabled: true,
   });
   const second = firstStore.create({
     name: 'SDVX cabinet',
@@ -71,6 +74,7 @@ test('persists several instances and their connection information only', () => {
   assert.equal(reloaded.selected().id, first.id);
   assert.equal(reloaded.selected().password, 'local-secret');
   assert.equal(reloaded.selected().iconId, 'ac_iidx33');
+  assert.equal(reloaded.selected().tickerEnabled, true);
   assert.equal(reloaded.get(second.id).host, 'sdvx.local');
   assert.equal(reloaded.get(second.id).iconId, 'ac_sdvx7');
   assert.equal('connected' in reloaded.selected(), false);
@@ -86,6 +90,7 @@ test('adds the spice2x icon when loading a profile saved before icon support', (
 
   const store = new ProfileStore(storage);
   assert.equal(store.selected().iconId, 'spice2x');
+  assert.equal(store.selected().tickerEnabled, false);
 });
 
 test('supports a localized name for newly generated default profiles', () => {

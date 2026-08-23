@@ -2,8 +2,11 @@
 
 - Repository: <https://github.com/bicarus-dev/bemani_fan_site_icons>
 - Revision: `225e494eebe3db5cd9b2ce04349b87606df97be3`
-- Vendored subset: 11 browser-ready files for supported subscreen releases:
-  - beatmania IIDX: `ac_iidx27.png` through `ac_iidx33.png`
+- Vendored subset: 25 browser-ready files for supported display modes:
+  - beatmania IIDX: all 18 upstream arcade images for releases 18–33,
+    including `ac_IIDX23_pre.png` and `ac_iidx24_loc.png`
+  - beatmania IIDX home/mobile: `gs_iidx_infinitas.png`,
+    `gs_iidx_infinitas2.png`, and `mobile_iidx.png`
   - GITADORA: `ac_gitadora_gw_delta.png`
   - SOUND VOLTEX: `ac_sdvx6.png` and `ac_sdvx7.jpg`
   - pop'n music: `ac_popn_highcheers.jpg`
