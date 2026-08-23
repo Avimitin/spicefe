@@ -28,9 +28,7 @@
 
 **Old beatmania IIDX 16-segment display**
 
-[![Old beatmania IIDX 16-segment display running in spicefe](./docs/screenshots/iidx-16-segment-display.png)](./docs/showcase/iidx-16-segment-display.mp4)
-
-[▶ Watch the 10-second segment-display demo (MP4)](./docs/showcase/iidx-16-segment-display.mp4)
+<video src="https://raw.githubusercontent.com/Avimitin/spicefe/main/docs/showcase/iidx-16-segment-display.mp4" controls></video>
 
 `spicefe` is a globally hostable, static LAN client for the spice2x subscreen
 stream and old beatmania IIDX cabinet ticker. Open the page on a phone, tablet,
