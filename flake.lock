@@ -17,6 +17,23 @@
         "type": "github"
       }
     },
+    "bitcountSingle": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1757065988,
+        "narHash": "sha256-WENI7UDpxfG8g8akJyyEtWu3Rs4nuNX7nghchAuS75I=",
+        "owner": "petrvanblokland",
+        "repo": "TYPETR-Bitcount",
+        "rev": "89e7994f73b7f5ced80e7cf493d40be9e66ff82f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "petrvanblokland",
+        "repo": "TYPETR-Bitcount",
+        "rev": "89e7994f73b7f5ced80e7cf493d40be9e66ff82f",
+        "type": "github"
+      }
+    },
     "libreCaslonText": {
       "flake": false,
       "locked": {
@@ -53,6 +70,7 @@
     "root": {
       "inputs": {
         "bemaniIcons": "bemaniIcons",
+        "bitcountSingle": "bitcountSingle",
         "libreCaslonText": "libreCaslonText",
         "nixpkgs": "nixpkgs",
         "spice2xSource": "spice2xSource"

@@ -116,7 +116,9 @@ instead use the matching gray-dark style, a solid color, the
 transparent-gradient treatment, or an uploaded PNG, JPEG, or WebP background.
 Uploaded artwork is resized on the device and stored with the card in browser
 `localStorage`; it is never uploaded by spicefe. Very long names remain on one
-line and scroll within their fixed name area.
+line and scroll within their fixed name area. Card numbers use the locally
+served Bitcount Single variable font, with the device's monospace font as a
+fallback.
 
 While video is live, select the card icon in the top bar, choose Player 1 or
 Player 2, then select a card. spicefe sends the native
@@ -397,7 +399,10 @@ pinned to an exact upstream revision as a non-flake Nix input. Nix converts the
 upstream TTF to WOFF2 reproducibly and verifies the checked-in browser asset.
 CSS checks for a locally installed copy first, and Chinese uses a local serif
 fallback. Other scripts use local system fallbacks, and no font CDN or live
-third-party request is used.
+third-party request is used. Virtual card numbers use
+[Bitcount Single](https://github.com/petrvanblokland/TYPETR-Bitcount), pinned
+to an exact revision and reproducibly converted from the requested variable TTF
+to WOFF2 by Nix; the asset is served locally with a system monospace fallback.
 
 ## Artwork provenance
 

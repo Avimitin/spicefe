@@ -80,6 +80,17 @@ pinned as a non-flake Nix input, and Nix reproducibly converts the source TTF
 to the checked-in WOFF2. Hashes and provenance are recorded in
 `public/vendor/libre-caslon-text/`.
 
+## Bitcount Single
+
+Virtual card numbers use the Bitcount Single variable font from the official
+[`petrvanblokland/TYPETR-Bitcount`](https://github.com/petrvanblokland/TYPETR-Bitcount)
+repository, revision `89e7994f73b7f5ced80e7cf493d40be9e66ff82f`. The
+requested upstream TTF is pinned as a non-flake Nix input and reproducibly
+converted to the checked-in WOFF2 browser asset. Bitcount is licensed under the
+SIL Open Font License 1.1, Copyright 1980 The Bitcount Project Authors. The
+license, upstream FONTLOG, hashes, and provenance record ship in
+`public/vendor/bitcount-single/`.
+
 ## spice2x icon
 
 The site icon and default connection-profile icon are copied without

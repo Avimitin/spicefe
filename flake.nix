@@ -5,6 +5,10 @@
     url = "github:bicarus-dev/bemani_fan_site_icons/225e494eebe3db5cd9b2ce04349b87606df97be3";
     flake = false;
   };
+  inputs.bitcountSingle = {
+    url = "github:petrvanblokland/TYPETR-Bitcount/89e7994f73b7f5ced80e7cf493d40be9e66ff82f";
+    flake = false;
+  };
   inputs.libreCaslonText = {
     url = "github:impallari/Libre-Caslon-Text/c31e21f7e8cf91f18d90f778ce20e66c68219c74";
     flake = false;
@@ -15,7 +19,7 @@
     flake = false;
   };
 
-  outputs = { self, bemaniIcons, libreCaslonText, nixpkgs, spice2xSource }:
+  outputs = { self, bemaniIcons, bitcountSingle, libreCaslonText, nixpkgs, spice2xSource }:
     let
       systems = [
         "x86_64-linux"
@@ -81,6 +85,16 @@
               woff2_compress LibreCaslonText-Regular.ttf
               install -m 0444 LibreCaslonText-Regular.woff2 "$out"
             '';
+          bitcountSingleVariableWoff2 = pkgs.runCommand "BitcountSingle-Variable.woff2"
+            {
+              nativeBuildInputs = [ pkgs.woff2 ];
+            }
+            ''
+              cp "${bitcountSingle}/fonts/ttf/variable/BitcountSingle[CRSV,ELSH,ELXP,slnt,wght].ttf" BitcountSingle-Variable.ttf
+              chmod u+w BitcountSingle-Variable.ttf
+              woff2_compress BitcountSingle-Variable.ttf
+              install -m 0444 BitcountSingle-Variable.woff2 "$out"
+            '';
         in
         rec {
           default = pkgs.buildNpmPackage {
@@ -102,11 +116,18 @@
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Medium-Latin1.woff2 ${ibmPlexMediumLatin1}
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Medium-Pi.woff2 ${ibmPlexMediumPi}
               cmp public/vendor/libre-caslon-text/fonts/LibreCaslonText-Regular.woff2 ${libreCaslonTextRegularWoff2}
+              cmp public/vendor/bitcount-single/fonts/BitcountSingle-Variable.woff2 ${bitcountSingleVariableWoff2}
               cmp public/vendor/e-amusement/ea_logo.png ${eaLogo}
               cmp public/vendor/frankerfacez/konmai.png ${konmaiLogo}
               cmp \
                 <(sed 's/\r$//; s/[[:blank:]]*$//' public/vendor/libre-caslon-text/LICENSE.OFL-1.1.txt) \
                 <(sed 's/\r$//; s/[[:blank:]]*$//' ${libreCaslonText}/OFL.txt)
+              cmp \
+                <(sed 's/\r$//; s/[[:blank:]]*$//' public/vendor/bitcount-single/LICENSE.OFL-1.1.txt) \
+                <(sed 's/\r$//; s/[[:blank:]]*$//' ${bitcountSingle}/OFL.txt)
+              cmp \
+                <(sed 's/\r$//; s/[[:blank:]]*$//' public/vendor/bitcount-single/FONTLOG.md) \
+                <(sed 's/\r$//; s/[[:blank:]]*$//' ${bitcountSingle}/FONTLOG.md)
               cmp \
                 <(tr -s '[:space:]' '\n' < public/vendor/ibm-plex-sans/LICENSE.OFL-1.1.txt) \
                 <(tr -s '[:space:]' '\n' < ${ibmPlexLicense})
@@ -127,6 +148,8 @@
           };
 
           libre-caslon-text-regular = libreCaslonTextRegularWoff2;
+
+          bitcount-single-variable = bitcountSingleVariableWoff2;
 
           release = pkgs.runCommand "spicefe-public.zip"
             {
