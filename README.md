@@ -26,6 +26,12 @@
 
 [![GITADORA GALAXY WAVE DELTA subscreen streaming through spicefe](./docs/screenshots/gitadora-stream.png)](./docs/screenshots/gitadora-stream.png)
 
+**Old beatmania IIDX 16-segment display**
+
+[![Old beatmania IIDX 16-segment display running in spicefe](./docs/screenshots/iidx-16-segment-display.png)](./docs/showcase/iidx-16-segment-display.mp4)
+
+[▶ Watch the 10-second segment-display demo (MP4)](./docs/showcase/iidx-16-segment-display.mp4)
+
 `spicefe` is a globally hostable, static LAN client for the spice2x subscreen
 stream and old beatmania IIDX cabinet ticker. Open the page on a phone, tablet,
 or another modern browser, select a saved gaming PC, and the browser connects

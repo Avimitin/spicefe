@@ -25,6 +25,12 @@
 
 [![通过 spicefe 串流的 GITADORA GALAXY WAVE DELTA 副屏](./docs/screenshots/gitadora-stream.png)](./docs/screenshots/gitadora-stream.png)
 
+**旧版 beatmania IIDX 米字屏**
+
+[![在 spicefe 中运行的旧版 beatmania IIDX 米字屏](./docs/screenshots/iidx-16-segment-display.png)](./docs/showcase/iidx-16-segment-display.mp4)
+
+[▶ 观看 10 秒米字屏演示（MP4）](./docs/showcase/iidx-16-segment-display.mp4)
+
 `spicefe` 是一个可在全球静态托管、用于 spice2x 副屏视频流及旧版 beatmania
 IIDX 机台米字屏的局域网客户端。在手机、平板或其他现代浏览器中打开页面，选择
 已保存的游戏 PC，浏览器就会直接连接 spice2x，提供视频与触控输入，或显示
