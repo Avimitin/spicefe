@@ -63,6 +63,14 @@
             url = "${ibmPlexBase}/LICENSE.txt";
             hash = "sha256-fmsoGO29j2oBroBkHMjxalEIDQj7TlMr46C290rbB9o=";
           };
+          eaLogo = pkgs.fetchurl {
+            url = "https://p.eagate.573.jp/img/ea_logo.png";
+            hash = "sha256-IvrpVqcKkOq9OxFM4sIdSqnF7gaub79LmZlyNkClzdU=";
+          };
+          konmaiLogo = pkgs.fetchurl {
+            url = "https://cdn.frankerfacez.com/emoticon/146473/4";
+            hash = "sha256-1XqOwNQkfQcucl0Rjj08nCN5jvQFhh1QwVnpPcpWjLg=";
+          };
           libreCaslonTextRegularWoff2 = pkgs.runCommand "LibreCaslonText-Regular.woff2"
             {
               nativeBuildInputs = [ pkgs.woff2 ];
@@ -94,6 +102,8 @@
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Medium-Latin1.woff2 ${ibmPlexMediumLatin1}
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Medium-Pi.woff2 ${ibmPlexMediumPi}
               cmp public/vendor/libre-caslon-text/fonts/LibreCaslonText-Regular.woff2 ${libreCaslonTextRegularWoff2}
+              cmp public/vendor/e-amusement/ea_logo.png ${eaLogo}
+              cmp public/vendor/frankerfacez/konmai.png ${konmaiLogo}
               cmp \
                 <(sed 's/\r$//; s/[[:blank:]]*$//' public/vendor/libre-caslon-text/LICENSE.OFL-1.1.txt) \
                 <(sed 's/\r$//; s/[[:blank:]]*$//' ${libreCaslonText}/OFL.txt)

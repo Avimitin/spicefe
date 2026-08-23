@@ -36,6 +36,12 @@ test('self-hosting guide remains available with or without saved servers', () =>
   assert.equal(mainView([blank], { wanted: false }, 'self-host'), 'self-host');
 });
 
+test('card management remains available with or without saved servers', () => {
+  assert.equal(browseView([saved], 'cards'), 'cards');
+  assert.equal(mainView([saved], { wanted: false }, 'cards'), 'cards');
+  assert.equal(mainView([blank], { wanted: false }, 'cards'), 'cards');
+});
+
 test('connection diagnostics remain on the server list until video is live', () => {
   assert.equal(mainView([saved], {
     wanted: true,

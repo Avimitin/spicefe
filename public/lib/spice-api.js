@@ -138,6 +138,18 @@ export class SpiceApi {
     });
   }
 
+  insertCard(index, cardId) {
+    const reader = Number(index);
+    const number = String(cardId ?? '').toUpperCase();
+    if (!Number.isInteger(reader) || reader < 0 || reader > 1) {
+      return Promise.reject(new SpiceApiError('Card reader must be Player 1 or Player 2', 'validation'));
+    }
+    if (!/^[0-9A-F]{16}$/.test(number)) {
+      return Promise.reject(new SpiceApiError('Card ID must contain exactly 16 hexadecimal characters', 'validation'));
+    }
+    return this.request('card', 'insert', [reader, number]);
+  }
+
   enqueue(entry) {
     if (!this.connected) {
       return false;

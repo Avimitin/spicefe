@@ -1,4 +1,12 @@
 import { likelyNeedsBrowserSetup, plainHttpPageUrl } from './lib/endpoints.js';
+import { cardImageDataUrl } from './lib/card-image.js';
+import {
+  CardStore,
+  generateCardNumber,
+  newCardDraft,
+  normalizeCardNumberInput,
+} from './lib/card-store.js';
+import { createCreditCard, measureCreditCardNames } from './lib/credit-card.js';
 import { GAME_ICON_GROUPS, gameIconById } from './lib/game-icons.js';
 import { connectionPresentation } from './lib/connection-status.js';
 import { createI18n, localizeError } from './lib/i18n.js';
@@ -22,6 +30,7 @@ const t = (key, parameters) => i18n.t(key, parameters);
 const store = new ProfileStore(undefined, {
   defaultProfileName: t('settings.profilePlaceholder'),
 });
+const cardStore = new CardStore();
 
 const app = element('app');
 const stage = element('stage');
@@ -40,6 +49,7 @@ const pageMenuButton = element('page-menu-button');
 const pageMenu = element('page-menu');
 const welcomePageLink = element('welcome-page-link');
 const libraryPageLink = element('library-page-link');
+const cardPageLink = element('card-page-link');
 const browserSetupPageLink = element('browser-setup-page-link');
 const selfHostPageLink = element('self-host-page-link');
 const brandIcon = element('brand-icon');
@@ -50,7 +60,19 @@ const emptyState = element('empty-state');
 const serverLibrary = element('server-library');
 const browserSetup = element('browser-setup');
 const selfHost = element('self-host');
+const cardLibrary = element('card-library');
 const serverList = element('server-list');
+const cardList = element('card-list');
+const cardEmpty = element('card-empty');
+const cardForm = element('card-form');
+const cardPreview = element('card-preview');
+const cardControls = element('card-controls');
+const cardMenuButton = element('card-menu-button');
+const cardMenu = element('card-menu');
+const cardMenuList = element('card-menu-list');
+const cardMenuEmpty = element('card-menu-empty');
+const cardMenuApiNote = element('card-menu-api-note');
+const deleteCardDialog = element('delete-card-dialog');
 const streamMessage = element('stream-message');
 const stageHud = element('stage-hud');
 const hudShowButton = element('hud-show-button');
@@ -75,6 +97,10 @@ let renderedMainView = null;
 const reachability = new Map();
 const reachabilityInFlight = new Map();
 let serverNameMeasureFrame = null;
+let editingCardId = null;
+let cardDraft = null;
+let selectedCardReader = 0;
+let cardInsertPending = false;
 
 function syncServerNameOverflow(name) {
   const text = name.querySelector('.server-name-text');
@@ -138,6 +164,7 @@ function applyDocumentTranslations() {
 
 function showToast(message, timeout = 4500) {
   toast.textContent = message;
+  toast.dataset.theme = renderedMainView === 'stream' ? 'stream' : 'default';
   toast.hidden = false;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {
@@ -158,6 +185,9 @@ function requestedBrowsePage() {
   }
   if (requested === 'library') {
     return 'servers';
+  }
+  if (requested === 'cards') {
+    return 'cards';
   }
   if (requested === 'browser-setup') {
     return 'browser-setup';
@@ -241,6 +271,197 @@ function renderIconGroups() {
     return section;
   });
   iconGroups.replaceChildren(...sections);
+}
+
+function cardDisplayName(card) {
+  return card.name || t('cards.unnamed');
+}
+
+function selectedCardAppearance() {
+  return cardForm.querySelector('input[name="card-appearance"]:checked')?.value
+    || 'gray-light';
+}
+
+function cardFromEditor() {
+  return {
+    ...cardDraft,
+    name: element('card-name').value,
+    number: normalizeCardNumberInput(element('card-number').value),
+    appearance: selectedCardAppearance(),
+    color: element('card-color').value.toUpperCase(),
+  };
+}
+
+function renderCardAppearanceControls() {
+  const appearance = selectedCardAppearance();
+  element('card-solid-controls').hidden = appearance !== 'solid';
+  element('card-image-controls').hidden = appearance !== 'image';
+  element('remove-card-image').disabled = !cardDraft?.image;
+  element('solid-color-swatch').style.background = element('card-color').value;
+  element('card-color-value').textContent = element('card-color').value.toUpperCase();
+}
+
+function renderCardPreview() {
+  if (!cardDraft) {
+    return;
+  }
+  const candidate = cardFromEditor();
+  const preview = createCreditCard(candidate, { unnamed: t('cards.unnamed') });
+  preview.classList.add('ea-card-preview');
+  cardPreview.replaceChildren(preview);
+  renderCardAppearanceControls();
+}
+
+function fillCardEditor(card, existing = false) {
+  cardDraft = { ...card };
+  editingCardId = existing ? card.id : null;
+  element('card-name').value = card.name;
+  element('card-number').value = card.number;
+  element('card-number').readOnly = existing;
+  element('card-color').value = card.color.toLowerCase();
+  const appearance = cardForm.querySelector(
+    `input[name="card-appearance"][value="${card.appearance}"]`,
+  ) || cardForm.querySelector('input[name="card-appearance"][value="gray-light"]');
+  appearance.checked = true;
+  element('card-editor-title').textContent = t(existing ? 'cards.editTitle' : 'cards.newTitle');
+  element('generate-card-number').textContent = t(existing ? 'cards.copyId' : 'cards.generate');
+  element('delete-card').hidden = !existing;
+  element('card-save-status').textContent = '';
+  element('card-image').value = '';
+  renderCardPreview();
+}
+
+function focusCardEditor() {
+  element('card-name').focus({ preventScroll: true });
+  if (matchMedia('(max-width: 820px)').matches) {
+    element('card-editor-title').scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+}
+
+function startNewCard(focus = true) {
+  fillCardEditor(newCardDraft(), false);
+  if (focus) {
+    requestAnimationFrame(focusCardEditor);
+  }
+}
+
+function editCard(id, focus = true) {
+  const card = cardStore.get(id);
+  if (!card) {
+    return;
+  }
+  fillCardEditor(card, true);
+  renderCardCollection();
+  if (focus) {
+    requestAnimationFrame(focusCardEditor);
+  }
+}
+
+function createManagedCard(card) {
+  const item = document.createElement('article');
+  const preview = createCreditCard(card, {
+    unnamed: t('cards.unnamed'),
+    label: t('cards.editLabel', { name: cardDisplayName(card) }),
+    onactivate: () => editCard(card.id),
+  });
+  item.className = 'managed-card';
+  item.dataset.selected = String(card.id === editingCardId);
+  item.setAttribute('role', 'listitem');
+  preview.classList.add('ea-card-library-preview');
+  item.append(preview);
+  return item;
+}
+
+function renderCardCollection() {
+  const cards = cardStore.list();
+  cardList.replaceChildren(...cards.map(createManagedCard));
+  cardList.hidden = cards.length === 0;
+  cardEmpty.hidden = cards.length !== 0;
+  element('card-count').textContent = t('cards.count', { count: cards.length });
+  requestAnimationFrame(() => measureCreditCardNames(cardLibrary));
+}
+
+function ensureCardEditor() {
+  if (cardDraft) {
+    return;
+  }
+  const first = cardStore.list()[0];
+  if (first) {
+    fillCardEditor(first, true);
+  } else {
+    startNewCard(false);
+  }
+}
+
+function renderCardManager() {
+  ensureCardEditor();
+  renderCardCollection();
+  renderCardPreview();
+}
+
+function setCardMenuOpen(open) {
+  const expanded = Boolean(open) && renderedMainView === 'stream';
+  cardMenu.hidden = !expanded;
+  cardMenuButton.setAttribute('aria-expanded', String(expanded));
+  if (expanded) {
+    renderStreamCardMenu();
+  }
+}
+
+function createStreamCard(card, apiReady) {
+  const item = document.createElement('div');
+  const preview = createCreditCard(card, {
+    unnamed: t('cards.unnamed'),
+    label: t('cardMenu.insertLabel', {
+      name: cardDisplayName(card),
+      player: selectedCardReader + 1,
+    }),
+    onactivate: () => insertStreamCard(card),
+  });
+  item.className = 'card-menu-item';
+  item.setAttribute('role', 'listitem');
+  preview.classList.add('ea-card-compact');
+  preview.disabled = !apiReady || cardInsertPending;
+  item.append(preview);
+  return item;
+}
+
+function renderStreamCardMenu() {
+  const cards = cardStore.list();
+  const apiReady = session.snapshot.apiState === 'live' && Boolean(session.api?.connected);
+  cardMenuApiNote.hidden = apiReady || cards.length === 0;
+  cardMenuList.replaceChildren(...cards.map((card) => createStreamCard(card, apiReady)));
+  cardMenuList.hidden = cards.length === 0;
+  cardMenuEmpty.hidden = cards.length !== 0;
+  cardMenuList.setAttribute('aria-busy', String(cardInsertPending));
+  for (const button of cardMenu.querySelectorAll('.card-reader-option')) {
+    button.setAttribute('aria-checked', String(Number(button.dataset.reader) === selectedCardReader));
+  }
+  requestAnimationFrame(() => measureCreditCardNames(cardMenu));
+}
+
+async function insertStreamCard(card) {
+  const api = session.api;
+  if (cardInsertPending || session.snapshot.apiState !== 'live' || !api?.connected) {
+    showToast(t('toast.cardApiUnavailable'));
+    return;
+  }
+
+  cardInsertPending = true;
+  setCardMenuOpen(false);
+  try {
+    await api.insertCard(selectedCardReader, card.number);
+    showToast(t('toast.cardInserted', {
+      name: cardDisplayName(card),
+      player: selectedCardReader + 1,
+    }));
+  } catch (error) {
+    showToast(t('toast.cardInsertFailed', {
+      error: localizeError(i18n.locale, error, 'status.apiDefaultError'),
+    }), 7000);
+  } finally {
+    cardInsertPending = false;
+  }
 }
 
 function renderProfileLists() {
@@ -654,6 +875,7 @@ function renderPageNavigation(view) {
   const hasServers = configuredProfiles(store.list()).length > 0;
   welcomePageLink.href = browsePagePath('welcome');
   libraryPageLink.href = browsePagePath('servers');
+  cardPageLink.href = browsePagePath('cards');
   browserSetupPageLink.href = browsePagePath('browser-setup');
   selfHostPageLink.href = browsePagePath('self-host');
 
@@ -666,6 +888,11 @@ function renderPageNavigation(view) {
     libraryPageLink.setAttribute('aria-current', 'page');
   } else {
     libraryPageLink.removeAttribute('aria-current');
+  }
+  if (view === 'cards') {
+    cardPageLink.setAttribute('aria-current', 'page');
+  } else {
+    cardPageLink.removeAttribute('aria-current');
   }
   if (view === 'browser-setup') {
     browserSetupPageLink.setAttribute('aria-current', 'page');
@@ -713,10 +940,12 @@ function renderMainView(snapshot) {
   }
   const previousView = renderedMainView;
   renderedMainView = view;
+  toast.dataset.theme = view === 'stream' ? 'stream' : 'default';
   app.dataset.mainView = view;
   stage.dataset.mainView = view;
   emptyState.hidden = view !== 'welcome';
   serverLibrary.hidden = view !== 'servers';
+  cardLibrary.hidden = view !== 'cards';
   browserSetup.hidden = view !== 'browser-setup';
   selfHost.hidden = view !== 'self-host';
 
@@ -726,9 +955,13 @@ function renderMainView(snapshot) {
   languagePicker.hidden = streaming;
   settingsButton.hidden = streaming;
   connectButton.hidden = !streaming;
+  cardControls.hidden = !streaming;
   pageMenuButton.hidden = streaming;
   brandIcon.hidden = !streaming;
   setPageMenuOpen(false);
+  if (!streaming) {
+    setCardMenuOpen(false);
+  }
   if (streaming && snapshot.profile) {
     setProfileIcon(brandIcon, snapshot.profile.iconId);
     element('active-server-name').textContent = snapshot.profile.name;
@@ -737,6 +970,12 @@ function renderMainView(snapshot) {
   renderCompatibility(false, view);
   if (view === 'servers' && previousView !== 'servers') {
     queueMicrotask(() => refreshReachability());
+  }
+  if (view === 'cards' && previousView !== 'cards') {
+    queueMicrotask(() => renderCardManager());
+  }
+  if (streaming && !cardMenu.hidden) {
+    renderStreamCardMenu();
   }
   return view;
 }
@@ -846,6 +1085,7 @@ function renderCompatibility(force = false, view = renderedMainView) {
   const recommended = isHttps && likelyNeedsBrowserSetup();
   compatBanner.hidden = view === 'browser-setup'
     || view === 'self-host'
+    || view === 'cards'
     || bannerDismissed
     || (!force && !recommended);
   element('compat-title').textContent = t('compat.title');
@@ -1017,6 +1257,11 @@ libraryPageLink.addEventListener('click', (event) => {
   }
 });
 
+cardPageLink.addEventListener('click', (event) => {
+  event.preventDefault();
+  navigateToBrowsePage('cards');
+});
+
 browserSetupPageLink.addEventListener('click', (event) => {
   event.preventDefault();
   navigateToBrowsePage('browser-setup');
@@ -1036,13 +1281,43 @@ document.addEventListener('pointerdown', (event) => {
   if (!pageMenu.hidden && !pageNavigation.contains(event.target)) {
     setPageMenuOpen(false);
   }
+  if (!cardMenu.hidden && !cardControls.contains(event.target)) {
+    setCardMenuOpen(false);
+  }
 });
 
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && !pageMenu.hidden) {
+  if (event.key !== 'Escape') {
+    return;
+  }
+  if (!cardMenu.hidden) {
+    setCardMenuOpen(false);
+    cardMenuButton.focus();
+  } else if (!pageMenu.hidden) {
     setPageMenuOpen(false);
     pageMenuButton.focus();
   }
+});
+
+cardMenuButton.addEventListener('click', () => {
+  setCardMenuOpen(cardMenu.hidden);
+});
+
+element('card-menu-close').addEventListener('click', () => {
+  setCardMenuOpen(false);
+  cardMenuButton.focus();
+});
+
+for (const button of cardMenu.querySelectorAll('.card-reader-option')) {
+  button.addEventListener('click', () => {
+    selectedCardReader = Number(button.dataset.reader);
+    renderStreamCardMenu();
+  });
+}
+
+element('card-menu-manage').addEventListener('click', () => {
+  setCardMenuOpen(false);
+  navigateToBrowsePage('cards');
 });
 
 settingsButton.addEventListener('click', openSettings);
@@ -1052,6 +1327,7 @@ element('guide-self-host').addEventListener('click', (event) => {
   navigateToBrowsePage('self-host');
 });
 element('add-server').addEventListener('click', createProfileAndEdit);
+element('add-card').addEventListener('click', () => startNewCard());
 element('close-settings').addEventListener('click', closeSettings);
 connectButton.addEventListener('click', connectSelected);
 
@@ -1090,6 +1366,156 @@ deleteDialog.addEventListener('close', () => {
   const next = store.remove(deleting);
   renderProfileLists();
   selectProfile(next.id);
+});
+
+function cardImageErrorMessage(error) {
+  const key = {
+    type: 'cards.imageTypeError',
+    size: 'cards.imageSizeError',
+    decode: 'cards.imageDecodeError',
+    'storage-size': 'cards.imageStorageError',
+  }[error?.code] || 'cards.imageGenericError';
+  return t(key);
+}
+
+cardForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const numberInput = element('card-number');
+  numberInput.value = normalizeCardNumberInput(numberInput.value);
+  numberInput.setCustomValidity('');
+  if (!cardForm.reportValidity()) {
+    return;
+  }
+
+  const candidate = cardFromEditor();
+  if (candidate.appearance === 'image' && !candidate.image) {
+    element('card-image').setCustomValidity(t('cards.imageRequired'));
+    element('card-image').reportValidity();
+    element('card-image').setCustomValidity('');
+    return;
+  }
+
+  try {
+    const saved = cardStore.upsert(candidate);
+    fillCardEditor(saved, true);
+    renderCardCollection();
+    if (!cardMenu.hidden) {
+      renderStreamCardMenu();
+    }
+    element('card-save-status').textContent = t('cards.saved');
+    showToast(t('toast.cardSaved'));
+  } catch {
+    element('card-save-status').textContent = t('cards.saveFailed');
+    showToast(t('cards.saveFailed'), 7000);
+  }
+});
+
+for (const id of ['card-name', 'card-number']) {
+  element(id).addEventListener('input', () => {
+    if (id === 'card-number') {
+      element(id).value = normalizeCardNumberInput(element(id).value);
+      element(id).setCustomValidity('');
+    }
+    renderCardPreview();
+  });
+}
+
+for (const input of cardForm.querySelectorAll('input[name="card-appearance"]')) {
+  input.addEventListener('change', renderCardPreview);
+}
+
+element('card-color').addEventListener('input', renderCardPreview);
+
+element('generate-card-number').addEventListener('click', async () => {
+  const input = element('card-number');
+  if (!editingCardId) {
+    input.value = generateCardNumber();
+    input.setCustomValidity('');
+    renderCardPreview();
+    input.focus();
+    input.select();
+    return;
+  }
+
+  let copied = false;
+  try {
+    await navigator.clipboard.writeText(input.value);
+    copied = true;
+  } catch {
+    input.select();
+    copied = document.execCommand?.('copy') || false;
+  }
+  showToast(t(copied ? 'cards.idCopied' : 'cards.idCopyFailed'));
+});
+
+element('card-image').addEventListener('change', async () => {
+  const input = element('card-image');
+  const file = input.files?.[0];
+  if (!file) {
+    return;
+  }
+  element('card-save-status').textContent = t('cards.processingImage');
+  try {
+    cardDraft.image = await cardImageDataUrl(file);
+    cardForm.querySelector('input[name="card-appearance"][value="image"]').checked = true;
+    element('card-save-status').textContent = t('cards.imageReady');
+    renderCardPreview();
+  } catch (error) {
+    const message = cardImageErrorMessage(error);
+    element('card-save-status').textContent = message;
+    showToast(message, 7000);
+  } finally {
+    input.value = '';
+  }
+});
+
+element('remove-card-image').addEventListener('click', () => {
+  cardDraft.image = null;
+  element('card-save-status').textContent = t('cards.imageRemoved');
+  renderCardPreview();
+});
+
+element('cancel-card').addEventListener('click', () => {
+  const existing = editingCardId && cardStore.get(editingCardId);
+  const first = cardStore.list()[0];
+  if (existing) {
+    fillCardEditor(existing, true);
+  } else if (first) {
+    fillCardEditor(first, true);
+  } else {
+    startNewCard(false);
+  }
+  renderCardCollection();
+});
+
+element('delete-card').addEventListener('click', () => {
+  const card = editingCardId && cardStore.get(editingCardId);
+  if (!card) {
+    return;
+  }
+  element('delete-card-copy').textContent = t('cards.deleteCopy', {
+    name: cardDisplayName(card),
+  });
+  deleteCardDialog.showModal();
+});
+
+deleteCardDialog.addEventListener('close', () => {
+  if (deleteCardDialog.returnValue !== 'confirm' || !editingCardId) {
+    return;
+  }
+  try {
+    cardStore.remove(editingCardId);
+    const first = cardStore.list()[0];
+    if (first) {
+      fillCardEditor(first, true);
+    } else {
+      startNewCard(false);
+    }
+    renderCardCollection();
+    showToast(t('toast.cardDeleted'));
+  } catch {
+    showToast(t('cards.deleteFailed'), 7000);
+  }
 });
 
 element('save-profile').addEventListener('click', () => {
@@ -1218,6 +1644,15 @@ function renderLocalizedUi() {
   if (iconDialog.open) {
     renderIconGroups();
   }
+  if (cardDraft) {
+    element('card-editor-title').textContent = t(editingCardId ? 'cards.editTitle' : 'cards.newTitle');
+    element('generate-card-number').textContent = t(editingCardId ? 'cards.copyId' : 'cards.generate');
+    renderCardCollection();
+    renderCardPreview();
+  }
+  if (!cardMenu.hidden) {
+    renderStreamCardMenu();
+  }
 }
 
 languageSelect.addEventListener('change', () => {
@@ -1258,6 +1693,10 @@ window.addEventListener('popstate', () => {
   }
 });
 
+window.addEventListener('resize', () => {
+  measureCreditCardNames();
+});
+
 setInterval(() => refreshReachability(true), REACHABILITY_INTERVAL_MS);
 
 applyDocumentTranslations();
@@ -1266,3 +1705,4 @@ fillForm(store.selected());
 renderCompatibility();
 renderSnapshot(session.snapshot);
 document.fonts?.ready?.then(() => measureServerNames());
+document.fonts?.ready?.then(() => measureCreditCardNames());

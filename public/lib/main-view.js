@@ -4,7 +4,9 @@ export function configuredProfiles(profiles) {
 }
 
 export function browseView(profiles, requestedView) {
-  if (requestedView === 'browser-setup' || requestedView === 'self-host') {
+  if (requestedView === 'browser-setup'
+    || requestedView === 'self-host'
+    || requestedView === 'cards') {
     return requestedView;
   }
   if (configuredProfiles(profiles).length === 0) {

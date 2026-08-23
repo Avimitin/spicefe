@@ -42,6 +42,8 @@ the LAN.
 - mouse, single-touch, and multi-touch input
 - Fit, Fill, and Stretch display modes with correct touch coordinate mapping
 - a dismissible in-stream adjustment bar, restorable from the top bar
+- a browser-local e-amusement card library with native-format card generation,
+  P1/P2 insertion from the stream toolbar, and customizable card artwork
 - multiple named connection profiles in `localStorage`, each with a selectable
   game icon from categorized, subscreen-capable releases shown beside the PC
   name
@@ -63,7 +65,7 @@ The API port entered in the UI is the spice2x base port:
 
 | Purpose | Browser endpoint for API port 1337 | Protection |
 | --- | --- | --- |
-| Touch and game info | `ws://PC:1338` | Optional spice2x password; legacy RC4 |
+| Touch, game info, and card insertion | `ws://PC:1338` | Optional spice2x password; legacy RC4 |
 | H.264 or MJPEG video | `http://PC:1339` | None |
 
 The CDN never proxies either connection. H.264 is decoded directly with
@@ -85,6 +87,27 @@ LAN. API authentication can therefore be red while Host remains green. When
 neither service responds, spicefe reports **No response** rather than claiming
 that a browser-level check can distinguish an offline host, broken route,
 firewall rule, or blocked local-network request.
+
+## Virtual cards
+
+Open **Card library** from the top-left page menu to create and edit virtual
+e-amusement cards. New cards start with a blank ID. Use **Generate** for the
+native `E0040100` pattern followed by eight random hexadecimal digits, or copy
+an existing ID from `card0.txt` in the spice directory if you previously used
+spice's card generator. Manually entered IDs must contain exactly 16
+hexadecimal characters.
+
+Cards use the Untitled UI gray-light treatment by default. Each card can
+instead use the matching gray-dark style, a solid color, the
+transparent-gradient treatment, or an uploaded PNG, JPEG, or WebP background.
+Uploaded artwork is resized on the device and stored with the card in browser
+`localStorage`; it is never uploaded by spicefe. Very long names remain on one
+line and scroll within their fixed name area.
+
+While video is live, select the card icon in the top bar, choose Player 1 or
+Player 2, then select a card. spicefe sends the native
+`card.insert(reader, card_id)` request over the active control-API connection
+and closes the menu automatically.
 
 ## Gaming PC setup
 

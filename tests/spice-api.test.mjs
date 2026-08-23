@@ -101,3 +101,35 @@ test('coalesces queued touch movement while preserving request order', async () 
   socket.receive(new TextEncoder().encode('{"id":2,"errors":[],"data":[]}\0'));
   api.close();
 });
+
+test('serializes native card insertion with a reader and uppercase card ID', async () => {
+  const api = new SpiceApi(profile(), { WebSocketImpl: FakeWebSocket, requestTimeout: 1000 });
+  api.connect();
+  const socket = FakeWebSocket.instances.at(-1);
+  socket.open();
+
+  const pending = api.insertCard(1, 'e00401001234abcd');
+  const request = JSON.parse(new TextDecoder().decode(socket.sent[0]));
+  assert.deepEqual(request, {
+    id: 1,
+    module: 'card',
+    function: 'insert',
+    params: [1, 'E00401001234ABCD'],
+  });
+
+  socket.receive(new TextEncoder().encode('{"id":1,"errors":[],"data":[]}\0'));
+  await pending;
+  api.close();
+});
+
+test('rejects invalid card insertion before sending it', async () => {
+  const api = new SpiceApi(profile(), { WebSocketImpl: FakeWebSocket, requestTimeout: 1000 });
+  api.connect();
+  const socket = FakeWebSocket.instances.at(-1);
+  socket.open();
+
+  await assert.rejects(api.insertCard(2, 'E00401001234ABCD'), /Player 1 or Player 2/);
+  await assert.rejects(api.insertCard(0, '1234'), /16 hexadecimal/);
+  assert.equal(socket.sent.length, 0);
+  api.close();
+});

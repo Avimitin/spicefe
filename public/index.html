@@ -32,6 +32,10 @@
               <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v5H4zM4 14h16v5H4zM8 7.5h.01M8 16.5h.01"/></svg>
               <span data-i18n="nav.library">Saved servers</span>
             </a>
+            <a id="card-page-link" class="page-menu-link" href="?page=cards">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3.5 6.5h17v11h-17zM3.5 10h17M7 14h4"/></svg>
+              <span data-i18n="nav.cards">Card library</span>
+            </a>
             <a id="browser-setup-page-link" class="page-menu-link" href="?page=browser-setup">
               <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.4c0 4.7 3.1 8.2 7.5 9.6 4.4-1.4 7.5-4.9 7.5-9.6V6zM9.5 12l1.7 1.7 3.5-4"/></svg>
               <span data-i18n="nav.browserSetup">Browser setup</span>
@@ -70,6 +74,36 @@
       </div>
 
       <span class="topbar-spacer"></span>
+
+      <div id="card-controls" class="card-controls" hidden>
+        <button id="card-menu-button" class="icon-button" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="card-menu" aria-label="Insert card" title="Insert card" data-i18n-aria-label="cardMenu.open" data-i18n-title="cardMenu.open">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3.5 6.5h17v11h-17zM3.5 10h17M7 14h4"/></svg>
+        </button>
+        <section id="card-menu" class="card-menu" role="dialog" aria-labelledby="card-menu-title" hidden>
+          <header class="card-menu-header">
+            <div>
+              <strong id="card-menu-title" data-i18n="cardMenu.title">Insert a card</strong>
+              <span data-i18n="cardMenu.copy">Choose a reader, then tap a saved card.</span>
+            </div>
+            <button id="card-menu-close" class="card-menu-close" type="button" aria-label="Close card menu" data-i18n-aria-label="cardMenu.close">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>
+            </button>
+          </header>
+          <div class="card-reader-picker" role="radiogroup" aria-label="Card reader" data-i18n-aria-label="cardMenu.reader">
+            <button class="card-reader-option" type="button" role="radio" aria-checked="true" data-reader="0" data-i18n="cardMenu.player1">Player 1</button>
+            <button class="card-reader-option" type="button" role="radio" aria-checked="false" data-reader="1" data-i18n="cardMenu.player2">Player 2</button>
+          </div>
+          <p id="card-menu-api-note" class="card-menu-api-note" hidden data-i18n="cardMenu.apiUnavailable">The control API is not ready yet.</p>
+          <div id="card-menu-list" class="card-menu-list" role="list" aria-label="Saved cards" data-i18n-aria-label="cardMenu.listAria"></div>
+          <div id="card-menu-empty" class="card-menu-empty" hidden>
+            <strong data-i18n="cardMenu.emptyTitle">No cards yet</strong>
+            <span data-i18n="cardMenu.emptyCopy">Create a card before inserting one.</span>
+          </div>
+          <footer class="card-menu-footer">
+            <button id="card-menu-manage" class="secondary-button" type="button" data-i18n="cardMenu.manage">Manage cards</button>
+          </footer>
+        </section>
+      </div>
 
       <label id="language-picker" class="language-picker">
         <span class="sr-only" data-i18n="language.label">Language</span>
@@ -234,6 +268,124 @@
           </header>
           <div id="server-list" class="server-list" role="list" aria-label="Saved spice2x servers" data-i18n-aria-label="library.listAria"></div>
           <a id="library-connection-help" class="guide-jump library-diagnostic-link" href="?page=browser-setup"><span data-i18n="library.connectionHelp">Failed to connect? Open connection help</span><span aria-hidden="true">→</span></a>
+        </div>
+      </section>
+
+      <section id="card-library" class="card-library" hidden aria-labelledby="card-library-title">
+        <div class="card-library-shell">
+          <header class="card-library-header">
+            <div>
+              <p class="eyebrow" data-i18n="cards.eyebrow">CARD LIBRARY</p>
+              <h1 id="card-library-title" data-i18n="cards.title">Your e-amusement cards</h1>
+              <p data-i18n="cards.copy">Create cards once, then insert one from the stream toolbar.</p>
+            </div>
+            <button id="add-card" class="primary-button" type="button" data-i18n="cards.add">Add card</button>
+          </header>
+
+          <div class="card-manager-layout">
+            <section class="card-collection" aria-labelledby="card-collection-title">
+              <header class="card-section-header">
+                <h2 id="card-collection-title" data-i18n="cards.savedTitle">Saved cards</h2>
+                <span id="card-count" class="card-count"></span>
+              </header>
+              <div id="card-list" class="card-list" role="list" aria-label="Saved e-amusement cards" data-i18n-aria-label="cards.listAria"></div>
+              <div id="card-empty" class="card-empty" hidden>
+                <span class="card-empty-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M3.5 6.5h17v11h-17zM3.5 10h17M7 14h4"/></svg>
+                </span>
+                <strong data-i18n="cards.emptyTitle">Create your first card</strong>
+                <p data-i18n="cards.emptyCopy">Use a card ID you already have, or generate one that follows spice2x’s native format.</p>
+              </div>
+            </section>
+
+            <aside class="card-editor" aria-labelledby="card-editor-title">
+              <form id="card-form">
+                <header class="card-editor-header">
+                  <div>
+                    <p class="eyebrow" data-i18n="cards.editorEyebrow">CARD DETAILS</p>
+                    <h2 id="card-editor-title" data-i18n="cards.newTitle">New card</h2>
+                  </div>
+                </header>
+
+                <div id="card-preview" class="card-preview" aria-live="polite"></div>
+
+                <div class="card-form-fields">
+                  <label class="field">
+                    <span data-i18n="cards.name">Card name</span>
+                    <input id="card-name" type="text" maxlength="256" autocomplete="off" placeholder="Main card" data-i18n-placeholder="cards.namePlaceholder">
+                  </label>
+
+                  <label class="field">
+                    <span data-i18n="cards.id">Card ID</span>
+                    <span class="card-id-input">
+                      <input id="card-number" type="text" inputmode="text" minlength="16" maxlength="16" pattern="[0-9A-Fa-f]{16}" autocomplete="off" autocapitalize="characters" spellcheck="false" required placeholder="E0040100FFFFFFFF">
+                      <button id="generate-card-number" class="inline-button" type="button" data-i18n="cards.generate">Generate</button>
+                    </span>
+                    <small data-i18n="cards.idHelp">Generate a new ID here, or copy the existing ID from card0.txt in your spice directory if you previously used spice’s card generator.</small>
+                  </label>
+
+                  <fieldset class="card-appearance-picker">
+                    <legend data-i18n="cards.appearance">Appearance</legend>
+                    <div class="card-appearance-options">
+                      <label>
+                        <input type="radio" name="card-appearance" value="gray-light" checked>
+                        <span class="appearance-swatch appearance-gray" aria-hidden="true"></span>
+                        <span data-i18n="cards.grayLight">Gray light</span>
+                      </label>
+                      <label>
+                        <input type="radio" name="card-appearance" value="gray-dark">
+                        <span class="appearance-swatch appearance-gray-dark" aria-hidden="true"></span>
+                        <span data-i18n="cards.grayDark">Gray dark</span>
+                      </label>
+                      <label>
+                        <input type="radio" name="card-appearance" value="transparent-gradient">
+                        <span class="appearance-swatch appearance-gradient" aria-hidden="true"></span>
+                        <span data-i18n="cards.gradient">Transparent gradient</span>
+                      </label>
+                      <label>
+                        <input type="radio" name="card-appearance" value="solid">
+                        <span id="solid-color-swatch" class="appearance-swatch appearance-solid" aria-hidden="true"></span>
+                        <span data-i18n="cards.solid">Solid color</span>
+                      </label>
+                      <label>
+                        <input type="radio" name="card-appearance" value="image">
+                        <span class="appearance-swatch appearance-image" aria-hidden="true">
+                          <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM7 15l3-3 3 3 2-2 3 3M8 9h.01"/></svg>
+                        </span>
+                        <span data-i18n="cards.image">Image</span>
+                      </label>
+                    </div>
+                  </fieldset>
+
+                  <div id="card-solid-controls" class="card-custom-controls" hidden>
+                    <label class="field card-color-field">
+                      <span data-i18n="cards.color">Card color</span>
+                      <span class="color-input-wrap">
+                        <input id="card-color" type="color" value="#667085">
+                        <output id="card-color-value" for="card-color">#667085</output>
+                      </span>
+                    </label>
+                  </div>
+
+                  <div id="card-image-controls" class="card-custom-controls" hidden>
+                    <label class="card-image-upload">
+                      <input id="card-image" type="file" accept="image/png,image/jpeg,image/webp">
+                      <span class="secondary-button" data-i18n="cards.chooseImage">Choose image</span>
+                    </label>
+                    <button id="remove-card-image" class="secondary-button" type="button" data-i18n="cards.removeImage">Remove image</button>
+                    <small data-i18n="cards.imageHelp">The image is resized and saved with this card in browser storage.</small>
+                  </div>
+                </div>
+
+                <footer class="card-editor-footer">
+                  <span id="card-save-status" aria-live="polite"></span>
+                  <button id="delete-card" class="danger-button" type="button" data-i18n="button.delete">Delete</button>
+                  <button id="cancel-card" class="secondary-button" type="button" data-i18n="button.cancel">Cancel</button>
+                  <button class="primary-button" type="submit" data-i18n="button.save">Save</button>
+                </footer>
+              </form>
+            </aside>
+          </div>
         </div>
       </section>
 
@@ -714,6 +866,17 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run</code></pre>
       <footer>
         <button value="cancel" class="secondary-button" data-i18n="button.cancel">Cancel</button>
         <button id="confirm-delete" value="confirm" class="danger-button" data-i18n="button.delete">Delete</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="delete-card-dialog" class="confirm-dialog">
+    <form method="dialog">
+      <h2 data-i18n="cards.deleteTitle">Delete this card?</h2>
+      <p id="delete-card-copy" data-i18n="cards.deleteDefaultCopy">The saved card will be removed from this browser.</p>
+      <footer>
+        <button value="cancel" class="secondary-button" data-i18n="button.cancel">Cancel</button>
+        <button value="confirm" class="danger-button" data-i18n="button.delete">Delete</button>
       </footer>
     </form>
   </dialog>

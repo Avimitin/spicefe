@@ -88,6 +88,22 @@ modification from `spice2x/spice2x.github.io`, revision
 `src/spice2x/build/icon.ico`. The source repository is licensed under GPLv3.
 The complete license and source record ship in `public/vendor/spice2x/`.
 
+## e-amusement logo
+
+Virtual card previews use the unmodified e-amusement logo retrieved from
+KONAMI's `p.eagate.573.jp` service. e-amusement and its logo are marks of
+KONAMI. Their inclusion is for visual identification of the card system and
+does not imply endorsement. The exact source URL and checksum are recorded in
+`public/vendor/e-amusement/SOURCE.md`.
+
+## FrankerFaceZ Konmai emote
+
+The lower-right mark on virtual card previews is FrankerFaceZ emote `146473`,
+named `Konmai`, submitted by user `kbh_exe`. The CDN does not provide license
+terms with the asset. It is included unmodified at the user's request; its
+inclusion does not imply endorsement. The exact source URL, API metadata, and
+checksum are recorded in `public/vendor/frankerfacez/SOURCE.md`.
+
 ## BEMANI fan-site icons
 
 The optional connection-profile artwork is copied from
