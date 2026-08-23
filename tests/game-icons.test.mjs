@@ -9,6 +9,7 @@ import {
   GAME_ICONS,
   gameIconById,
   normalizeGameIconId,
+  setCustomGameIcons,
 } from '../public/lib/game-icons.js';
 
 const EXPECTED_GROUPS = [
@@ -56,4 +57,26 @@ test('unknown, unsupported, or malicious icon ids fall back to spice2x', () => {
   assert.equal(normalizeGameIconId('ac_ddr_world'), DEFAULT_GAME_ICON_ID);
   assert.equal(normalizeGameIconId('../../secret'), DEFAULT_GAME_ICON_ID);
   assert.equal(gameIconById(null).id, DEFAULT_GAME_ICON_ID);
+});
+
+test('registered local icons can be resolved without changing the static catalog', () => {
+  setCustomGameIcons([{
+    id: 'custom-icon-12345678',
+    label: 'My cabinet',
+    src: 'data:image/png;base64,iVBORw0KGgo=',
+  }]);
+  assert.equal(gameIconById('custom-icon-12345678').label, 'My cabinet');
+  assert.equal(normalizeGameIconId('custom-icon-12345678'), 'custom-icon-12345678');
+  assert.equal(GAME_ICONS.some((icon) => icon.id === 'custom-icon-12345678'), false);
+  setCustomGameIcons();
+});
+
+test('custom registration ignores unsafe ids and remote artwork', () => {
+  setCustomGameIcons([
+    { id: 'custom-icon-../../secret', label: 'Unsafe', src: 'data:image/png;base64,AAAA' },
+    { id: 'custom-icon-87654321', label: 'Remote', src: 'https://example.com/icon.png' },
+  ]);
+  assert.equal(gameIconById('custom-icon-../../secret').id, DEFAULT_GAME_ICON_ID);
+  assert.equal(gameIconById('custom-icon-87654321').id, DEFAULT_GAME_ICON_ID);
+  setCustomGameIcons();
 });

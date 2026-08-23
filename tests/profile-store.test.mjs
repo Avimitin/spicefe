@@ -7,6 +7,7 @@ import {
   PROFILE_STORAGE_KEY,
   sanitizeProfile,
 } from '../public/lib/profile-store.js';
+import { setCustomGameIcons } from '../public/lib/game-icons.js';
 
 class MemoryStorage {
   constructor() {
@@ -94,4 +95,21 @@ test('supports a localized name for newly generated default profiles', () => {
 
   store.remove(store.selectedId);
   assert.equal(store.selected().name, '游戏 PC');
+});
+
+test('preserves a registered browser-local custom icon id across profile reloads', () => {
+  const storage = new MemoryStorage();
+  setCustomGameIcons([{
+    id: 'custom-icon-12345678',
+    label: 'Local artwork',
+    src: 'data:image/png;base64,iVBORw0KGgo=',
+  }]);
+  const store = new ProfileStore(storage);
+  store.upsert({
+    ...store.selected(),
+    host: '192.168.1.50',
+    iconId: 'custom-icon-12345678',
+  });
+  assert.equal(new ProfileStore(storage).selected().iconId, 'custom-icon-12345678');
+  setCustomGameIcons();
 });

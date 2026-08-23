@@ -152,7 +152,18 @@
           <p class="eyebrow" data-i18n="home.eyebrow">LAN SUBSCREEN CLIENT</p>
           <h1><span data-i18n="home.titleFirst">Your arcade subscreen</span><br><span data-i18n="home.titleSecond">is already in your hands.</span></h1>
           <p data-i18n="home.copy">Turn your phone or tablet into a responsive touch display—no extra screen required.</p>
-          <button id="empty-configure" class="primary-button large" type="button" data-i18n="home.configure">Set up a connection</button>
+          <div class="welcome-actions">
+            <button id="empty-configure" class="primary-button large" type="button" data-i18n="home.configure">Set up a connection</button>
+            <button id="empty-create-card" class="welcome-card-button" type="button" aria-label="Create a new e-amusement card" data-i18n-aria-label="home.createCardLabel">
+              <svg class="welcome-card-icon" aria-hidden="true" viewBox="0 0 24 24">
+                <rect x="2" y="4" width="20" height="16" rx="3" fill="#171717"/>
+                <path d="M2.75 8.25h18.5" stroke="#fff" stroke-width="1.5" opacity=".9"/>
+                <circle cx="7.25" cy="14" r="2.1" fill="#9e77ed"/>
+                <path d="M11.5 12.75h6M11.5 15.75h4.25" stroke="#fff" stroke-linecap="round" stroke-width="1.35"/>
+              </svg>
+              <span data-i18n="home.createCard">Create card</span>
+            </button>
+          </div>
           <a class="guide-jump" href="#usage-guide"><span data-i18n="guide.jump">Read the setup guide</span><span aria-hidden="true">↓</span></a>
         </div>
 
@@ -855,6 +866,18 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run</code></pre>
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></svg>
         </button>
       </header>
+      <section class="custom-icon-uploader" aria-labelledby="custom-icon-upload-title">
+        <div class="custom-icon-upload-copy">
+          <strong id="custom-icon-upload-title" data-i18n="icon.uploadTitle">Use your own icon</strong>
+          <span data-i18n="icon.uploadCopy">PNG, JPEG, or WebP. Center-cropped to a square and saved only in this browser.</span>
+          <small id="custom-icon-status" aria-live="polite"></small>
+        </div>
+        <label class="secondary-button custom-icon-upload-button">
+          <input id="custom-icon-upload" type="file" accept="image/png,image/jpeg,image/webp">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M5 15v4h14v-4"/></svg>
+          <span data-i18n="icon.upload">Upload image</span>
+        </label>
+      </section>
       <div id="game-icon-groups" class="icon-groups" role="listbox" aria-label="Supported game icons by series" data-i18n-aria-label="icon.groupsAria"></div>
     </form>
   </dialog>

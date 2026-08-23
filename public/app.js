@@ -7,7 +7,17 @@ import {
   normalizeCardNumberInput,
 } from './lib/card-store.js';
 import { createCreditCard, measureCreditCardNames } from './lib/credit-card.js';
-import { GAME_ICON_GROUPS, gameIconById } from './lib/game-icons.js';
+import { CustomIconStore } from './lib/custom-icon-store.js';
+import {
+  customIconLabel,
+  gameIconDataUrl,
+} from './lib/game-icon-image.js';
+import {
+  DEFAULT_GAME_ICON_ID,
+  GAME_ICON_GROUPS,
+  gameIconById,
+  setCustomGameIcons,
+} from './lib/game-icons.js';
 import { connectionPresentation } from './lib/connection-status.js';
 import { createI18n, localizeError } from './lib/i18n.js';
 import { configuredProfiles, mainView } from './lib/main-view.js';
@@ -27,6 +37,8 @@ import { TouchController } from './lib/touch-controller.js';
 const element = (id) => document.getElementById(id);
 const i18n = createI18n();
 const t = (key, parameters) => i18n.t(key, parameters);
+const customIconStore = new CustomIconStore();
+setCustomGameIcons(customIconStore.list());
 const store = new ProfileStore(undefined, {
   defaultProfileName: t('settings.profilePlaceholder'),
 });
@@ -44,6 +56,8 @@ const form = element('profile-form');
 const streamSettings = element('stream-settings');
 const profilePicker = element('profile-picker');
 const iconGroups = element('game-icon-groups');
+const customIconInput = element('custom-icon-upload');
+const customIconStatus = element('custom-icon-status');
 const pageNavigation = element('page-navigation');
 const pageMenuButton = element('page-menu-button');
 const pageMenu = element('page-menu');
@@ -249,12 +263,31 @@ function createIconOption(icon, selectedId) {
     setFormGameIcon(icon.id);
     iconDialog.close();
   });
-  return button;
+
+  if (!icon.custom) {
+    return button;
+  }
+
+  const item = document.createElement('div');
+  const remove = document.createElement('button');
+  item.className = 'custom-game-icon-option';
+  remove.type = 'button';
+  remove.className = 'custom-game-icon-remove';
+  remove.setAttribute('aria-label', t('icon.removeLabel', { name: icon.label }));
+  remove.title = t('icon.remove');
+  remove.innerHTML = '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+  remove.addEventListener('click', () => removeCustomGameIcon(icon));
+  item.append(button, remove);
+  return item;
 }
 
 function renderIconGroups() {
   const selectedId = element('game-icon-id').value;
-  const sections = GAME_ICON_GROUPS.map((group) => {
+  const customIcons = customIconStore.list();
+  const groups = customIcons.length > 0
+    ? [{ id: 'custom', icons: customIcons }, ...GAME_ICON_GROUPS]
+    : GAME_ICON_GROUPS;
+  const sections = groups.map((group) => {
     const section = document.createElement('section');
     const heading = document.createElement('h3');
     const grid = document.createElement('div');
@@ -271,6 +304,27 @@ function renderIconGroups() {
     return section;
   });
   iconGroups.replaceChildren(...sections);
+}
+
+function refreshCustomGameIcons() {
+  setCustomGameIcons(customIconStore.list());
+}
+
+function removeCustomGameIcon(icon) {
+  try {
+    customIconStore.remove(icon.id);
+    refreshCustomGameIcons();
+    if (element('game-icon-id').value === icon.id) {
+      setFormGameIcon(DEFAULT_GAME_ICON_ID);
+    }
+    renderIconGroups();
+    renderProfileLists();
+    showToast(t('toast.iconRemoved'));
+  } catch {
+    const message = t('icon.removeFailed');
+    customIconStatus.textContent = message;
+    showToast(message, 7000);
+  }
 }
 
 function cardDisplayName(card) {
@@ -1322,6 +1376,11 @@ element('card-menu-manage').addEventListener('click', () => {
 
 settingsButton.addEventListener('click', openSettings);
 element('empty-configure').addEventListener('click', openSettings);
+element('empty-create-card').addEventListener('click', () => {
+  navigateToBrowsePage('cards');
+  startNewCard();
+  renderCardCollection();
+});
 element('guide-self-host').addEventListener('click', (event) => {
   event.preventDefault();
   navigateToBrowsePage('self-host');
@@ -1548,8 +1607,49 @@ element('show-password').addEventListener('click', () => {
 });
 
 element('game-icon-button').addEventListener('click', () => {
+  customIconStatus.textContent = '';
   renderIconGroups();
   iconDialog.showModal();
+});
+
+function gameIconImageErrorMessage(error) {
+  const key = {
+    type: 'icon.imageTypeError',
+    size: 'icon.imageSizeError',
+    decode: 'icon.imageDecodeError',
+    processing: 'icon.imageProcessingError',
+    'storage-size': 'icon.imageStorageError',
+    limit: 'icon.libraryFull',
+  }[error?.code] || 'icon.saveFailed';
+  return t(key);
+}
+
+customIconInput.addEventListener('change', async () => {
+  const file = customIconInput.files?.[0];
+  if (!file) {
+    return;
+  }
+  customIconInput.disabled = true;
+  customIconStatus.textContent = t('icon.processing');
+  try {
+    const src = await gameIconDataUrl(file);
+    const icon = customIconStore.create({
+      label: customIconLabel(file.name),
+      src,
+    });
+    refreshCustomGameIcons();
+    setFormGameIcon(icon.id);
+    renderIconGroups();
+    customIconStatus.textContent = t('icon.uploadReady');
+    showToast(t('toast.iconSaved'));
+  } catch (error) {
+    const message = gameIconImageErrorMessage(error);
+    customIconStatus.textContent = message;
+    showToast(message, 7000);
+  } finally {
+    customIconInput.disabled = false;
+    customIconInput.value = '';
+  }
 });
 
 streamSettings.addEventListener('toggle', () => {

@@ -52,9 +52,35 @@ export const GAME_ICONS = Object.freeze(
 );
 
 const ICONS_BY_ID = new Map(GAME_ICONS.map((icon) => [icon.id, icon]));
+const CUSTOM_ICONS_BY_ID = new Map();
+const CUSTOM_ICON_ID_PATTERN = /^custom-icon-[A-Za-z0-9_-]{8,96}$/;
+const CUSTOM_ICON_DATA_URL_PATTERN = /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/;
+
+export function setCustomGameIcons(icons = []) {
+  CUSTOM_ICONS_BY_ID.clear();
+  for (const icon of icons) {
+    const id = String(icon?.id ?? '');
+    const label = String(icon?.label ?? '').trim();
+    const src = String(icon?.src ?? '');
+    if (!CUSTOM_ICON_ID_PATTERN.test(id)
+      || !label
+      || !CUSTOM_ICON_DATA_URL_PATTERN.test(src)) {
+      continue;
+    }
+    CUSTOM_ICONS_BY_ID.set(id, Object.freeze({
+      id,
+      label,
+      src,
+      custom: true,
+    }));
+  }
+}
 
 export function gameIconById(id) {
-  return ICONS_BY_ID.get(String(id ?? '')) || ICONS_BY_ID.get(DEFAULT_GAME_ICON_ID);
+  const key = String(id ?? '');
+  return ICONS_BY_ID.get(key)
+    || CUSTOM_ICONS_BY_ID.get(key)
+    || ICONS_BY_ID.get(DEFAULT_GAME_ICON_ID);
 }
 
 export function normalizeGameIconId(id) {

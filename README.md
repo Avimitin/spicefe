@@ -49,8 +49,8 @@ the LAN.
 - a browser-local e-amusement card library with native-format card generation,
   P1/P2 insertion from the stream toolbar, and customizable card artwork
 - multiple named connection profiles in `localStorage`, each with a selectable
-  game icon from categorized, subscreen-capable releases shown beside the PC
-  name
+  categorized game icon or locally uploaded, center-cropped artwork shown beside
+  the PC name
 - explicit Connect, Disconnect, and Switch behavior; a reload never reconnects
 - English and Simplified Chinese UI with browser-language detection and a saved
   manual language choice
@@ -91,6 +91,16 @@ LAN. API authentication can therefore be red while Host remains green. When
 neither service responds, spicefe reports **No response** rather than claiming
 that a browser-level check can distinguish an offline host, broken route,
 firewall rule, or blocked local-network request.
+
+## Custom server icons
+
+Open the game-icon picker in a connection profile and select **Upload image**
+to use a PNG, JPEG, or WebP file. spicefe takes the largest centered square,
+resizes it to at most 384×384 on the device, and saves only that result in browser
+`localStorage`; the source file is never uploaded. Saved artwork appears at the
+top of the picker under **Custom Icons** and can be reused by multiple server
+profiles. Up to 24 custom icons are kept. Removing one makes profiles that
+referenced it display the default spice2x icon instead.
 
 ## Virtual cards
 
@@ -393,7 +403,7 @@ third-party request is used.
 
 The favicon and default profile artwork are the unmodified official spice2x
 icon from pinned revision `b9c8afb`; its GPLv3 license ships with the site.
-The searchable profile picker also includes an 11-image whitelist from
+The profile icon picker also includes an 11-image whitelist from
 [`bicarus-dev/bemani_fan_site_icons`](https://github.com/bicarus-dev/bemani_fan_site_icons)
 at pinned revision `225e494`: beatmania IIDX 27–33, GITADORA GALAXY WAVE
 DELTA, SOUND VOLTEX 6–7, and pop'n music High Cheer. The picker groups those
@@ -407,6 +417,9 @@ or endorsement by KONAMI or the individual games is implied. Exact provenance
 and the upstream README are included in
 [`public/vendor/bemani-fan-site-icons/`](./public/vendor/bemani-fan-site-icons/).
 
+Artwork uploaded through the custom-icon picker remains browser-local and is
+not part of the distributed site or the upstream BEMANI icon whitelist.
+
 ## Security model
 
 Use this only on a trusted home LAN:
@@ -416,6 +429,8 @@ Use this only on a trusted home LAN:
   modern secure channel.
 - Profiles, including passwords, are intentionally stored as plain text in the
   browser's `localStorage` so they are ready after reopening the page.
+- Uploaded server icons and virtual-card artwork are stored as encoded image
+  data in that browser origin's `localStorage`; spicefe does not upload them.
 - An HTTP page does not authenticate the static application in transit. A
   network attacker could replace its JavaScript, so prefer the documented
   per-site HTTPS exception where it works and trust the network used for HTTP.
