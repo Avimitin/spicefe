@@ -118,9 +118,9 @@
         rec {
           default = pkgs.buildNpmPackage {
             pname = "spicefe";
-            version = "0.1.0";
+            version = "0.1.2";
             src = self;
-            npmDepsHash = "sha256-TspqtPorXU1xx9Ti+nfwPYaDxRfRENEWeZ+WC9xvhL0=";
+            npmDepsHash = "sha256-OYqWCj+HoZ+MaZPizQYlqJfVTUI5Sr2bZY3neM+JNq8=";
             npmFlags = [ "--ignore-scripts" ];
             dontNpmBuild = true;
             installPhase = ''
