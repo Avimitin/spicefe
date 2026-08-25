@@ -90,6 +90,10 @@
             url = "https://cdn.frankerfacez.com/emoticon/146473/4";
             hash = "sha256-1XqOwNQkfQcucl0Rjj08nCN5jvQFhh1QwVnpPcpWjLg=";
           };
+          brushedMetalTexture = pkgs.fetchurl {
+            url = "https://www.wallart.com/media/catalog/product/cache/871f459736130e239a3f5e6472128962/w/1/w12098-small.jpg";
+            hash = "sha256-yG44KpRWo4de9Em4myVCjRpJaMiN+e//T7eOJnAkS5g=";
+          };
           libreCaslonTextRegularWoff2 = pkgs.runCommand "LibreCaslonText-Regular.woff2"
             {
               nativeBuildInputs = [ pkgs.woff2 ];
@@ -158,6 +162,7 @@
                   | awk '{ for (i = 1; i <= NF; i++) print $i }')
               cmp public/vendor/e-amusement/ea_logo.png ${eaLogo}
               cmp public/vendor/frankerfacez/konmai.png ${konmaiLogo}
+              cmp public/vendor/brushed-metal/w12098-small.jpg ${brushedMetalTexture}
               cmp \
                 <(sed 's/\r$//; s/[[:blank:]]*$//' public/vendor/libre-caslon-text/LICENSE.OFL-1.1.txt) \
                 <(sed 's/\r$//; s/[[:blank:]]*$//' ${libreCaslonText}/OFL.txt)

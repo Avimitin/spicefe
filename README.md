@@ -156,8 +156,11 @@ spice2x connection.
 The view deliberately exposes exactly nine character positions, matching
 spice2x and the original cabinet hardware. It keeps a fixed 27:5 aspect ratio,
 scales with the available screen, and renders pure red characters on a pure
-black panel with a restrained fluorescent glow. Recent IIDX releases may offer
-only a subscreen; use normal video mode for those releases.
+black panel with a restrained fluorescent glow. The separate enclosure has
+been removed: the logo, caption, and display sit directly in a brushed-metal
+background that fills the complete ticker surface, including fullscreen.
+Recent IIDX releases may offer only a subscreen; use normal video mode for
+those releases.
 
 ## Virtual cards
 
@@ -510,6 +513,12 @@ required to redistribute or publicly serve those images. No affiliation with
 or endorsement by KONAMI or the individual games is implied. Exact provenance
 and the upstream README are included in
 [`public/vendor/bemani-fan-site-icons/`](./public/vendor/bemani-fan-site-icons/).
+
+The locally served brushed-metal ticker background is the unmodified WallArt
+image supplied by the repository owner. The direct source does not state
+redistribution terms, so the asset is not covered by spicefe's MIT license.
+Its source, checksum, and retrieval details are recorded in
+[`public/vendor/brushed-metal/`](./public/vendor/brushed-metal/).
 
 Artwork uploaded through the custom-icon picker remains browser-local and is
 not part of the distributed site or the upstream BEMANI icon whitelist.

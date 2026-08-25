@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFileSync, statSync } from 'node:fs';
 import test from 'node:test';
 
@@ -63,7 +64,7 @@ test('vendors the attributed display font and applies the red-on-black cabinet t
   assert.match(source, /SIL Open Font License 1\.1/);
 });
 
-test('offers a connection-free display preview with a clean screenshot view', () => {
+test('offers a texture-backed frameless preview with a clean screenshot view', () => {
   const markup = readFileSync(
     new URL('../public/index.html', import.meta.url),
     'utf8',
@@ -80,8 +81,17 @@ test('offers a connection-free display preview with a clean screenshot view', ()
     '../public/vendor/iidx-caption/iidx-caption.png',
     import.meta.url,
   );
+  const texture = new URL(
+    '../public/vendor/brushed-metal/w12098-small.jpg',
+    import.meta.url,
+  );
+  const textureSource = readFileSync(
+    new URL('../public/vendor/brushed-metal/SOURCE.md', import.meta.url),
+    'utf8',
+  );
   const logoBytes = readFileSync(logo);
   const captionBytes = readFileSync(caption);
+  const textureBytes = readFileSync(texture);
 
   assert.match(markup, /id="ticker-preview-button"/);
   assert.match(markup, /id="ticker-preview-input"/);
@@ -100,18 +110,30 @@ test('offers a connection-free display preview with a clean screenshot view', ()
   assert.equal(captionBytes.readUInt32BE(16), 278);
   assert.equal(captionBytes.readUInt32BE(20), 61);
   assert.equal(statSync(caption).size, 4237);
-  assert.match(styles, /\.ticker-view\s*\{[\s\S]*?aspect-ratio:\s*301\s*\/\s*80/);
-  assert.match(styles, /\.ticker-view\s*\{[\s\S]*?border-radius:\s*0/);
-  assert.match(styles, /\.ticker-view\s*\{[\s\S]*?rgba\(0, 0, 0, 0\.4\)/);
-  assert.match(styles, /\.ticker-view\s*\{[\s\S]*?radial-gradient/);
-  assert.doesNotMatch(styles, /\.ticker-view\s*\{[\s\S]*?repeating-linear-gradient/);
-  assert.match(styles, /\.ticker-hardware\s*\{[\s\S]*?inset:\s*6\.644518cqi 1\.66113cqi/);
-  assert.match(styles, /\.ticker-hardware\s*\{[\s\S]*?column-gap:\s*1\.66113cqi/);
+  assert.equal(textureBytes.subarray(0, 3).toString('hex'), 'ffd8ff');
+  assert.equal(statSync(texture).size, 541629);
+  assert.equal(
+    createHash('sha256').update(textureBytes).digest('hex'),
+    'c86e382a9456a3875ef449b89b25428d1a4968c88df9efff4fb78e2670244b98',
+  );
+  assert.match(textureSource, /wallart\.com\/media\/catalog\/product/);
+  const tickerViewRule = styles.match(/\.ticker-view\s*\{([\s\S]*?)\n\}/)?.[1] || '';
+  assert.match(tickerViewRule, /width:\s*100%/);
+  assert.match(tickerViewRule, /height:\s*100%/);
+  assert.match(tickerViewRule, /inset:\s*0/);
+  assert.match(tickerViewRule, /url\("\.\.\/vendor\/brushed-metal\/w12098-small\.jpg"\)/);
+  assert.match(tickerViewRule, /background-size:\s*cover/);
+  assert.doesNotMatch(tickerViewRule, /aspect-ratio|border-radius|box-shadow|radial-gradient|transform/);
+  assert.match(styles, /\.stage\[data-main-view="stream"\]\[data-output-mode="ticker"\]\s*\{[\s\S]*?w12098-small\.jpg/);
+  assert.match(styles, /\.ticker-hardware\s*\{[\s\S]*?aspect-ratio:\s*291\s*\/\s*40/);
+  assert.match(styles, /\.ticker-hardware\s*\{[\s\S]*?inset:\s*50% auto auto 50%/);
+  assert.match(styles, /\.ticker-hardware\s*\{[\s\S]*?column-gap:\s*1\.718%/);
   assert.match(styles, /\.ticker-hardware\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 20fr\) minmax\(0, 123fr\)/);
+  assert.match(styles, /\.ticker-hardware\s*\{[\s\S]*?transform:\s*translate\(-50%, -50%\)/);
   assert.match(styles, /\.ticker-info-panel\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 15fr\) minmax\(0, 108fr\)/);
   assert.doesNotMatch(styles, /\.ticker-logo-panel\s*\{[\s\S]*?border-right/);
   assert.match(styles, /\.ticker-logo-panel::after,\s*\n\.ticker-info-panel::after\s*\{[\s\S]*?inset 0 0/);
-  assert.match(styles, /\.ticker-caption\s*\{[\s\S]*?padding-left:\s*1\.66113cqi/);
+  assert.match(styles, /\.ticker-caption\s*\{[\s\S]*?padding-left:\s*1\.718cqi/);
   assert.match(styles, /\.ticker-caption-image\s*\{[\s\S]*?object-fit:\s*contain/);
   assert.doesNotMatch(styles, /\.ticker-caption-(?:title|copy|rule)\s*\{/);
   assert.match(

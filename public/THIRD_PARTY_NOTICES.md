@@ -132,6 +132,16 @@ decoration. No ownership or endorsement is implied. Its dimensions, checksum,
 and transformation record ship in `public/vendor/iidx-dj-logo/`. The artwork
 is not covered by spicefe's MIT license.
 
+## WallArt brushed-metal texture
+
+The old beatmania IIDX ticker view uses an unmodified brushed-metal JPEG from
+[WallArt](https://www.wallart.com/media/catalog/product/cache/871f459736130e239a3f5e6472128962/w/1/w12098-small.jpg),
+included at the spicefe repository owner's request. WallArt does not state
+redistribution terms alongside the direct asset URL. The image is not covered
+by spicefe's MIT license; its inclusion does not imply ownership or
+endorsement. Its dimensions, checksum, retrieval date, and source URL ship in
+`public/vendor/brushed-metal/SOURCE.md`.
+
 ## spice2x icon
 
 The site icon and default connection-profile icon are copied without
