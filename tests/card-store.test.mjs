@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  CARD_ELEMENT_POSITIONS,
+  CARD_NAME_POSITIONS,
   CardStore,
   CARD_STORAGE_KEY,
   generateCardNumber,
@@ -44,6 +46,56 @@ test('starts a new editor draft without generating a card ID', () => {
   const draft = newCardDraft();
   assert.equal(draft.number, '');
   assert.equal(draft.appearance, 'gray-light');
+  assert.equal(draft.eAmusementPosition, 'top-left');
+  assert.equal(draft.konmaiPosition, 'bottom-right');
+  assert.equal(draft.cardIdPosition, 'bottom-left');
+  assert.equal(draft.namePosition, 'bottom-left');
+});
+
+test('sanitizes and persists independent card element positions', () => {
+  assert.deepEqual(CARD_ELEMENT_POSITIONS, [
+    'top-left',
+    'top-center',
+    'top-right',
+    'bottom-left',
+    'bottom-center',
+    'bottom-right',
+  ]);
+  assert.deepEqual(CARD_NAME_POSITIONS, [
+    'top-left',
+    'top-center',
+    'top-right',
+    'center-left',
+    'center',
+    'center-right',
+    'bottom-left',
+    'bottom-center',
+    'bottom-right',
+  ]);
+
+  const customized = sanitizeCard({
+    number: 'E004010000000003',
+    eAmusementPosition: 'bottom-center',
+    konmaiPosition: 'top-right',
+    cardIdPosition: 'top-left',
+    namePosition: 'center-right',
+  });
+  assert.equal(customized.eAmusementPosition, 'bottom-center');
+  assert.equal(customized.konmaiPosition, 'top-right');
+  assert.equal(customized.cardIdPosition, 'top-left');
+  assert.equal(customized.namePosition, 'center-right');
+
+  const fallback = sanitizeCard({
+    number: 'E004010000000004',
+    eAmusementPosition: 'outside',
+    konmaiPosition: '<script>',
+    cardIdPosition: '',
+    namePosition: 'outside',
+  });
+  assert.equal(fallback.eAmusementPosition, 'top-left');
+  assert.equal(fallback.konmaiPosition, 'bottom-right');
+  assert.equal(fallback.cardIdPosition, 'bottom-left');
+  assert.equal(fallback.namePosition, 'bottom-left');
 });
 
 test('persists named card appearance and local image data', () => {
@@ -56,10 +108,18 @@ test('persists named card appearance and local image data', () => {
     name: '主卡 / Main card ✨',
     appearance: 'image',
     image,
+    eAmusementPosition: 'bottom-center',
+    konmaiPosition: 'top-right',
+    cardIdPosition: 'top-left',
+    namePosition: 'center',
   }));
 
   assert.equal(saved.number, 'E00401001234ABCD');
   assert.equal(saved.name, '主卡 / Main card ✨');
+  assert.equal(saved.eAmusementPosition, 'bottom-center');
+  assert.equal(saved.konmaiPosition, 'top-right');
+  assert.equal(saved.cardIdPosition, 'top-left');
+  assert.equal(saved.namePosition, 'center');
   assert.equal(JSON.parse(storage.getItem(CARD_STORAGE_KEY)).cards.length, 1);
 
   const reloaded = new CardStore(storage);

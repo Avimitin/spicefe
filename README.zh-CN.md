@@ -53,7 +53,8 @@ IIDX 机台米字屏的局域网客户端。在手机、平板或其他现代浏
 - 支持适应（Fit）、填充（Fill）和拉伸（Stretch）显示模式，并正确映射触控坐标
 - 视频内的调整栏可以关闭，并可从顶部栏重新打开
 - 提供浏览器本地 e-amusement 卡片库，支持原生格式卡号生成、从 spice2x 卡片文件
-  和卡号覆盖项选择性导入、从串流工具栏向 P1/P2 插卡，以及自定义卡片外观
+  和卡号覆盖项选择性导入、从串流工具栏向 P1/P2 插卡、选择性 ZIP 备份，以及
+  自定义卡片外观与 e-amusement、KONMAI、卡片名称、卡片 ID 的独立位置设置
 - 在 `localStorage` 中保存多个具名连接配置，并可为每个配置选择按游戏分类的
   图标，或上传自动居中裁剪的本地图像，显示在 PC 名称旁
 - 可将已保存服务器导出为二维码或直达链接；接收设备会先预览，再由用户明确
@@ -132,7 +133,9 @@ WebP 文件。spicefe 会在本设备上取图片中央最大的正方形，并�
 
 显示区域严格限制为 9 个字符，与 spice2x 及原始机台硬件一致；固定使用 27:5
 比例，随设备屏幕放大或缩小，并以纯黑底、纯红字和克制的荧光辉光还原机台效果。
-较新的 IIDX 可能只有副屏，此时请关闭该选项并使用普通视频模式。
+独立外框现已移除：Logo、标题图及显示区域直接嵌在覆盖整个米字屏画面（包括全屏
+模式）的拉丝金属背景上。仅 Logo 与标题图表面覆盖克制的透明塑料反光，红色米字屏
+窗口不受遮挡。较新的 IIDX 可能只有副屏，此时请关闭该选项并使用普通视频模式。
 
 ## 虚拟卡片
 
@@ -149,7 +152,16 @@ ID 默认为空。点击**随机生成**会使用原生格式：`E0040100` 后�
 样式，或上传 PNG、JPEG、WebP 图片作为背景。图片会在当前设备上缩放，并随卡片
 保存在浏览器 `localStorage` 中；spicefe 不会上传图片。名称过长时仍保持单行，并在
 固定名称区域内水平滚动。卡号使用本地提供的 Bitcount Single 可变字体，加载失败时
-回退到设备的等宽字体。
+回退到设备的等宽字体。编辑器还可分别设置 e-amusement 标记、KONMAI Logo 与
+卡片 ID 在卡片顶部或底部的左、中、右位置。卡片名称可在单独的中间安全区域中移动，
+始终低于图标行、高于卡片 ID 行；每次调整都会立即显示在预览中。新建卡片或选择已有
+卡片时，编辑器会在独立弹窗中打开；保存或取消后返回卡片库。
+
+若要在游戏 PC 上复用浏览器创建的卡片，请在需要的卡片下方勾选**选择备份**，再点击
+**导出备份**。下载的 ZIP 会为每张所选卡片生成一个 `<卡片名称>.txt` 文件；文件中
+仅包含 16 位卡片 ID，不含浏览器元数据，因此可直接在 spice2x 卡片管理器中选择使用。
+已有的 `.txt` 后缀会保留；导出时会调整 Windows 不允许或过长的文件名及重复名称，
+避免解压时丢失卡片。
 
 视频或米字屏会话连接后，点击顶部栏中的卡片图标，选择玩家 1 或玩家 2，再选择卡片。
 spicefe 会通过当前控制 API 连接发送原生的
@@ -361,10 +373,13 @@ npm。`0.0.0.0` 会让页面可从局域网访问，因此应将电脑防火墙�
 
 ## 本地开发
 
-flake 固定了 Nixpkgs，并提供 Node.js 和 Python，无需在系统中全局安装 npm。
+flake 固定了 Nixpkgs，并提供 Node.js、TypeScript、esbuild 与 Python；无需在系统中
+全局安装 npm 包，也不会使用 npm 提供的构建二进制文件。
 
 ```sh
 nix develop
+npm ci --ignore-scripts
+npm run build
 npm test
 python tools/check_static.py public
 ```
@@ -383,19 +398,21 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
 
 ## 依赖策略
 
-浏览器依赖为纯 JavaScript 包 `jmuxer@2.1.1` 和
-`qrcode-generator@2.0.4`；两者都没有运行时传递依赖或安装生命周期脚本。
-npm 完整性元数据将其锁定在精确版本。Nix 构建会传入 `--ignore-scripts`，通过
-固定输出的 Nix derivation 下载依赖，并在生成站点之前逐字节比较其随站点发布的
-浏览器文件。完整许可证和来源记录位于 `public/vendor/`。构建不会下载或运行
-任何来自 npm 包的可执行二进制文件。
+浏览器直接依赖均为纯 JavaScript 包：`react@19.2.8`、`react-dom@19.2.8`、
+`react-aria-components@1.20.0`、`tailwind-merge@3.6.0`、`jmuxer@2.1.1`
+与 `qrcode-generator@2.0.4`。npm 完整性元数据将直接和间接依赖锁定在精确
+版本，并禁用安装生命周期脚本。TypeScript、esbuild 与 Tailwind CSS 4.3.3
+均由固定的 Nixpkgs 提供，而非 npm。完整许可证和来源记录位于
+`public/vendor/`；构建不会下载或运行任何来自 npm 包的可执行二进制文件。
 
 ## 界面与字体资源
 
-界面借鉴了采用 MIT 许可证的开源
-[`untitleduico/react`](https://github.com/untitleduico/react) 设计系统，包括其中性
-配色、紧凑组件尺寸、焦点状态及克制的阴影。项目仍然使用纯静态 HTML、CSS 和
-JavaScript；React、Tailwind CSS 与 React Aria 都不是运行时或构建依赖。
+共享的 Button、Checkbox 与 Status Badge 组件，以及中性配色、紧凑尺寸、焦点
+状态和克制的阴影，均改编自采用 MIT 许可证的开源
+[`untitleduico/react`](https://github.com/untitleduico/react) 设计系统；flake
+固定了准确的上游版本。组件使用 React Aria 提供无障碍交互，并由 Nix 提供的
+Tailwind 编译工具类。各功能的专用布局继续保留在维护中的应用 CSS 中；部署结果
+仍是纯客户端静态站点，不会从 CDN 加载 CSS 或组件运行时。
 
 界面首选 IBM Plex Sans。站点固定使用 IBM
 [`@ibm/plex-sans@1.1.0`](https://github.com/IBM/plex/releases/tag/%40ibm%2Fplex-sans%401.1.0)
@@ -432,6 +449,11 @@ BEMANI 图标仓库没有提供许可证，并说明这些图像收集自 KONAMI
 不表示与 KONAMI 或各游戏存在关联，也不代表其认可。完整来源记录及上游
 README 位于
 [`public/vendor/bemani-fan-site-icons/`](./public/vendor/bemani-fan-site-icons/)。
+
+米字屏本地提供的拉丝金属背景，是仓库所有者指定使用的未经修改 WallArt 图片。
+其直接来源未注明再分发条款，因此该素材不属于 spicefe 的 MIT 许可证范围；来源、
+校验和及获取信息记录在
+[`public/vendor/brushed-metal/`](./public/vendor/brushed-metal/)。
 
 通过自定义图标选择器上传的图像只保存在浏览器本地，不属于站点发行内容，也不在
 上游 BEMANI 图标白名单内。

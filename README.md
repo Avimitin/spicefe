@@ -58,7 +58,8 @@ the LAN.
 - a dismissible in-stream adjustment bar, restorable from the top bar
 - a browser-local e-amusement card library with native-format card generation,
   selective import from spice2x card files and overrides, P1/P2 insertion from
-  the stream toolbar, and customizable card artwork
+  the stream toolbar, selective ZIP backup, customizable card artwork, and
+  independently positioned e-amusement, KONMAI, card-name, and card-ID marks
 - multiple named connection profiles in `localStorage`, each with a selectable
   categorized game icon or locally uploaded, center-cropped artwork shown beside
   the PC name
@@ -156,8 +157,13 @@ spice2x connection.
 The view deliberately exposes exactly nine character positions, matching
 spice2x and the original cabinet hardware. It keeps a fixed 27:5 aspect ratio,
 scales with the available screen, and renders pure red characters on a pure
-black panel with a restrained fluorescent glow. Recent IIDX releases may offer
-only a subscreen; use normal video mode for those releases.
+black panel with a restrained fluorescent glow. The separate enclosure has
+been removed: the logo, caption, and display sit directly in a brushed-metal
+background that fills the complete ticker surface, including fullscreen. A
+restrained clear-plastic reflection covers only the logo and caption artwork;
+the red segment window remains unobstructed.
+Recent IIDX releases may offer only a subscreen; use normal video mode for
+those releases.
 
 ## Virtual cards
 
@@ -181,7 +187,20 @@ Uploaded artwork is resized on the device and stored with the card in browser
 `localStorage`; it is never uploaded by spicefe. Very long names remain on one
 line and scroll within their fixed name area. Card numbers use the locally
 served Bitcount Single variable font, with the device's monospace font as a
-fallback.
+fallback. The editor also provides independent top and bottom alignment controls
+for the e-amusement mark, KONMAI logo, and card ID. The card name can move within
+a separate safe middle band, so it always remains below the icon row and above
+the card-ID row. Every change is reflected immediately in the preview. Creating
+or selecting a card opens this editor in a focused modal; saving or cancelling
+returns to the card library.
+
+To reuse browser-created cards on the gaming PC, select **Back up** beneath each
+card you want and then select **Export backup**. The downloaded ZIP contains one
+`<card name>.txt` file per selected card. Each file contains exactly its
+16-character card ID and no browser metadata, so it can be selected directly in
+spice2x's card manager. Existing `.txt` suffixes are preserved; unsafe or
+overlong Windows filenames and duplicate names are adjusted during export so no
+card is lost when the archive is extracted.
 
 While a video or ticker session is live, select the card icon in the top bar,
 choose Player 1 or Player 2, then select a card. spicefe sends the native
@@ -419,11 +438,13 @@ while playing and press **Ctrl+C** to stop it.
 
 ## Local development
 
-The flake pins Nixpkgs and supplies Node.js and Python. No global npm install is
-needed.
+The flake pins Nixpkgs and supplies Node.js, TypeScript, esbuild, and Python.
+No global npm package or npm-delivered build binary is needed.
 
 ```sh
 nix develop
+npm ci --ignore-scripts
+npm run build
 npm test
 python tools/check_static.py public
 ```
@@ -442,21 +463,25 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
 
 ## Dependency policy
 
-The browser dependencies are the pure-JavaScript packages `jmuxer@2.1.1` and
-`qrcode-generator@2.0.4`; neither has runtime transitive dependencies or an
-install lifecycle script. Both are exact-version locked with npm integrity
-metadata. The Nix build passes `--ignore-scripts`, downloads them through a
-fixed-output Nix derivation, and byte-compares their vendored browser
-distributions before producing the site. Complete license and source records
-ship in `public/vendor/`. No executable npm binary is downloaded or run.
+The direct browser dependencies are pure-JavaScript packages: `react@19.2.8`,
+`react-dom@19.2.8`, `react-aria-components@1.20.0`,
+`tailwind-merge@3.6.0`, `jmuxer@2.1.1`, and `qrcode-generator@2.0.4`. Direct
+and transitive packages are exact-version locked with npm integrity metadata,
+and install lifecycle scripts are disabled. TypeScript, esbuild, and Tailwind
+CSS 4.3.3 come from pinned Nixpkgs instead of npm. Complete license and source
+records ship in `public/vendor/`; no executable npm binary is downloaded or
+run.
 
 ## Interface and font assets
 
-The interface adapts the neutral palette, compact component geometry, focus
-states, and restrained shadows of the MIT-licensed open-source
-[`untitleduico/react`](https://github.com/untitleduico/react) design system.
-It remains plain static HTML, CSS, and JavaScript; React, Tailwind CSS, and
-React Aria are not runtime or build dependencies.
+The shared Button, Checkbox, and Status Badge components, plus the neutral
+palette, compact geometry, focus states, and restrained shadows, are adapted
+from the MIT-licensed open-source
+[`untitleduico/react`](https://github.com/untitleduico/react) design system at
+the exact revision pinned by the flake. They use React Aria for accessible
+interaction and Tailwind utility classes compiled by Nix. Feature-specific
+layouts remain in maintained application CSS, and the deployable result remains
+a client-only static site with no CSS or component runtime loaded from a CDN.
 
 IBM Plex Sans is the primary interface font. Four small Latin-1 and symbol
 subsets (Regular and Medium) are pinned to IBM's
@@ -500,6 +525,12 @@ required to redistribute or publicly serve those images. No affiliation with
 or endorsement by KONAMI or the individual games is implied. Exact provenance
 and the upstream README are included in
 [`public/vendor/bemani-fan-site-icons/`](./public/vendor/bemani-fan-site-icons/).
+
+The locally served brushed-metal ticker background is the unmodified WallArt
+image supplied by the repository owner. The direct source does not state
+redistribution terms, so the asset is not covered by spicefe's MIT license.
+Its source, checksum, and retrieval details are recorded in
+[`public/vendor/brushed-metal/`](./public/vendor/brushed-metal/).
 
 Artwork uploaded through the custom-icon picker remains browser-local and is
 not part of the distributed site or the upstream BEMANI icon whitelist.

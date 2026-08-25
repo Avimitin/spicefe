@@ -56,15 +56,43 @@ License, Copyright (c) 2009 Kazuhiko Arase. The unmodified browser module,
 complete license, checksum, and source record ship in
 `public/vendor/qrcode-generator/`.
 
+## React
+
+The browser application uses `react@19.2.8`, `react-dom@19.2.8`, and their
+`scheduler@0.27.0`, `use-sync-external-store@1.6.0`, and `client-only@0.0.1`
+runtime dependencies from the official
+[`facebook/react`](https://github.com/facebook/react) project. They are
+licensed under the MIT License, Copyright (c) Meta Platforms, Inc. and
+affiliates. Exact versions, npm integrity values, source links, and the
+complete shared license ship in `public/vendor/react/`.
+
+## React Aria
+
+The Untitled UI controls use `react-aria-components@1.20.0` with its
+version-locked `react-aria`, `react-stately`, and `@internationalized/*`
+runtime dependencies from Adobe's
+[`react-spectrum`](https://github.com/adobe/react-spectrum) project. These
+packages provide accessible browser interaction and state behavior and are
+licensed under the Apache License 2.0. Exact versions, source details, and the
+complete shared license ship in `public/vendor/react-aria/`.
+
 ## Untitled UI React
 
-The visual tokens and component treatment are adapted for the existing static
-HTML/CSS application from the open-source
+The Button, Checkbox, Status Badge, class-merging utility, visual tokens, and
+credit-card treatments are adapted from the free, open-source
 [`untitleduico/react`](https://github.com/untitleduico/react) design system,
-revision `548c28ad9c9449bcc20751c84c542d5739f1e17e`. No Untitled UI PRO
-assets or examples are included. The referenced source is licensed under the
-MIT License, Copyright (c) 2025 Untitled UI. The complete license and source
-record ship in `public/vendor/untitled-ui/`.
+revision `d29a2adf6909e5aaeb234bccf82dcffeb67fdb2e`. No Untitled UI PRO source,
+assets, or examples are included. The referenced source is licensed under the
+MIT License, Copyright (c) 2025 Untitled UI. The complete license and exact
+component source record ship in `public/vendor/untitled-ui/`.
+
+## tailwind-merge and clsx
+
+The component bundle uses `tailwind-merge@3.6.0`, licensed under the MIT
+License, Copyright (c) 2021 Dany Castillo, and the React Aria dependency tree
+uses `clsx@2.1.1`, licensed under the MIT License, Copyright (c) Luke Edwards.
+Exact source records and complete licenses ship in
+`public/vendor/tailwind-merge/` and `public/vendor/clsx/`.
 
 ## IBM Plex Sans
 
@@ -122,6 +150,16 @@ of the supplied image and is used only for visual identification and
 decoration. No ownership or endorsement is implied. Its dimensions, checksum,
 and transformation record ship in `public/vendor/iidx-dj-logo/`. The artwork
 is not covered by spicefe's MIT license.
+
+## WallArt brushed-metal texture
+
+The old beatmania IIDX ticker view uses an unmodified brushed-metal JPEG from
+[WallArt](https://www.wallart.com/media/catalog/product/cache/871f459736130e239a3f5e6472128962/w/1/w12098-small.jpg),
+included at the spicefe repository owner's request. WallArt does not state
+redistribution terms alongside the direct asset URL. The image is not covered
+by spicefe's MIT license; its inclusion does not imply ownership or
+endorsement. Its dimensions, checksum, retrieval date, and source URL ship in
+`public/vendor/brushed-metal/SOURCE.md`.
 
 ## spice2x icon
 

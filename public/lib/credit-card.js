@@ -49,7 +49,6 @@ export function createCreditCard(card, options = {}) {
   const name = document.createElement('span');
   const nameText = document.createElement('span');
   const brand = document.createElement('span');
-  const footer = document.createElement('span');
   const number = document.createElement('span');
   const logoWrap = document.createElement('span');
   const logo = document.createElement('img');
@@ -75,29 +74,31 @@ export function createCreditCard(card, options = {}) {
     root.setAttribute('aria-label', options.label || `${card.name || options.unnamed || 'Unnamed card'}, ${formatCardNumber(card.number)}`);
   }
 
-  brand.className = 'ea-card-brand';
+  brand.className = 'ea-card-brand ea-card-positioned';
+  brand.dataset.position = card.eAmusementPosition || 'top-left';
   brandLogo.src = EA_LOGO_SOURCE;
   brandLogo.alt = '';
   brandLogo.decoding = 'async';
   brand.append(brandLogo);
 
   name.className = 'ea-card-name';
+  name.dataset.position = card.namePosition || 'bottom-left';
   name.title = card.name || options.unnamed || 'Unnamed card';
   nameText.className = 'ea-card-name-text';
   nameText.textContent = card.name || options.unnamed || 'Unnamed card';
   name.append(nameText);
 
-  footer.className = 'ea-card-footer';
-  number.className = 'ea-card-number';
+  number.className = 'ea-card-number ea-card-positioned';
+  number.dataset.position = card.cardIdPosition || 'bottom-left';
   number.textContent = formatCardNumber(card.number);
 
-  logoWrap.className = 'ea-card-logo';
+  logoWrap.className = 'ea-card-logo ea-card-positioned';
+  logoWrap.dataset.position = card.konmaiPosition || 'bottom-right';
   logo.src = KONMAI_LOGO_SOURCE;
   logo.alt = '';
   logo.decoding = 'async';
   logoWrap.append(logo);
-  footer.append(number, logoWrap);
-  root.append(brand, name, footer);
+  root.append(brand, name, number, logoWrap);
   scheduleNameMeasurement(name);
   return root;
 }

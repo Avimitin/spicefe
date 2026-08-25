@@ -83,7 +83,7 @@ test('the connection editor leaves server selection to the library', () => {
     'utf8',
   );
   const script = readFileSync(
-    new URL('../public/app.js', import.meta.url),
+    new URL('../src/app.tsx', import.meta.url),
     'utf8',
   );
 
@@ -102,7 +102,7 @@ test('the welcome page leads into README showcases while setup has its own page'
     'utf8',
   );
   const script = readFileSync(
-    new URL('../public/app.js', import.meta.url),
+    new URL('../src/app.tsx', import.meta.url),
     'utf8',
   );
 
@@ -125,7 +125,7 @@ test('connection entry points expose the usage guide and a clear primary icon', 
     'utf8',
   );
   const script = readFileSync(
-    new URL('../public/app.js', import.meta.url),
+    new URL('../src/app.tsx', import.meta.url),
     'utf8',
   );
 
@@ -149,7 +149,11 @@ test('saved servers expose explicit QR export and query restore controls', () =>
     'utf8',
   );
   const script = readFileSync(
-    new URL('../public/app.js', import.meta.url),
+    new URL('../src/app.tsx', import.meta.url),
+    'utf8',
+  );
+  const components = readFileSync(
+    new URL('../src/components.tsx', import.meta.url),
     'utf8',
   );
 
@@ -157,8 +161,12 @@ test('saved servers expose explicit QR export and query restore controls', () =>
   assert.match(markup, /id="profile-share-qr"[\s\S]*id="profile-share-link"/);
   assert.match(markup, /id="profile-share-restore"[^>]*hidden/);
   assert.match(
+    components,
+    /className="server-card-icon-button server-share-button"[\s\S]*onPress=\{\(\) => onShare\(profile\.id\)\}/,
+  );
+  assert.match(
     script,
-    /shareButton\.addEventListener\('click',[\s\S]*store\.get\(profile\.id\)[\s\S]*openProfileShare\(latestProfile\)/,
+    /onShare=\{\(id\) => \{[\s\S]*store\.get\(id\)[\s\S]*openProfileShare\(latestProfile\)/,
   );
   assert.match(
     script,

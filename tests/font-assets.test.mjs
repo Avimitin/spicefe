@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
-const styles = readFileSync(new URL('../public/assets/styles.css', import.meta.url), 'utf8');
+const styles = readFileSync(new URL('../src/styles/application.css', import.meta.url), 'utf8');
 const bitcount = readFileSync(
   new URL('../public/vendor/bitcount-single/fonts/BitcountSingle-Variable.woff2', import.meta.url),
 );

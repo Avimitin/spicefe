@@ -22,8 +22,12 @@
     url = "github:spice2x/spice2x.github.io/b9c8afbbc12452edc3f4ac50cc1eda9ed0ee7f61";
     flake = false;
   };
+  inputs.untitledUi = {
+    url = "github:untitleduico/react/d29a2adf6909e5aaeb234bccf82dcffeb67fdb2e";
+    flake = false;
+  };
 
-  outputs = { self, bemaniIcons, bitcountSingle, libreCaslonText, nixpkgs, sixteenFont, spice2xSource }:
+  outputs = { self, bemaniIcons, bitcountSingle, libreCaslonText, nixpkgs, sixteenFont, spice2xSource, untitledUi }:
     let
       systems = [
         "x86_64-linux"
@@ -90,6 +94,10 @@
             url = "https://cdn.frankerfacez.com/emoticon/146473/4";
             hash = "sha256-1XqOwNQkfQcucl0Rjj08nCN5jvQFhh1QwVnpPcpWjLg=";
           };
+          brushedMetalTexture = pkgs.fetchurl {
+            url = "https://www.wallart.com/media/catalog/product/cache/871f459736130e239a3f5e6472128962/w/1/w12098-small.jpg";
+            hash = "sha256-yG44KpRWo4de9Em4myVCjRpJaMiN+e//T7eOJnAkS5g=";
+          };
           libreCaslonTextRegularWoff2 = pkgs.runCommand "LibreCaslonText-Regular.woff2"
             {
               nativeBuildInputs = [ pkgs.woff2 ];
@@ -116,13 +124,17 @@
             '';
         in
         rec {
-          default = pkgs.buildNpmPackage {
+          default = assert pkgs.tailwindcss_4.version == "4.3.3"; pkgs.buildNpmPackage {
             pname = "spicefe";
             version = "0.1.2";
             src = self;
-            npmDepsHash = "sha256-vznUTQEPcaem9tA9eBH2zKGfb9zPEbGa/IqyKPgo63s=";
+            npmDepsHash = "sha256-4dWAlP0EAQHHdJbj1QwbAX9Y3884hRkCzgkMDhnWSgw=";
             npmFlags = [ "--ignore-scripts" ];
-            dontNpmBuild = true;
+            nativeBuildInputs = [
+              pkgs.esbuild
+              pkgs.tailwindcss_4
+              pkgs.typescript
+            ];
             installPhase = ''
               runHook preInstall
               cmp public/vendor/jmuxer.min.js node_modules/jmuxer/dist/jmuxer.min.js
@@ -131,9 +143,42 @@
               grep -Fx '  "version": "2.0.4",' node_modules/qrcode-generator/package.json
               grep -Fx '  "license": "MIT",' node_modules/qrcode-generator/package.json
               grep -Fx 'Copyright (c) 2009 Kazuhiko Arase' public/vendor/qrcode-generator/LICENSE.MIT.txt
+              grep -Fx '  "version": "19.2.8",' node_modules/react/package.json
+              grep -Fx '  "version": "19.2.8",' node_modules/react-dom/package.json
+              grep -Fx '  "version": "0.27.0",' node_modules/scheduler/package.json
+              cmp public/vendor/react/LICENSE.MIT.txt node_modules/react/LICENSE
+              cmp public/vendor/react/LICENSE.MIT.txt node_modules/react-dom/LICENSE
+              cmp public/vendor/react/LICENSE.MIT.txt node_modules/scheduler/LICENSE
+              cmp public/vendor/react/LICENSE.MIT.txt node_modules/use-sync-external-store/LICENSE
+              grep -Eq '"version": *"0\.0\.1"' node_modules/client-only/package.json
+              grep -Eq '"license": *"MIT"' node_modules/client-only/package.json
+              grep -Eq '"version": *"1\.20\.0"' node_modules/react-aria-components/package.json
+              grep -Eq '"version": *"3\.51\.0"' node_modules/react-aria/package.json
+              grep -Eq '"version": *"3\.49\.0"' node_modules/react-stately/package.json
+              grep -Eq '"version": *"3\.12\.3"' node_modules/@internationalized/date/package.json
+              grep -Eq '"version": *"3\.6\.7"' node_modules/@internationalized/number/package.json
+              grep -Eq '"version": *"3\.2\.10"' node_modules/@internationalized/string/package.json
+              for react_aria_license in \
+                node_modules/react-aria-components/LICENSE \
+                node_modules/react-aria/LICENSE \
+                node_modules/react-stately/LICENSE \
+                node_modules/@internationalized/date/LICENSE \
+                node_modules/@internationalized/number/LICENSE \
+                node_modules/@internationalized/string/LICENSE; do
+                cmp public/vendor/react-aria/LICENSE.Apache-2.0.txt "$react_aria_license"
+              done
+              grep -Eq '"version": *"3\.6\.0"' node_modules/tailwind-merge/package.json
+              cmp public/vendor/tailwind-merge/LICENSE.MIT.txt node_modules/tailwind-merge/LICENSE.md
+              grep -Eq '"version": *"2\.1\.1"' node_modules/clsx/package.json
+              cmp public/vendor/clsx/LICENSE.MIT.txt node_modules/clsx/license
               cmp public/vendor/bemani-fan-site-icons/UPSTREAM_README.md ${bemaniIcons}/README.md
               cmp public/assets/spice2x.ico ${spice2xSource}/src/spice2x/build/icon.ico
               cmp public/vendor/spice2x/LICENSE.GPL-3.0.txt ${spice2xSource}/LICENSE
+              cmp public/vendor/untitled-ui/LICENSE.MIT.txt ${untitledUi}/LICENSE
+              test -f ${untitledUi}/components/base/buttons/button.tsx
+              test -f ${untitledUi}/components/base/checkbox/checkbox.tsx
+              test -f ${untitledUi}/components/base/badges/badges.tsx
+              test -f ${untitledUi}/utils/cx.ts
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Regular-Latin1.woff2 ${ibmPlexRegularLatin1}
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Regular-Pi.woff2 ${ibmPlexRegularPi}
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Medium-Latin1.woff2 ${ibmPlexMediumLatin1}
@@ -149,6 +194,7 @@
                   | awk '{ for (i = 1; i <= NF; i++) print $i }')
               cmp public/vendor/e-amusement/ea_logo.png ${eaLogo}
               cmp public/vendor/frankerfacez/konmai.png ${konmaiLogo}
+              cmp public/vendor/brushed-metal/w12098-small.jpg ${brushedMetalTexture}
               cmp \
                 <(sed 's/\r$//; s/[[:blank:]]*$//' public/vendor/libre-caslon-text/LICENSE.OFL-1.1.txt) \
                 <(sed 's/\r$//; s/[[:blank:]]*$//' ${libreCaslonText}/OFL.txt)
@@ -287,9 +333,12 @@
           default = pkgs.mkShellNoCC {
             packages = [
               pkgs.actionlint
+              pkgs.esbuild
               pkgs.nodejs
               pkgs.python3
               pkgs.shellcheck
+              pkgs.tailwindcss_4
+              pkgs.typescript
             ];
           };
         });

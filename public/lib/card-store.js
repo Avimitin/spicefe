@@ -3,6 +3,32 @@ export const CARD_NUMBER_PATTERN = /^[0-9A-F]{16}$/;
 export const CARD_NUMBER_PREFIX = 'E0040100';
 export const CARD_NAME_LIMIT = 256;
 export const CARD_IMAGE_DATA_URL_LIMIT = 1_600_000;
+export const CARD_ELEMENT_POSITIONS = Object.freeze([
+  'top-left',
+  'top-center',
+  'top-right',
+  'bottom-left',
+  'bottom-center',
+  'bottom-right',
+]);
+export const CARD_NAME_POSITIONS = Object.freeze([
+  'top-left',
+  'top-center',
+  'top-right',
+  'center-left',
+  'center',
+  'center-right',
+  'bottom-left',
+  'bottom-center',
+  'bottom-right',
+]);
+
+export const DEFAULT_CARD_ELEMENT_POSITIONS = Object.freeze({
+  eAmusementPosition: 'top-left',
+  konmaiPosition: 'bottom-right',
+  cardIdPosition: 'bottom-left',
+  namePosition: 'bottom-left',
+});
 
 const APPEARANCES = new Set([
   'gray-light',
@@ -13,6 +39,8 @@ const APPEARANCES = new Set([
 ]);
 const COLOR_PATTERN = /^#[0-9A-F]{6}$/;
 const IMAGE_DATA_URL_PATTERN = /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/;
+const CARD_ELEMENT_POSITION_SET = new Set(CARD_ELEMENT_POSITIONS);
+const CARD_NAME_POSITION_SET = new Set(CARD_NAME_POSITIONS);
 
 export class CardStoreError extends Error {
   constructor(message, code = 'storage') {
@@ -74,6 +102,18 @@ function sanitizeImage(value) {
     : null;
 }
 
+function sanitizeCardElementPosition(value, fallback) {
+  const position = String(value ?? '');
+  return CARD_ELEMENT_POSITION_SET.has(position) ? position : fallback;
+}
+
+function sanitizeCardNamePosition(value) {
+  const position = String(value ?? '');
+  return CARD_NAME_POSITION_SET.has(position)
+    ? position
+    : DEFAULT_CARD_ELEMENT_POSITIONS.namePosition;
+}
+
 export function sanitizeCard(input = {}) {
   const number = normalizeCardNumberInput(input.number);
   if (!isValidCardNumber(number)) {
@@ -96,6 +136,19 @@ export function sanitizeCard(input = {}) {
     appearance,
     color: sanitizeColor(input.color),
     image,
+    eAmusementPosition: sanitizeCardElementPosition(
+      input.eAmusementPosition,
+      DEFAULT_CARD_ELEMENT_POSITIONS.eAmusementPosition,
+    ),
+    konmaiPosition: sanitizeCardElementPosition(
+      input.konmaiPosition,
+      DEFAULT_CARD_ELEMENT_POSITIONS.konmaiPosition,
+    ),
+    cardIdPosition: sanitizeCardElementPosition(
+      input.cardIdPosition,
+      DEFAULT_CARD_ELEMENT_POSITIONS.cardIdPosition,
+    ),
+    namePosition: sanitizeCardNamePosition(input.namePosition),
   };
 }
 
@@ -107,19 +160,37 @@ export function newCard(overrides = {}) {
     appearance: 'gray-light',
     color: '#667085',
     image: null,
+    ...DEFAULT_CARD_ELEMENT_POSITIONS,
     ...overrides,
   });
 }
 
 export function newCardDraft(overrides = {}) {
-  return {
+  const draft = {
     id: createId(),
     number: '',
     name: '',
     appearance: 'gray-light',
     color: '#667085',
     image: null,
+    ...DEFAULT_CARD_ELEMENT_POSITIONS,
     ...overrides,
+  };
+  return {
+    ...draft,
+    eAmusementPosition: sanitizeCardElementPosition(
+      draft.eAmusementPosition,
+      DEFAULT_CARD_ELEMENT_POSITIONS.eAmusementPosition,
+    ),
+    konmaiPosition: sanitizeCardElementPosition(
+      draft.konmaiPosition,
+      DEFAULT_CARD_ELEMENT_POSITIONS.konmaiPosition,
+    ),
+    cardIdPosition: sanitizeCardElementPosition(
+      draft.cardIdPosition,
+      DEFAULT_CARD_ELEMENT_POSITIONS.cardIdPosition,
+    ),
+    namePosition: sanitizeCardNamePosition(draft.namePosition),
   };
 }
 

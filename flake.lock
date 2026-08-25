@@ -74,7 +74,8 @@
         "libreCaslonText": "libreCaslonText",
         "nixpkgs": "nixpkgs",
         "sixteenFont": "sixteenFont",
-        "spice2xSource": "spice2xSource"
+        "spice2xSource": "spice2xSource",
+        "untitledUi": "untitledUi"
       }
     },
     "sixteenFont": {
@@ -108,6 +109,23 @@
         "owner": "spice2x",
         "repo": "spice2x.github.io",
         "rev": "b9c8afbbc12452edc3f4ac50cc1eda9ed0ee7f61",
+        "type": "github"
+      }
+    },
+    "untitledUi": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787582532,
+        "narHash": "sha256-Jn3QvomJsl40BdmH7Ot6xApfzBKRYrgfMQCLRm4pIfM=",
+        "owner": "untitleduico",
+        "repo": "react",
+        "rev": "d29a2adf6909e5aaeb234bccf82dcffeb67fdb2e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "untitleduico",
+        "repo": "react",
+        "rev": "d29a2adf6909e5aaeb234bccf82dcffeb67fdb2e",
         "type": "github"
       }
     }

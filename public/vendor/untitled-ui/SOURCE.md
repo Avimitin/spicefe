@@ -1,15 +1,24 @@
-# Untitled UI source record
+# Untitled UI React source record
 
-spicefe's visual tokens and component styling are adapted for plain CSS from
-the open-source [`untitleduico/react`](https://github.com/untitleduico/react)
-design system at commit `548c28ad9c9449bcc20751c84c542d5739f1e17e`.
+spicefe vendors and adapts the free, open-source React components from
+[`untitleduico/react`](https://github.com/untitleduico/react) at commit
+`d29a2adf6909e5aaeb234bccf82dcffeb67fdb2e`. The same revision is pinned as a
+non-flake Nix input so the build checks this license against upstream.
 
-The application does not include React, Tailwind CSS, React Aria, or Untitled
-UI runtime code. Its existing static HTML and JavaScript behavior are retained.
-The e-amusement previews adapt the `gray-light`, `gray-dark`, and
-`transparent-gradient` variants from
-`components/shared-assets/credit-card/credit-card.tsx` at the same revision.
+The local component foundation derives from these upstream files:
 
-The referenced open-source components are licensed under the MIT License. See
-`LICENSE.MIT.txt` in this directory. Untitled UI PRO assets and examples are
-not included.
+- `src/ui/button.tsx` — `components/base/buttons/button.tsx`
+- `src/ui/checkbox.tsx` — `components/base/checkbox/checkbox.tsx`
+- `src/ui/status-badge.tsx` — `components/base/badges/badges.tsx`
+- `src/ui/cx.ts` — `utils/cx.ts`
+- the e-amusement card variants —
+  `components/shared-assets/credit-card/credit-card.tsx`
+
+Variants, sizes, tokens, and dependencies are narrowed to what spicefe uses.
+The resulting source is compiled locally with the Nix-provided Tailwind CSS
+4.3.3 executable. React Aria Components and `tailwind-merge` are independently
+version-locked npm source dependencies with their own notices and licenses.
+
+The referenced Untitled UI source is licensed under the MIT License. See
+`LICENSE.MIT.txt` in this directory. Untitled UI PRO source, assets, and
+examples are not included.
