@@ -58,7 +58,8 @@ the LAN.
 - a dismissible in-stream adjustment bar, restorable from the top bar
 - a browser-local e-amusement card library with native-format card generation,
   selective import from spice2x card files and overrides, P1/P2 insertion from
-  the stream toolbar, selective ZIP backup, and customizable card artwork
+  the stream toolbar, selective ZIP backup, customizable card artwork, and
+  independently positioned e-amusement, KONMAI, card-name, and card-ID marks
 - multiple named connection profiles in `localStorage`, each with a selectable
   categorized game icon or locally uploaded, center-cropped artwork shown beside
   the PC name
@@ -186,7 +187,12 @@ Uploaded artwork is resized on the device and stored with the card in browser
 `localStorage`; it is never uploaded by spicefe. Very long names remain on one
 line and scroll within their fixed name area. Card numbers use the locally
 served Bitcount Single variable font, with the device's monospace font as a
-fallback.
+fallback. The editor also provides independent top and bottom alignment controls
+for the e-amusement mark, KONMAI logo, and card ID. The card name can move within
+a separate safe middle band, so it always remains below the icon row and above
+the card-ID row. Every change is reflected immediately in the preview. Creating
+or selecting a card opens this editor in a focused modal; saving or cancelling
+returns to the card library.
 
 To reuse browser-created cards on the gaming PC, select **Back up** beneath each
 card you want and then select **Export backup**. The downloaded ZIP contains one

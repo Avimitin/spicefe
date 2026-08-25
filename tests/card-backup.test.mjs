@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  cardBackupAction,
   cardBackupArchiveName,
   cardBackupEntries,
   createCardBackupArchive,
@@ -47,6 +48,13 @@ function readStoredZip(buffer) {
 }
 
 const card = (id, name, number) => ({ id, name, number });
+
+test('moves the backup button through start, cancel, and download actions', () => {
+  assert.equal(cardBackupAction(false, 0), 'start');
+  assert.equal(cardBackupAction(true, 0), 'cancel');
+  assert.equal(cardBackupAction(true, 1), 'download');
+  assert.equal(cardBackupAction(true, 3), 'download');
+});
 
 test('creates safe spice2x text file names without duplicating the extension', () => {
   const entries = cardBackupEntries([

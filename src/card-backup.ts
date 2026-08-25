@@ -17,6 +17,18 @@ export interface CardBackupEntry {
   content: string;
 }
 
+export type CardBackupAction = 'start' | 'cancel' | 'download';
+
+export function cardBackupAction(
+  backupMode: boolean,
+  selectedCount: number,
+): CardBackupAction {
+  if (!backupMode) {
+    return 'start';
+  }
+  return selectedCount > 0 ? 'download' : 'cancel';
+}
+
 interface EncodedZipEntry extends CardBackupEntry {
   crc32: number;
   data: Uint8Array;

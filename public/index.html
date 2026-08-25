@@ -425,18 +425,25 @@
               </div>
             </section>
 
-            <aside class="card-editor" aria-labelledby="card-editor-title">
+            <dialog id="card-editor-dialog" class="card-editor-dialog" aria-labelledby="card-editor-title">
               <form id="card-form">
                 <header class="card-editor-header">
                   <div>
                     <p class="eyebrow" data-i18n="cards.editorEyebrow">CARD DETAILS</p>
                     <h2 id="card-editor-title" data-i18n="cards.newTitle">New card</h2>
                   </div>
+                  <button id="close-card-editor" class="card-editor-close" type="button"
+                          aria-label="Close card editor" title="Close card editor"
+                          data-i18n-aria-label="cards.editorClose"
+                          data-i18n-title="cards.editorClose">
+                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>
+                  </button>
                 </header>
 
-                <div id="card-preview" class="card-preview" aria-live="polite"></div>
+                <div class="card-editor-content">
+                  <div id="card-preview" class="card-preview" aria-live="polite"></div>
 
-                <div class="card-form-fields">
+                  <div class="card-form-fields">
                   <label class="field">
                     <span data-i18n="cards.name">Card name</span>
                     <input id="card-name" type="text" maxlength="256" autocomplete="off" placeholder="Main card" data-i18n-placeholder="cards.namePlaceholder">
@@ -452,6 +459,60 @@
                       Generate a new ID, import cards from your gaming PC, or enter a 16-character ID.
                     </small>
                   </label>
+
+                  <fieldset class="card-position-picker">
+                    <legend data-i18n="cards.positions">Element positions</legend>
+                    <small data-i18n="cards.positionsHelp">Choose where each mark appears. The card name stays safely between the edge rows.</small>
+                    <div class="card-position-options">
+                      <label>
+                        <span data-i18n="cards.eAmusementPosition">e-amusement</span>
+                        <select id="card-eamusement-position">
+                          <option value="top-left" data-i18n="cards.positionTopLeft" selected>Top left</option>
+                          <option value="top-center" data-i18n="cards.positionTopCenter">Top center</option>
+                          <option value="top-right" data-i18n="cards.positionTopRight">Top right</option>
+                          <option value="bottom-left" data-i18n="cards.positionBottomLeft">Bottom left</option>
+                          <option value="bottom-center" data-i18n="cards.positionBottomCenter">Bottom center</option>
+                          <option value="bottom-right" data-i18n="cards.positionBottomRight">Bottom right</option>
+                        </select>
+                      </label>
+                      <label>
+                        <span data-i18n="cards.konmaiPosition">KONMAI</span>
+                        <select id="card-konmai-position">
+                          <option value="top-left" data-i18n="cards.positionTopLeft">Top left</option>
+                          <option value="top-center" data-i18n="cards.positionTopCenter">Top center</option>
+                          <option value="top-right" data-i18n="cards.positionTopRight">Top right</option>
+                          <option value="bottom-left" data-i18n="cards.positionBottomLeft">Bottom left</option>
+                          <option value="bottom-center" data-i18n="cards.positionBottomCenter">Bottom center</option>
+                          <option value="bottom-right" data-i18n="cards.positionBottomRight" selected>Bottom right</option>
+                        </select>
+                      </label>
+                      <label>
+                        <span data-i18n="cards.namePosition">Card name</span>
+                        <select id="card-name-position">
+                          <option value="top-left" data-i18n="cards.positionTopLeft">Top left</option>
+                          <option value="top-center" data-i18n="cards.positionTopCenter">Top center</option>
+                          <option value="top-right" data-i18n="cards.positionTopRight">Top right</option>
+                          <option value="center-left" data-i18n="cards.positionCenterLeft">Center left</option>
+                          <option value="center" data-i18n="cards.positionCenter">Center</option>
+                          <option value="center-right" data-i18n="cards.positionCenterRight">Center right</option>
+                          <option value="bottom-left" data-i18n="cards.positionBottomLeft" selected>Bottom left</option>
+                          <option value="bottom-center" data-i18n="cards.positionBottomCenter">Bottom center</option>
+                          <option value="bottom-right" data-i18n="cards.positionBottomRight">Bottom right</option>
+                        </select>
+                      </label>
+                      <label>
+                        <span data-i18n="cards.cardIdPosition">Card ID</span>
+                        <select id="card-id-position">
+                          <option value="top-left" data-i18n="cards.positionTopLeft">Top left</option>
+                          <option value="top-center" data-i18n="cards.positionTopCenter">Top center</option>
+                          <option value="top-right" data-i18n="cards.positionTopRight">Top right</option>
+                          <option value="bottom-left" data-i18n="cards.positionBottomLeft" selected>Bottom left</option>
+                          <option value="bottom-center" data-i18n="cards.positionBottomCenter">Bottom center</option>
+                          <option value="bottom-right" data-i18n="cards.positionBottomRight">Bottom right</option>
+                        </select>
+                      </label>
+                    </div>
+                  </fieldset>
 
                   <fieldset class="card-appearance-picker">
                     <legend data-i18n="cards.appearance">Appearance</legend>
@@ -504,6 +565,7 @@
                     <button id="remove-card-image" class="secondary-button" type="button" data-i18n="cards.removeImage">Remove image</button>
                     <small data-i18n="cards.imageHelp">The image is resized and saved with this card in browser storage.</small>
                   </div>
+                  </div>
                 </div>
 
                 <footer class="card-editor-footer">
@@ -513,7 +575,7 @@
                   <button class="primary-button" type="submit" data-i18n="button.save">Save</button>
                 </footer>
               </form>
-            </aside>
+            </dialog>
           </div>
         </div>
       </section>

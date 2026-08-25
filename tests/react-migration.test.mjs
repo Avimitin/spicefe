@@ -71,6 +71,48 @@ test('keeps connection diagnostics in the server library instead of the streamin
   assert.match(components, /<ChannelStatus channel="API"/);
 });
 
+test('card position controls feed the shared React card renderer', () => {
+  const html = read('../public/index.html');
+  const app = read('../src/app.tsx');
+  const components = read('../src/components.tsx');
+
+  for (const id of [
+    'card-eamusement-position',
+    'card-konmai-position',
+    'card-id-position',
+    'card-name-position',
+  ]) {
+    assert.match(html, new RegExp(`id="${id}"`));
+    assert.match(app, new RegExp(`element\\('${id}'\\)\\.value`));
+  }
+  assert.match(components, /data-position=\{card\.eAmusementPosition\}/);
+  assert.match(components, /data-position=\{card\.konmaiPosition\}/);
+  assert.match(components, /data-position=\{card\.cardIdPosition\}/);
+  assert.match(components, /data-position=\{card\.namePosition\}/);
+});
+
+test('opens new and existing card editing in a dedicated modal', () => {
+  const html = read('../public/index.html');
+  const app = read('../src/app.tsx');
+
+  assert.match(html, /<dialog id="card-editor-dialog" class="card-editor-dialog"/);
+  assert.doesNotMatch(html, /<aside class="card-editor"/);
+  assert.match(app, /function showCardEditor\(/);
+  assert.match(app, /cardEditorDialog\.showModal\(\)/);
+  assert.match(app, /function startNewCard[\s\S]*?showCardEditor\(focus\)/);
+  assert.match(app, /function editCard[\s\S]*?showCardEditor\(focus\)/);
+});
+
+test('only shows card backup selectors while explicit backup mode is active', () => {
+  const app = read('../src/app.tsx');
+  const components = read('../src/components.tsx');
+
+  assert.match(app, /let cardBackupMode = false/);
+  assert.match(app, /cardBackupAction\(cardBackupMode, selectedCardBackupIds\.size\)/);
+  assert.match(app, /exportCardsButton\.addEventListener\('click', handleCardBackupAction\)/);
+  assert.match(components, /\{backupMode \? \([\s\S]*?className="managed-card-backup-select"[\s\S]*?\) : null\}/);
+});
+
 test('ships React runtime provenance and its complete shared license', () => {
   const source = read('../public/vendor/react/SOURCE.md');
   const license = read('../public/vendor/react/LICENSE.MIT.txt');

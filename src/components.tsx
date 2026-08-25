@@ -15,6 +15,10 @@ interface Card {
   appearance: string;
   color: string;
   image: string | null;
+  eAmusementPosition: string;
+  konmaiPosition: string;
+  cardIdPosition: string;
+  namePosition: string;
 }
 
 interface GameIcon {
@@ -143,17 +147,31 @@ export function CreditCard({
 
   const content = (
     <>
-      <span className="ea-card-brand">
+      <span
+        className="ea-card-brand ea-card-positioned"
+        data-position={card.eAmusementPosition}
+      >
         <img src={EA_LOGO_SOURCE} alt="" decoding="async" />
       </span>
-      <span ref={nameRef} className="ea-card-name" title={displayName}>
+      <span
+        ref={nameRef}
+        className="ea-card-name"
+        data-position={card.namePosition}
+        title={displayName}
+      >
         <span className="ea-card-name-text">{displayName}</span>
       </span>
-      <span className="ea-card-footer">
-        <span className="ea-card-number">{formatCardNumber(card.number)}</span>
-        <span className="ea-card-logo">
-          <img src={KONMAI_LOGO_SOURCE} alt="" decoding="async" />
-        </span>
+      <span
+        className="ea-card-number ea-card-positioned"
+        data-position={card.cardIdPosition}
+      >
+        {formatCardNumber(card.number)}
+      </span>
+      <span
+        className="ea-card-logo ea-card-positioned"
+        data-position={card.konmaiPosition}
+      >
+        <img src={KONMAI_LOGO_SOURCE} alt="" decoding="async" />
       </span>
     </>
   );
@@ -264,6 +282,7 @@ export function GameIconGroups({ groups, selectedId, t, onSelect, onRemove }: {
 export function CardCollection({
   cards,
   editingCardId,
+  backupMode,
   backupSelection,
   t,
   onEdit,
@@ -271,6 +290,7 @@ export function CardCollection({
 }: {
   cards: Card[];
   editingCardId: string | null;
+  backupMode: boolean;
   backupSelection: ReadonlySet<string>;
   t: Translate;
   onEdit: (id: string) => void;
@@ -294,15 +314,17 @@ export function CardCollection({
           onActivate={() => onEdit(card.id)}
           className="ea-card-library-preview"
         />
-        <label className="managed-card-backup-select">
-          <input
-            type="checkbox"
-            checked={selectedForBackup}
-            aria-label={t('cards.backupSelectLabel', { name: displayName })}
-            onChange={(event) => onBackupSelectionChange(card.id, event.currentTarget.checked)}
-          />
-          <span>{t('cards.backupSelect')}</span>
-        </label>
+        {backupMode ? (
+          <label className="managed-card-backup-select">
+            <input
+              type="checkbox"
+              checked={selectedForBackup}
+              aria-label={t('cards.backupSelectLabel', { name: displayName })}
+              onChange={(event) => onBackupSelectionChange(card.id, event.currentTarget.checked)}
+            />
+            <span>{t('cards.backupSelect')}</span>
+          </label>
+        ) : null}
       </article>
     );
   });

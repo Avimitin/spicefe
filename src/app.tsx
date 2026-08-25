@@ -11,6 +11,7 @@ import {
   StreamCardList,
 } from './components';
 import {
+  cardBackupAction,
   cardBackupArchiveName,
   createCardBackupArchive,
 } from './card-backup';
@@ -167,6 +168,7 @@ const cardLibrary = element('card-library');
 const serverList = element('server-list');
 const cardList = element('card-list');
 const cardEmpty = element('card-empty');
+const cardEditorDialog = element('card-editor-dialog');
 const cardForm = element('card-form');
 const cardPreview = element('card-preview');
 const importCardsButton = element('import-cards');
@@ -227,6 +229,7 @@ const reachability = new Map();
 const reachabilityInFlight = new Map();
 let editingCardId: string | null = null;
 let cardDraft: CardDraft | Card | null = null;
+let cardBackupMode = false;
 const selectedCardBackupIds = new Set<string>();
 let selectedCardReader = 0;
 let cardInsertPending = false;
@@ -387,6 +390,10 @@ function cardFromEditor() {
     number: normalizeCardNumberInput(element('card-number').value),
     appearance: selectedCardAppearance(),
     color: element('card-color').value.toUpperCase(),
+    eAmusementPosition: element('card-eamusement-position').value,
+    konmaiPosition: element('card-konmai-position').value,
+    cardIdPosition: element('card-id-position').value,
+    namePosition: element('card-name-position').value,
   };
 }
 
@@ -421,6 +428,10 @@ function fillCardEditor(card: Card | CardDraft, existing = false) {
   element('card-number').value = card.number;
   element('card-number').readOnly = existing;
   element('card-color').value = card.color.toLowerCase();
+  element('card-eamusement-position').value = card.eAmusementPosition;
+  element('card-konmai-position').value = card.konmaiPosition;
+  element('card-id-position').value = card.cardIdPosition;
+  element('card-name-position').value = card.namePosition;
   const appearance = cardForm.querySelector(
     `input[name="card-appearance"][value="${card.appearance}"]`,
   ) || cardForm.querySelector('input[name="card-appearance"][value="gray-light"]');
@@ -435,16 +446,27 @@ function fillCardEditor(card: Card | CardDraft, existing = false) {
 
 function focusCardEditor() {
   element('card-name').focus({ preventScroll: true });
-  if (matchMedia('(max-width: 820px)').matches) {
-    element('card-editor-title').scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+
+function showCardEditor(focus = true) {
+  if (!cardEditorDialog.open) {
+    cardEditorDialog.showModal();
+  }
+  renderCardCollection();
+  if (focus) {
+    requestAnimationFrame(focusCardEditor);
+  }
+}
+
+function closeCardEditor() {
+  if (cardEditorDialog.open) {
+    cardEditorDialog.close();
   }
 }
 
 function startNewCard(focus = true) {
   fillCardEditor(newCardDraft(), false);
-  if (focus) {
-    requestAnimationFrame(focusCardEditor);
-  }
+  showCardEditor(focus);
 }
 
 function editCard(id: string, focus = true) {
@@ -453,10 +475,7 @@ function editCard(id: string, focus = true) {
     return;
   }
   fillCardEditor(card, true);
-  renderCardCollection();
-  if (focus) {
-    requestAnimationFrame(focusCardEditor);
-  }
+  showCardEditor(focus);
 }
 
 function updateCardBackupControls(cards: Card[]) {
@@ -466,12 +485,28 @@ function updateCardBackupControls(cards: Card[]) {
       selectedCardBackupIds.delete(id);
     }
   }
+  if (cards.length === 0) {
+    cardBackupMode = false;
+    selectedCardBackupIds.clear();
+  }
   const count = selectedCardBackupIds.size;
-  exportCardsButton.disabled = count === 0;
-  exportCardsButton.textContent = t(count === 0 ? 'cards.export' : 'cards.exportCount', { count });
+  const action = cardBackupAction(cardBackupMode, count);
+  const labelKey = action === 'start'
+    ? 'cards.export'
+    : action === 'cancel'
+      ? 'cards.cancelBackup'
+      : 'cards.downloadBackup';
+  exportCardsButton.disabled = cards.length === 0;
+  exportCardsButton.textContent = t(labelKey, { count });
+  exportCardsButton.classList.toggle('primary-button', action === 'download');
+  exportCardsButton.classList.toggle('secondary-button', action !== 'download');
+  exportCardsButton.setAttribute('aria-pressed', String(cardBackupMode));
 }
 
 function setCardBackupSelection(id: string, selected: boolean) {
+  if (!cardBackupMode) {
+    return;
+  }
   if (selected) {
     selectedCardBackupIds.add(id);
   } else {
@@ -487,6 +522,7 @@ function renderCardCollection() {
     <CardCollection
       cards={cards}
       editingCardId={editingCardId}
+      backupMode={cardBackupMode}
       backupSelection={selectedCardBackupIds}
       t={t}
       onEdit={editCard}
@@ -519,27 +555,33 @@ function exportSelectedCards() {
     download.remove();
     setTimeout(() => URL.revokeObjectURL(url), 30_000);
     showToast(t('cards.exported', { count: cards.length }));
+    cardBackupMode = false;
+    selectedCardBackupIds.clear();
+    renderCardCollection();
   } catch {
     showToast(t('cards.exportFailed'), 7000);
   }
 }
 
-function ensureCardEditor() {
-  if (cardDraft) {
+function handleCardBackupAction() {
+  const action = cardBackupAction(cardBackupMode, selectedCardBackupIds.size);
+  if (action === 'start') {
+    cardBackupMode = true;
+    selectedCardBackupIds.clear();
+    renderCardCollection();
     return;
   }
-  const first = cardStore.list()[0];
-  if (first) {
-    fillCardEditor(first, true);
-  } else {
-    startNewCard(false);
+  if (action === 'cancel') {
+    cardBackupMode = false;
+    selectedCardBackupIds.clear();
+    renderCardCollection();
+    return;
   }
+  exportSelectedCards();
 }
 
 function renderCardManager() {
-  ensureCardEditor();
   renderCardCollection();
-  renderCardPreview();
 }
 
 function setCardImportPending(pending: boolean) {
@@ -711,19 +753,11 @@ function importSelectedRemoteCards() {
   }
 
   try {
-    const wasEmpty = cardStore.list().length === 0;
     const imported = cardStore.importCards(selected.map((card: any) => newCard({
       number: card.cardId,
       name: card.fileName,
     })));
-    const editorIsBlank = !editingCardId
-      && !element('card-name').value.trim()
-      && !normalizeCardNumberInput(element('card-number').value);
-    if (wasEmpty && editorIsBlank && imported[0]) {
-      fillCardEditor(imported[0], true);
-    }
     renderCardCollection();
-    renderCardPreview();
     if (!cardMenu.hidden) {
       renderStreamCardMenu();
     }
@@ -1454,6 +1488,9 @@ function renderMainView(snapshot: SessionSnapshot): MainView {
   cardLibrary.hidden = view !== 'cards';
   browserSetup.hidden = view !== 'browser-setup';
   usageGuidePage.hidden = view !== 'guide';
+  if (view !== 'cards') {
+    closeCardEditor();
+  }
 
   const streaming = view === 'stream';
   const tickerStreaming = streaming && snapshot.profile?.tickerEnabled;
@@ -1887,7 +1924,7 @@ element('guide-self-host').addEventListener('click', (event: Event) => {
 });
 element('add-server').addEventListener('click', createProfileAndEdit);
 element('add-card').addEventListener('click', () => startNewCard());
-exportCardsButton.addEventListener('click', exportSelectedCards);
+exportCardsButton.addEventListener('click', handleCardBackupAction);
 importCardsButton.addEventListener('click', importRemoteCards);
 element('card-import-close').addEventListener('click', closeCardImportDialog);
 cardImportDismiss.addEventListener('click', closeCardImportDialog);
@@ -1984,13 +2021,12 @@ cardForm.addEventListener('submit', (event: Event) => {
   }
 
   try {
-    const saved = cardStore.upsert(candidate);
-    fillCardEditor(saved, true);
+    cardStore.upsert(candidate);
     renderCardCollection();
     if (!cardMenu.hidden) {
       renderStreamCardMenu();
     }
-    element('card-save-status').textContent = t('cards.saved');
+    closeCardEditor();
     showToast(t('toast.cardSaved'));
   } catch {
     element('card-save-status').textContent = t('cards.saveFailed');
@@ -2006,6 +2042,15 @@ for (const id of ['card-name', 'card-number']) {
     }
     renderCardPreview();
   });
+}
+
+for (const id of [
+  'card-eamusement-position',
+  'card-konmai-position',
+  'card-id-position',
+  'card-name-position',
+]) {
+  element(id).addEventListener('change', renderCardPreview);
 }
 
 for (const input of cardForm.querySelectorAll('input[name="card-appearance"]')) {
@@ -2042,9 +2087,14 @@ element('card-image').addEventListener('change', async () => {
   if (!file || !cardDraft) {
     return;
   }
+  const draft = cardDraft;
   element('card-save-status').textContent = t('cards.processingImage');
   try {
-    cardDraft.image = await cardImageDataUrl(file);
+    const image = await cardImageDataUrl(file);
+    if (cardDraft !== draft || !cardEditorDialog.open) {
+      return;
+    }
+    draft.image = image;
     cardForm.querySelector('input[name="card-appearance"][value="image"]').checked = true;
     element('card-save-status').textContent = t('cards.imageReady');
     renderCardPreview();
@@ -2066,16 +2116,16 @@ element('remove-card-image').addEventListener('click', () => {
   renderCardPreview();
 });
 
-element('cancel-card').addEventListener('click', () => {
-  const existing = editingCardId && cardStore.get(editingCardId);
-  const first = cardStore.list()[0];
-  if (existing) {
-    fillCardEditor(existing, true);
-  } else if (first) {
-    fillCardEditor(first, true);
-  } else {
-    startNewCard(false);
-  }
+element('close-card-editor').addEventListener('click', closeCardEditor);
+element('cancel-card').addEventListener('click', closeCardEditor);
+cardEditorDialog.addEventListener('cancel', (event: Event) => {
+  event.preventDefault();
+  closeCardEditor();
+});
+cardEditorDialog.addEventListener('close', () => {
+  cardDraft = null;
+  editingCardId = null;
+  renderReact(reactRoots.cardPreview, null);
   renderCardCollection();
 });
 
@@ -2096,13 +2146,8 @@ deleteCardDialog.addEventListener('close', () => {
   }
   try {
     cardStore.remove(editingCardId);
-    const first = cardStore.list()[0];
-    if (first) {
-      fillCardEditor(first, true);
-    } else {
-      startNewCard(false);
-    }
     renderCardCollection();
+    closeCardEditor();
     showToast(t('toast.cardDeleted'));
   } catch {
     showToast(t('cards.deleteFailed'), 7000);
@@ -2325,11 +2370,13 @@ function renderLocalizedUi() {
   if (iconDialog.open) {
     renderIconGroups();
   }
-  if (cardDraft) {
+  if (cardEditorDialog.open && cardDraft) {
     element('card-editor-title').textContent = t(editingCardId ? 'cards.editTitle' : 'cards.newTitle');
     element('generate-card-number').textContent = t(editingCardId ? 'cards.copyId' : 'cards.generate');
-    renderCardCollection();
     renderCardPreview();
+  }
+  if (renderedMainView === 'cards') {
+    renderCardCollection();
   }
   if (!cardMenu.hidden) {
     renderStreamCardMenu();
