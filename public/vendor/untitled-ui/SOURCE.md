@@ -9,6 +9,7 @@ The local component foundation derives from these upstream files:
 
 - `src/ui/button.tsx` — `components/base/buttons/button.tsx`
 - `src/ui/checkbox.tsx` — `components/base/checkbox/checkbox.tsx`
+- `src/ui/toggle.tsx` — `components/base/toggle/toggle.tsx`
 - `src/ui/status-badge.tsx` — `components/base/badges/badges.tsx`
 - `src/ui/cx.ts` — `utils/cx.ts`
 - the e-amusement card variants —

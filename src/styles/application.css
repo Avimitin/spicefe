@@ -5813,8 +5813,8 @@ body {
   display: grid;
   min-width: 0;
   align-content: start;
-  gap: 5px;
-  padding-bottom: 8px;
+  gap: 8px;
+  padding: 2px 0 6px;
 }
 
 .segment-display-heading {
@@ -5867,83 +5867,8 @@ body {
   stroke-width: 1.7;
 }
 
-.segment-display-control {
-  display: flex;
-  min-height: 56px;
-  align-items: center;
-  gap: 9px;
-  padding: 8px 10px;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: var(--shadow-xs);
-  color: var(--text);
-  cursor: pointer;
-}
-
-.segment-display-control input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.segment-display-checkbox {
-  display: grid;
-  width: 18px;
-  height: 18px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid var(--line-strong);
-  border-radius: 5px;
-  background: #ffffff;
-  color: transparent;
-}
-
-.segment-display-checkbox svg {
-  width: 12px;
-  height: 10px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.8;
-}
-
-.segment-display-control strong {
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 16px;
-}
-
-.segment-display-option > small {
-  color: var(--faint);
-  font-size: 10px;
-  line-height: 14px;
-}
-
-.segment-display-option:hover .segment-display-control {
-  background: #fafafa;
-}
-
-.segment-display-option:has(input:checked) .segment-display-control {
-  border-color: #b692f6;
-  background: #f9f5ff;
-  box-shadow: 0 0 0 1px #b692f6;
-  color: #53389e;
-}
-
-.segment-display-option input:checked + .segment-display-checkbox {
-  border-color: #7f56d9;
-  background: #7f56d9;
-  color: #ffffff;
-}
-
-.segment-display-option:has(input:focus-visible) .segment-display-control {
-  outline: 2px solid #9e77ed;
-  outline-offset: 2px;
+#ticker-toggle-root {
+  min-width: 0;
 }
 
 .stage[data-main-view="stream"][data-output-mode="ticker"] {
@@ -6245,10 +6170,6 @@ body {
 }
 
 @media (max-width: 520px) {
-  .segment-display-control {
-    min-height: 48px;
-  }
-
   .ticker-hardware {
     width: min(96%, calc((100dvh - 92px) * 5.82));
   }

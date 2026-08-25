@@ -78,7 +78,7 @@ complete shared license ship in `public/vendor/react-aria/`.
 
 ## Untitled UI React
 
-The Button, Checkbox, Status Badge, class-merging utility, visual tokens, and
+The Button, Checkbox, Toggle, Status Badge, class-merging utility, visual tokens, and
 credit-card treatments are adapted from the free, open-source
 [`untitleduico/react`](https://github.com/untitleduico/react) design system,
 revision `d29a2adf6909e5aaeb234bccf82dcffeb67fdb2e`. No Untitled UI PRO source,

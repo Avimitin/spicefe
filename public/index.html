@@ -1011,14 +1011,7 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run</code></pre>
               <span data-i18n="ticker.previewButton">Preview display</span>
             </button>
           </div>
-          <label class="segment-display-control">
-            <input id="ticker-enabled" name="ticker-enabled" type="checkbox">
-            <span class="segment-display-checkbox" aria-hidden="true">
-              <svg viewBox="0 0 12 10"><path d="m1 5 3 3 7-7"/></svg>
-            </span>
-            <strong data-i18n="settings.tickerEnabled">Enable 16 Segment Display</strong>
-          </label>
-          <small data-i18n="settings.tickerHelp">Use this only with older beatmania IIDX releases that drive the cabinet’s 16-segment display. Recent IIDX releases may provide only a subscreen.</small>
+          <div id="ticker-toggle-root"></div>
         </div>
       </div>
 

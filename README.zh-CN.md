@@ -407,7 +407,7 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
 
 ## 界面与字体资源
 
-共享的 Button、Checkbox 与 Status Badge 组件，以及中性配色、紧凑尺寸、焦点
+共享的 Button、Checkbox、Toggle 与 Status Badge 组件，以及中性配色、紧凑尺寸、焦点
 状态和克制的阴影，均改编自采用 MIT 许可证的开源
 [`untitleduico/react`](https://github.com/untitleduico/react) 设计系统；flake
 固定了准确的上游版本。组件使用 React Aria 提供无障碍交互，并由 Nix 提供的

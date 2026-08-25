@@ -474,7 +474,7 @@ run.
 
 ## Interface and font assets
 
-The shared Button, Checkbox, and Status Badge components, plus the neutral
+The shared Button, Checkbox, Toggle, and Status Badge components, plus the neutral
 palette, compact geometry, focus states, and restrained shadows, are adapted
 from the MIT-licensed open-source
 [`untitleduico/react`](https://github.com/untitleduico/react) design system at

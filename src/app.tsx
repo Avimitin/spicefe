@@ -10,6 +10,7 @@ import {
   ServerList,
   StreamCardList,
 } from './components';
+import { Toggle } from './ui';
 import {
   cardBackupAction,
   cardBackupArchiveName,
@@ -144,6 +145,7 @@ const iconDialog = element('icon-dialog');
 const deleteDialog = element('delete-dialog');
 const form = element('profile-form');
 const streamSettings = element('stream-settings');
+const tickerToggleRoot = element('ticker-toggle-root');
 const iconGroups = element('game-icon-groups');
 const customIconInput = element('custom-icon-upload');
 const customIconStatus = element('custom-icon-status');
@@ -213,6 +215,7 @@ const reactRoots = {
   cardPreview: createRoot(cardPreview),
   iconGroups: createRoot(iconGroups),
   serverList: createRoot(serverList),
+  tickerToggle: createRoot(tickerToggleRoot),
 };
 
 function renderReact(root: ReturnType<typeof createRoot>, content: React.ReactNode) {
@@ -245,6 +248,7 @@ let tickerPreviewOffset = 0;
 let tickerPreviewTimer: ReturnType<typeof setTimeout> | null = null;
 let editingProfile: Profile | null = null;
 let editingProfileIsNew = false;
+let tickerEnabledDraft = false;
 
 function translationParameters(node: HTMLElement) {
   const screen = node.getAttribute('data-i18n-screen');
@@ -851,6 +855,30 @@ function renderProfileLists() {
   renderSnapshot(session.snapshot, false);
 }
 
+function renderTickerModeToggle() {
+  renderReact(reactRoots.tickerToggle, (
+    <Toggle
+      id="ticker-enabled"
+      name="ticker-enabled"
+      size="sm"
+      className="w-full"
+      isSelected={tickerEnabledDraft}
+      label={t('settings.tickerEnabled')}
+      hint={t('settings.tickerHelp')}
+      onChange={(isSelected) => {
+        tickerEnabledDraft = isSelected;
+        renderTickerModeToggle();
+        syncTickerModeControls();
+      }}
+    />
+  ));
+}
+
+function setTickerModeEnabled(enabled: boolean) {
+  tickerEnabledDraft = enabled;
+  renderTickerModeToggle();
+}
+
 function fillForm(profile: Profile) {
   element('profile-name').value = profile.name;
   setFormGameIcon(profile.iconId);
@@ -862,7 +890,7 @@ function fillForm(profile: Profile) {
   element('fps').value = String(profile.fps);
   element('quality').value = String(profile.quality);
   element('view-mode').value = profile.viewMode;
-  element('ticker-enabled').checked = profile.tickerEnabled;
+  setTickerModeEnabled(profile.tickerEnabled);
   syncTickerModeControls();
   element('view-mode-button').textContent = t(`display.${profile.viewMode}`);
   stage.dataset.viewMode = profile.viewMode;
@@ -883,12 +911,12 @@ function profileFromForm() {
     fps: element('fps').value,
     quality: element('quality').value,
     viewMode: element('view-mode').value,
-    tickerEnabled: element('ticker-enabled').checked,
+    tickerEnabled: tickerEnabledDraft,
   });
 }
 
 function syncTickerModeControls() {
-  const enabled = element('ticker-enabled').checked;
+  const enabled = tickerEnabledDraft;
   streamSettings.hidden = enabled;
   if (enabled) {
     streamSettings.open = false;
@@ -2198,8 +2226,6 @@ element('show-password').addEventListener('click', () => {
   element('show-password').textContent = t(showing ? 'button.show' : 'button.hide');
 });
 
-element('ticker-enabled').addEventListener('change', syncTickerModeControls);
-
 element('ticker-preview-button').addEventListener('click', openTickerPreview);
 tickerPreviewInput.addEventListener('input', startTickerPreviewMarquee);
 element('ticker-preview-clean').addEventListener('click', (event: Event) => {
@@ -2369,6 +2395,7 @@ element('self-host-done').addEventListener('click', () => {
 
 function renderLocalizedUi() {
   applyDocumentTranslations();
+  renderTickerModeToggle();
   renderTickerPreviewText();
   renderConnectionButton();
   renderCompatibility();

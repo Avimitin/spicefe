@@ -177,6 +177,7 @@
               cmp public/vendor/untitled-ui/LICENSE.MIT.txt ${untitledUi}/LICENSE
               test -f ${untitledUi}/components/base/buttons/button.tsx
               test -f ${untitledUi}/components/base/checkbox/checkbox.tsx
+              test -f ${untitledUi}/components/base/toggle/toggle.tsx
               test -f ${untitledUi}/components/base/badges/badges.tsx
               test -f ${untitledUi}/utils/cx.ts
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Regular-Latin1.woff2 ${ibmPlexRegularLatin1}

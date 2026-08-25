@@ -27,17 +27,30 @@ test('pins React source packages while Nix supplies compiler binaries', () => {
 test('uses the pinned Untitled UI React foundation for shared controls', () => {
   const button = read('../src/ui/button.tsx');
   const checkbox = read('../src/ui/checkbox.tsx');
+  const toggle = read('../src/ui/toggle.tsx');
   const badge = read('../src/ui/status-badge.tsx');
   const components = read('../src/components.tsx');
+  const app = read('../src/app.tsx');
+  const markup = read('../public/index.html');
   const source = read('../public/vendor/untitled-ui/SOURCE.md');
 
   assert.match(button, /Button as AriaButton/);
   assert.match(checkbox, /Checkbox as AriaCheckbox/);
+  assert.match(toggle, /Switch as AriaSwitch/);
+  assert.match(toggle, /hint\?: ReactNode/);
+  assert.match(toggle, /return \(\s*<div\s+aria-hidden="true"/);
+  assert.doesNotMatch(toggle, /<span\s+aria-hidden="true"/);
+  assert.match(toggle, /shrink-0 cursor-pointer/);
   assert.match(button, /shadow-xs-skeuomorphic/);
   assert.match(badge, /export function StatusBadge/);
   assert.match(components, /<Button[\s\S]*?<Checkbox[\s\S]*?<StatusBadge/);
   assert.match(source, /d29a2adf6909e5aaeb234bccf82dcffeb67fdb2e/);
   assert.match(source, /components\/base\/buttons\/button\.tsx/);
+  assert.match(source, /components\/base\/toggle\/toggle\.tsx/);
+  assert.match(app, /tickerToggle: createRoot\(tickerToggleRoot\)/);
+  assert.match(app, /<Toggle[\s\S]*?label=\{t\('settings\.tickerEnabled'\)\}[\s\S]*?hint=\{t\('settings\.tickerHelp'\)\}/);
+  assert.match(markup, /id="ticker-toggle-root"/);
+  assert.doesNotMatch(markup, /segment-display-control|segment-display-checkbox/);
   assert.doesNotMatch(source, /does not include React|plain CSS/);
 });
 
@@ -100,6 +113,7 @@ test('React owns the repeated interactive collections', () => {
     'cardPreview',
     'iconGroups',
     'serverList',
+    'tickerToggle',
   ]) {
     assert.match(app, new RegExp(`${root}: createRoot\\(`));
   }
