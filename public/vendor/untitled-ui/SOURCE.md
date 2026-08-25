@@ -11,14 +11,16 @@ The local component foundation derives from these upstream files:
 - `src/ui/checkbox.tsx` — `components/base/checkbox/checkbox.tsx`
 - `src/ui/toggle.tsx` — `components/base/toggle/toggle.tsx`
 - `src/ui/status-badge.tsx` — `components/base/badges/badges.tsx`
+- `src/ui/carousel.tsx` — `components/application/carousel/carousel-base.tsx`
 - `src/ui/cx.ts` — `utils/cx.ts`
 - the e-amusement card variants —
   `components/shared-assets/credit-card/credit-card.tsx`
 
 Variants, sizes, tokens, and dependencies are narrowed to what spicefe uses.
 The resulting source is compiled locally with the Nix-provided Tailwind CSS
-4.3.3 executable. React Aria Components and `tailwind-merge` are independently
-version-locked npm source dependencies with their own notices and licenses.
+4.3.3 executable. React Aria Components, Embla Carousel, and `tailwind-merge`
+are independently version-locked npm source dependencies with their own
+notices and licenses.
 
 The referenced Untitled UI source is licensed under the MIT License. See
 `LICENSE.MIT.txt` in this directory. Untitled UI PRO source, assets, and

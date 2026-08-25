@@ -19,17 +19,21 @@
 | :---: | :---: |
 | [![spicefe 欢迎页](./docs/screenshots/welcome.png)](./docs/screenshots/welcome.png) | [![分别显示主机、API 与视频状态的 spicefe 服务器库](./public/assets/showcase/server-library.png)](./public/assets/showcase/server-library.png) |
 
-| 卡片管理 | 串流中插卡 |
+| 创建卡片 | 卡片库 |
 | :---: | :---: |
-| [![spicefe 虚拟 e-amusement 卡片管理页](./public/assets/showcase/card-library.png)](./public/assets/showcase/card-library.png) | [![实时副屏串流上方的 spicefe 插卡菜单](./public/assets/showcase/card-insert.png)](./public/assets/showcase/card-insert.png) |
+| [![spicefe 虚拟 e-amusement 卡片编辑器](./public/assets/showcase/card-create.png)](./public/assets/showcase/card-create.png) | [![spicefe 虚拟 e-amusement 卡片库](./public/assets/showcase/card-library.png)](./public/assets/showcase/card-library.png) |
 
-**GITADORA GALAXY WAVE DELTA 实时副屏**
+**无需离开串流即可插卡**
 
-[![通过 spicefe 串流的 GITADORA GALAXY WAVE DELTA 副屏](./public/assets/showcase/gitadora-stream.png)](./public/assets/showcase/gitadora-stream.png)
+[![实时副屏串流上方的 spicefe 插卡菜单](./public/assets/showcase/card-insert.png)](./public/assets/showcase/card-insert.png)
 
-**旧版 beatmania IIDX 米字屏**
+| beatmania IIDX 33 触控副屏 | GITADORA GALAXY WAVE DELTA 触控副屏 |
+| :---: | :---: |
+| [![通过 spicefe 串流的 beatmania IIDX 33 副屏](./public/assets/showcase/iidx-stream.png)](./public/assets/showcase/iidx-stream.png) | [![通过 spicefe 串流的 GITADORA GALAXY WAVE DELTA 副屏](./public/assets/showcase/gitadora-stream.png)](./public/assets/showcase/gitadora-stream.png) |
 
-https://github.com/user-attachments/assets/dab8b2ec-577d-4078-9c29-0bfeb0448908
+**旧版 beatmania IIDX 米字屏——最新录制**
+
+<video src="https://raw.githubusercontent.com/Avimitin/spicefe/main/public/assets/showcase/iidx-16-segment-display.mp4" controls title="spicefe 中的旧版 beatmania IIDX 米字屏"></video>
 
 `spicefe` 是一个可在全球静态托管、用于 spice2x 副屏视频流及旧版 beatmania
 IIDX 机台米字屏的局域网客户端。在手机、平板或其他现代浏览器中打开页面，选择
@@ -285,12 +289,6 @@ GitHub Pages 不处理 `_headers`，因此 Cloudflare Pages 使用的自定义�
 GitHub Actions 与 NixOS 官方安装器均固定到完整 commit ID。安装器可执行文件
 还固定为 Nix `2.35.1`，并且会在运行前用仓库中记录的 SHA-256 校验。
 
-### EdgeOne Pages
-
-直接上传 `public/`（或 `result/` 的内容）。其中的 `edgeone.json` 会设置响应
-头。在域名的 HTTPS 设置中保持 **Force HTTPS** 关闭，以确保
-`http://your-client-domain` 仍可访问。
-
 ### Cloudflare Pages
 
 不选择框架、不设置构建命令，并将 `public` 设为输出目录。Pages 会读取其中的
@@ -300,8 +298,6 @@ GitHub Actions 与 NixOS 官方安装器均固定到完整 commit ID。安装器
 上述部署设置可参考
 [GitHub Pages 自定义工作流](https://docs.github.com/zh/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)、
 [GitHub Pages HTTPS 配置](https://docs.github.com/zh/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https)、
-[EdgeOne 直接上传](https://pages.edgeone.ai/document/direct-upload)、
-[EdgeOne HTTPS 配置](https://pages.edgeone.ai/document/https-configuration-overview)、
 [Cloudflare Pages 响应头](https://developers.cloudflare.com/pages/configuration/headers/)
 和 [Cloudflare Always Use HTTPS](https://developers.cloudflare.com/ssl/edge-certificates/additional-options/always-use-https/)。
 
@@ -399,16 +395,17 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
 ## 依赖策略
 
 浏览器直接依赖均为纯 JavaScript 包：`react@19.2.8`、`react-dom@19.2.8`、
-`react-aria-components@1.20.0`、`tailwind-merge@3.6.0`、`jmuxer@2.1.1`
-与 `qrcode-generator@2.0.4`。npm 完整性元数据将直接和间接依赖锁定在精确
-版本，并禁用安装生命周期脚本。TypeScript、esbuild 与 Tailwind CSS 4.3.3
-均由固定的 Nixpkgs 提供，而非 npm。完整许可证和来源记录位于
-`public/vendor/`；构建不会下载或运行任何来自 npm 包的可执行二进制文件。
+`react-aria-components@1.20.0`、`embla-carousel-react@8.6.0`、
+`tailwind-merge@3.6.0`、`jmuxer@2.1.1` 与 `qrcode-generator@2.0.4`。npm
+完整性元数据将直接和间接依赖锁定在精确版本，并禁用安装生命周期脚本。
+TypeScript、esbuild 与 Tailwind CSS 4.3.3 均由固定的 Nixpkgs 提供，而非 npm。
+完整许可证和来源记录位于 `public/vendor/`；构建不会下载或运行任何来自 npm
+包的可执行二进制文件。
 
 ## 界面与字体资源
 
-共享的 Button、Checkbox、Toggle 与 Status Badge 组件，以及中性配色、紧凑尺寸、焦点
-状态和克制的阴影，均改编自采用 MIT 许可证的开源
+共享的 Button、Checkbox、Toggle、Status Badge 与 Carousel 组件，以及中性配色、
+紧凑尺寸、焦点状态和克制的阴影，均改编自采用 MIT 许可证的开源
 [`untitleduico/react`](https://github.com/untitleduico/react) 设计系统；flake
 固定了准确的上游版本。组件使用 React Aria 提供无障碍交互，并由 Nix 提供的
 Tailwind 编译工具类。各功能的专用布局继续保留在维护中的应用 CSS 中；部署结果
@@ -483,4 +480,4 @@ README 位于
 官方图标，可选游戏图标来自 `bicarus-dev/bemani_fan_site_icons`；界面样式借鉴
 开源 Untitled UI React，并使用 IBM Plex Sans，欢迎页主标题使用 Libre Caslon Text。
 许可证、固定版本以及 BEMANI 图像的注意事项详见
-[THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)。
+[第三方声明](./public/THIRD_PARTY_NOTICES.md)。

@@ -76,10 +76,19 @@ packages provide accessible browser interaction and state behavior and are
 licensed under the Apache License 2.0. Exact versions, source details, and the
 complete shared license ship in `public/vendor/react-aria/`.
 
+## Embla Carousel
+
+The welcome-page image carousels use `embla-carousel@8.6.0`,
+`embla-carousel-react@8.6.0`, and `embla-carousel-reactive-utils@8.6.0` from
+[`davidjerleke/embla-carousel`](https://github.com/davidjerleke/embla-carousel/tree/v8.6.0).
+They are licensed under the MIT License, Copyright (c) David Jerleke. Exact
+versions, npm integrity values, source details, and the complete shared license
+ship in `public/vendor/embla-carousel/`.
+
 ## Untitled UI React
 
-The Button, Checkbox, Toggle, Status Badge, class-merging utility, visual tokens, and
-credit-card treatments are adapted from the free, open-source
+The Button, Checkbox, Toggle, Status Badge, Carousel, class-merging utility,
+visual tokens, and credit-card treatments are adapted from the free, open-source
 [`untitleduico/react`](https://github.com/untitleduico/react) design system,
 revision `d29a2adf6909e5aaeb234bccf82dcffeb67fdb2e`. No Untitled UI PRO source,
 assets, or examples are included. The referenced source is licensed under the

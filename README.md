@@ -21,17 +21,21 @@
 | :---: | :---: |
 | [![spicefe welcome page](./docs/screenshots/welcome.png)](./docs/screenshots/welcome.png) | [![spicefe library showing independent Host, API, and Video states](./public/assets/showcase/server-library.png)](./public/assets/showcase/server-library.png) |
 
-| Card management | Insert cards while streaming |
+| Create a card | Card library |
 | :---: | :---: |
-| [![spicefe virtual e-amusement card management page](./public/assets/showcase/card-library.png)](./public/assets/showcase/card-library.png) | [![spicefe card insertion menu over a live subscreen stream](./public/assets/showcase/card-insert.png)](./public/assets/showcase/card-insert.png) |
+| [![spicefe virtual e-amusement card editor](./public/assets/showcase/card-create.png)](./public/assets/showcase/card-create.png) | [![spicefe virtual e-amusement card library](./public/assets/showcase/card-library.png)](./public/assets/showcase/card-library.png) |
 
-**Live GITADORA GALAXY WAVE DELTA subscreen**
+**Insert a card without leaving the stream**
 
-[![GITADORA GALAXY WAVE DELTA subscreen streaming through spicefe](./public/assets/showcase/gitadora-stream.png)](./public/assets/showcase/gitadora-stream.png)
+[![spicefe card insertion menu over a live subscreen stream](./public/assets/showcase/card-insert.png)](./public/assets/showcase/card-insert.png)
 
-**Old beatmania IIDX 16-segment display**
+| beatmania IIDX 33 touch subscreen | GITADORA GALAXY WAVE DELTA touch subscreen |
+| :---: | :---: |
+| [![beatmania IIDX 33 subscreen streaming through spicefe](./public/assets/showcase/iidx-stream.png)](./public/assets/showcase/iidx-stream.png) | [![GITADORA GALAXY WAVE DELTA subscreen streaming through spicefe](./public/assets/showcase/gitadora-stream.png)](./public/assets/showcase/gitadora-stream.png) |
 
-https://github.com/user-attachments/assets/dab8b2ec-577d-4078-9c29-0bfeb0448908
+**Old beatmania IIDX 16-segment display — updated recording**
+
+<video src="https://raw.githubusercontent.com/Avimitin/spicefe/main/public/assets/showcase/iidx-16-segment-display.mp4" controls title="Old beatmania IIDX 16-segment display in spicefe"></video>
 
 `spicefe` is a globally hostable, static LAN client for the spice2x subscreen
 stream and old beatmania IIDX cabinet ticker. Open the page on a phone, tablet,
@@ -335,12 +339,6 @@ GitHub Actions and the official NixOS installer are pinned to complete commit
 IDs. The installer executable is additionally pinned to Nix `2.35.1` and
 verified against a repository-recorded SHA-256 before it runs.
 
-### EdgeOne Pages
-
-Direct-upload `public/` (or the contents of `result/`). The included
-`edgeone.json` applies the response headers. In the domain's HTTPS settings,
-leave **Force HTTPS** disabled so `http://your-client-domain` remains usable.
-
 ### Cloudflare Pages
 
 Use no framework and no build command, with `public` as the output directory.
@@ -352,8 +350,6 @@ page.
 The deployment details referenced above are documented by
 [GitHub Pages custom workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages),
 [GitHub Pages HTTPS configuration](https://docs.github.com/en/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https),
-[EdgeOne direct upload](https://pages.edgeone.ai/document/direct-upload),
-[EdgeOne HTTPS configuration](https://pages.edgeone.ai/document/https-configuration-overview),
 [Cloudflare Pages headers](https://developers.cloudflare.com/pages/configuration/headers/),
 and [Cloudflare Always Use HTTPS](https://developers.cloudflare.com/ssl/edge-certificates/additional-options/always-use-https/).
 
@@ -465,18 +461,18 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
 
 The direct browser dependencies are pure-JavaScript packages: `react@19.2.8`,
 `react-dom@19.2.8`, `react-aria-components@1.20.0`,
-`tailwind-merge@3.6.0`, `jmuxer@2.1.1`, and `qrcode-generator@2.0.4`. Direct
-and transitive packages are exact-version locked with npm integrity metadata,
-and install lifecycle scripts are disabled. TypeScript, esbuild, and Tailwind
-CSS 4.3.3 come from pinned Nixpkgs instead of npm. Complete license and source
-records ship in `public/vendor/`; no executable npm binary is downloaded or
-run.
+`embla-carousel-react@8.6.0`, `tailwind-merge@3.6.0`, `jmuxer@2.1.1`, and
+`qrcode-generator@2.0.4`. Direct and transitive packages are exact-version
+locked with npm integrity metadata, and install lifecycle scripts are disabled.
+TypeScript, esbuild, and Tailwind CSS 4.3.3 come from pinned Nixpkgs instead of
+npm. Complete license and source records ship in `public/vendor/`; no executable
+npm binary is downloaded or run.
 
 ## Interface and font assets
 
-The shared Button, Checkbox, Toggle, and Status Badge components, plus the neutral
-palette, compact geometry, focus states, and restrained shadows, are adapted
-from the MIT-licensed open-source
+The shared Button, Checkbox, Toggle, Status Badge, and Carousel components,
+plus the neutral palette, compact geometry, focus states, and restrained
+shadows, are adapted from the MIT-licensed open-source
 [`untitleduico/react`](https://github.com/untitleduico/react) design system at
 the exact revision pinned by the flake. They use React Aria for accessible
 interaction and Tailwind utility classes compiled by Nix. Feature-specific
@@ -566,5 +562,5 @@ reference client. The site identity uses the official spice2x icon, and the
 optional game artwork comes from `bicarus-dev/bemani_fan_site_icons`. The UI
 treatment is adapted from open-source Untitled UI React and uses IBM Plex Sans;
 the welcome headline uses Libre Caslon Text. See
-[THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for licenses, revisions, and
+[third-party notices](./public/THIRD_PARTY_NOTICES.md) for licenses, revisions, and
 the BEMANI artwork caveat.

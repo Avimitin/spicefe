@@ -14,6 +14,7 @@
     "@types/react-dom": "19.2.5"
   },
   "dependencies": {
+    "embla-carousel-react": "8.6.0",
     "jmuxer": "2.1.1",
     "qrcode-generator": "2.0.4",
     "react": "19.2.8",

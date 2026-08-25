@@ -8,6 +8,7 @@ import {
   CreditCard,
   GameIconGroups,
   ServerList,
+  ShowcaseCarousel,
   StreamCardList,
 } from './components';
 import { Toggle } from './ui';
@@ -200,6 +201,8 @@ const cardMenuApiNote = element('card-menu-api-note');
 const deleteCardDialog = element('delete-card-dialog');
 const streamMessage = element('stream-message');
 const streamMetric = element('stream-metric');
+const showcaseStreamCarousel = element('showcase-stream-carousel');
+const showcaseCardsCarousel = element('showcase-cards-carousel');
 
 // Keep the long deployment guide next to the browser guide in source while
 // presenting connection setup and self-hosting as one continuous usage page.
@@ -220,11 +223,58 @@ const reactRoots = {
   cardPreview: createRoot(cardPreview),
   iconGroups: createRoot(iconGroups),
   serverList: createRoot(serverList),
+  showcaseCards: createRoot(showcaseCardsCarousel),
+  showcaseStream: createRoot(showcaseStreamCarousel),
   tickerToggle: createRoot(tickerToggleRoot),
 };
 
 function renderReact(root: ReturnType<typeof createRoot>, content: React.ReactNode) {
   flushSync(() => root.render(content));
+}
+
+function renderShowcaseCarousels() {
+  const labels = {
+    previousLabel: t('showcase.carouselPrevious'),
+    nextLabel: t('showcase.carouselNext'),
+    slideLabel: (current: number, total: number) => t('showcase.carouselSlide', {
+      current,
+      total,
+    }),
+  };
+  renderReact(reactRoots.showcaseStream, (
+    <ShowcaseCarousel
+      {...labels}
+      variant="stream"
+      label={t('showcase.streamCarouselAria')}
+      slides={[
+        {
+          src: './assets/showcase/iidx-stream.png',
+          alt: t('showcase.streamIidxAlt'),
+        },
+        {
+          src: './assets/showcase/gitadora-stream.png',
+          alt: t('showcase.streamGitadoraAlt'),
+        },
+      ]}
+    />
+  ));
+  renderReact(reactRoots.showcaseCards, (
+    <ShowcaseCarousel
+      {...labels}
+      variant="cards"
+      label={t('showcase.cardsCarouselAria')}
+      slides={[
+        {
+          src: './assets/showcase/card-create.png',
+          alt: t('showcase.cardsCreateAlt'),
+        },
+        {
+          src: './assets/showcase/card-library.png',
+          alt: t('showcase.cardsLibraryAlt'),
+        },
+      ]}
+    />
+  ));
 }
 
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
@@ -2390,6 +2440,7 @@ element('self-host-done').addEventListener('click', () => {
 
 function renderLocalizedUi() {
   applyDocumentTranslations();
+  renderShowcaseCarousels();
   renderTickerModeToggle();
   renderTickerPreviewText();
   renderConnectionButton();
@@ -2465,6 +2516,7 @@ window.addEventListener('resize', () => {
 setInterval(() => refreshReachability(true), REACHABILITY_INTERVAL_MS);
 
 applyDocumentTranslations();
+renderShowcaseCarousels();
 renderProfileLists();
 fillForm(store.selected());
 renderCompatibility();

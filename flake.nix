@@ -99,6 +99,10 @@
             url = "https://www.wallart.com/media/catalog/product/cache/871f459736130e239a3f5e6472128962/w/1/w12098-small.jpg";
             hash = "sha256-yG44KpRWo4de9Em4myVCjRpJaMiN+e//T7eOJnAkS5g=";
           };
+          emblaLicense = pkgs.fetchurl {
+            url = "https://raw.githubusercontent.com/davidjerleke/embla-carousel/v8.6.0/LICENSE";
+            hash = "sha256-mSSQBkuQ7JTDAv5fKdzBTLRBRYVwZORvn/5sj1EcEJM=";
+          };
           libreCaslonTextRegularWoff2 = pkgs.runCommand "LibreCaslonText-Regular.woff2"
             {
               nativeBuildInputs = [ pkgs.woff2 ];
@@ -129,7 +133,7 @@
             pname = "spicefe";
             version = "0.1.2";
             src = self;
-            npmDepsHash = "sha256-4dWAlP0EAQHHdJbj1QwbAX9Y3884hRkCzgkMDhnWSgw=";
+            npmDepsHash = "sha256-yQMqeuZPbTUJ+KeLqav/YcggZkI4PQbqanyXgeamSss=";
             npmFlags = [ "--ignore-scripts" ];
             nativeBuildInputs = [
               pkgs.esbuild
@@ -172,6 +176,14 @@
               cmp public/vendor/tailwind-merge/LICENSE.MIT.txt node_modules/tailwind-merge/LICENSE.md
               grep -Eq '"version": *"2\.1\.1"' node_modules/clsx/package.json
               cmp public/vendor/clsx/LICENSE.MIT.txt node_modules/clsx/license
+              for embla_package in \
+                embla-carousel \
+                embla-carousel-react \
+                embla-carousel-reactive-utils; do
+                grep -Eq '"version": *"8\.6\.0"' "node_modules/$embla_package/package.json"
+                grep -Eq '"license": *"MIT"' "node_modules/$embla_package/package.json"
+              done
+              cmp public/vendor/embla-carousel/LICENSE.MIT.txt ${emblaLicense}
               cmp public/vendor/bemani-fan-site-icons/UPSTREAM_README.md ${bemaniIcons}/README.md
               cmp public/assets/spice2x.ico ${spice2xSource}/src/spice2x/build/icon.ico
               cmp public/vendor/spice2x/LICENSE.GPL-3.0.txt ${spice2xSource}/LICENSE
@@ -180,6 +192,7 @@
               test -f ${untitledUi}/components/base/checkbox/checkbox.tsx
               test -f ${untitledUi}/components/base/toggle/toggle.tsx
               test -f ${untitledUi}/components/base/badges/badges.tsx
+              test -f ${untitledUi}/components/application/carousel/carousel-base.tsx
               test -f ${untitledUi}/utils/cx.ts
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Regular-Latin1.woff2 ${ibmPlexRegularLatin1}
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Regular-Pi.woff2 ${ibmPlexRegularPi}
@@ -212,7 +225,6 @@
                 <(tr -s '[:space:]' '\n' < public/vendor/ibm-plex-sans/LICENSE.OFL-1.1.txt) \
                 <(tr -s '[:space:]' '\n' < ${ibmPlexLicense})
               cmp LICENSE public/LICENSE.txt
-              cmp THIRD_PARTY_NOTICES.md public/THIRD_PARTY_NOTICES.md
               mkdir -p "$out"
               cp -R public/. "$out/"
               rm -r "$out/vendor/bemani-fan-site-icons/img"

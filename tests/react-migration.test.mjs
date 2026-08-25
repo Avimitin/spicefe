@@ -17,6 +17,7 @@ test('pins React source packages while Nix supplies compiler binaries', () => {
   assert.equal(manifest.dependencies.typescript, undefined);
   assert.equal(manifest.devDependencies.typescript, undefined);
   assert.equal(manifest.dependencies['react-aria-components'], '1.20.0');
+  assert.equal(manifest.dependencies['embla-carousel-react'], '8.6.0');
   assert.equal(manifest.dependencies['tailwind-merge'], '3.6.0');
   assert.match(manifest.scripts.build, /npm run typecheck && npm run styles && esbuild src\/app\.tsx/);
   assert.match(manifest.scripts.styles, /tailwindcss -i src\/styles\.css -o public\/assets\/styles\.css --minify/);
@@ -29,6 +30,7 @@ test('uses the pinned Untitled UI React foundation for shared controls', () => {
   const checkbox = read('../src/ui/checkbox.tsx');
   const toggle = read('../src/ui/toggle.tsx');
   const badge = read('../src/ui/status-badge.tsx');
+  const carousel = read('../src/ui/carousel.tsx');
   const components = read('../src/components.tsx');
   const app = read('../src/app.tsx');
   const markup = read('../public/index.html');
@@ -43,10 +45,13 @@ test('uses the pinned Untitled UI React foundation for shared controls', () => {
   assert.match(toggle, /shrink-0 cursor-pointer/);
   assert.match(button, /shadow-xs-skeuomorphic/);
   assert.match(badge, /export function StatusBadge/);
+  assert.match(carousel, /useEmblaCarousel/);
+  assert.match(carousel, /export const Carousel/);
   assert.match(components, /<Button[\s\S]*?<Checkbox[\s\S]*?<StatusBadge/);
   assert.match(source, /d29a2adf6909e5aaeb234bccf82dcffeb67fdb2e/);
   assert.match(source, /components\/base\/buttons\/button\.tsx/);
   assert.match(source, /components\/base\/toggle\/toggle\.tsx/);
+  assert.match(source, /components\/application\/carousel\/carousel-base\.tsx/);
   assert.match(app, /tickerToggle: createRoot\(tickerToggleRoot\)/);
   assert.match(app, /<Toggle[\s\S]*?label=\{t\('settings\.tickerEnabled'\)\}[\s\S]*?hint=\{t\('settings\.tickerHelp'\)\}/);
   assert.match(markup, /id="ticker-toggle-root"/);
@@ -137,6 +142,8 @@ test('React owns the repeated interactive collections', () => {
     'cardPreview',
     'iconGroups',
     'serverList',
+    'showcaseCards',
+    'showcaseStream',
     'tickerToggle',
   ]) {
     assert.match(app, new RegExp(`${root}: createRoot\\(`));
@@ -148,6 +155,7 @@ test('React owns the repeated interactive collections', () => {
     'CardImportOptions',
     'StreamCardList',
     'ServerList',
+    'ShowcaseCarousel',
   ]) {
     assert.match(components, new RegExp(`export function ${component}\\(`));
   }
@@ -247,4 +255,18 @@ test('ships provenance for the accessible component runtime', () => {
   assert.match(source, /react-stately@3\.49\.0/);
   assert.match(license, /Apache License[\s\S]*Version 2\.0/);
   assert.match(mergeSource, /tailwind-merge@3\.6\.0/);
+});
+
+test('ships provenance and the complete shared license for Embla Carousel', () => {
+  const source = read('../public/vendor/embla-carousel/SOURCE.md');
+  const license = read('../public/vendor/embla-carousel/LICENSE.MIT.txt');
+  const notices = read('../public/THIRD_PARTY_NOTICES.md');
+
+  assert.match(source, /embla-carousel@8\.6\.0/);
+  assert.match(source, /embla-carousel-react@8\.6\.0/);
+  assert.match(source, /embla-carousel-reactive-utils@8\.6\.0/);
+  assert.match(source, /npm integrity/);
+  assert.match(license, /Copyright \(c\) David Jerleke\./);
+  assert.match(license, /Permission is hereby granted, free of charge/);
+  assert.match(notices, /## Embla Carousel/);
 });

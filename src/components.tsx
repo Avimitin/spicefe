@@ -5,7 +5,13 @@ import {
   syncCreditCardName,
 } from '../public/lib/credit-card.js';
 import { gameIconById } from '../public/lib/game-icons.js';
-import { Button, Checkbox, StatusBadge, type StatusTone } from './ui';
+import {
+  Button,
+  Carousel,
+  Checkbox,
+  StatusBadge,
+  type StatusTone,
+} from './ui';
 
 type Translate = (key: string, parameters?: Record<string, unknown>) => string;
 
@@ -66,6 +72,11 @@ interface StreamMessage {
   state: string;
   title: string;
   copy: string;
+}
+
+interface ShowcaseSlide {
+  src: string;
+  alt: string;
 }
 
 interface ProfilePresentation {
@@ -206,6 +217,99 @@ function CloseIcon() {
     <svg aria-hidden="true" viewBox="0 0 24 24">
       <path d="M6 6l12 12M18 6 6 18" />
     </svg>
+  );
+}
+
+function ShowcaseArrow({ direction }: { direction: 'previous' | 'next' }) {
+  return (
+    <svg data-icon aria-hidden="true" viewBox="0 0 24 24">
+      <path d={direction === 'previous' ? 'm15 18-6-6 6-6' : 'm9 6 6 6-6 6'} />
+    </svg>
+  );
+}
+
+export function ShowcaseCarousel({
+  slides,
+  variant,
+  label,
+  previousLabel,
+  nextLabel,
+  slideLabel,
+}: {
+  slides: readonly ShowcaseSlide[];
+  variant: 'stream' | 'cards';
+  label: string;
+  previousLabel: string;
+  nextLabel: string;
+  slideLabel: (current: number, total: number) => string;
+}) {
+  return (
+    <Carousel.Root
+      className={joinClasses('showcase-carousel', `showcase-carousel-${variant}`)}
+      aria-label={label}
+      opts={{ align: 'start', containScroll: 'trimSnaps' }}
+    >
+      <Carousel.PrevTrigger>
+        {({ isDisabled, onClick }) => (
+          <button
+            className="showcase-carousel-button showcase-carousel-previous"
+            type="button"
+            aria-label={previousLabel}
+            disabled={isDisabled}
+            onClick={onClick}
+          >
+            <ShowcaseArrow direction="previous" />
+          </button>
+        )}
+      </Carousel.PrevTrigger>
+      <Carousel.NextTrigger>
+        {({ isDisabled, onClick }) => (
+          <button
+            className="showcase-carousel-button showcase-carousel-next"
+            type="button"
+            aria-label={nextLabel}
+            disabled={isDisabled}
+            onClick={onClick}
+          >
+            <ShowcaseArrow direction="next" />
+          </button>
+        )}
+      </Carousel.NextTrigger>
+
+      <Carousel.IndicatorGroup className="showcase-carousel-indicators" aria-label={label}>
+        {({ index }) => (
+          <Carousel.Indicator key={index} index={index}>
+            {({ isSelected, onClick }) => (
+              <button
+                className="showcase-carousel-indicator"
+                type="button"
+                aria-label={slideLabel(index + 1, slides.length)}
+                aria-current={isSelected ? 'true' : undefined}
+                onClick={onClick}
+              />
+            )}
+          </Carousel.Indicator>
+        )}
+      </Carousel.IndicatorGroup>
+
+      <Carousel.Content className="showcase-carousel-track">
+        {slides.map((slide, index) => (
+          <Carousel.Item
+            key={slide.src}
+            className="showcase-carousel-slide"
+            aria-label={slideLabel(index + 1, slides.length)}
+          >
+            <img
+              src={slide.src}
+              alt={slide.alt}
+              loading="lazy"
+              decoding="async"
+              draggable={false}
+            />
+          </Carousel.Item>
+        ))}
+      </Carousel.Content>
+    </Carousel.Root>
   );
 }
 

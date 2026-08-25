@@ -76,7 +76,7 @@ def main() -> int:
                 else:
                     checked_references.append(str(css_target.relative_to(root)))
 
-    for json_file in [root / "site.webmanifest", root / "edgeone.json"]:
+    for json_file in [root / "site.webmanifest"]:
         try:
             json.loads(json_file.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as error:

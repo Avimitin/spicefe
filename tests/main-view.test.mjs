@@ -1,11 +1,17 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import { browseView, configuredProfiles, mainView } from '../public/lib/main-view.js';
 
 const blank = { id: 'draft', host: '' };
 const saved = { id: 'saved', host: '192.168.1.20' };
+
+test('keeps one deployable third-party notice and no obsolete EdgeOne config', () => {
+  assert.equal(existsSync(new URL('../THIRD_PARTY_NOTICES.md', import.meta.url)), false);
+  assert.equal(existsSync(new URL('../public/edgeone.json', import.meta.url)), false);
+  assert.equal(existsSync(new URL('../public/THIRD_PARTY_NOTICES.md', import.meta.url)), true);
+});
 
 test('a blank first-run draft does not count as a configured server', () => {
   assert.deepEqual(configuredProfiles([blank]), []);
@@ -110,17 +116,29 @@ test('the welcome page leads into README showcases while setup has its own page'
   assert.match(markup, /id="usage-guide-page"[^>]*hidden/);
   assert.match(markup, /id="usage-guide-page-link"[^>]*href="\?page=guide"/);
   assert.match(markup, /\.\/assets\/showcase\/server-library\.png/);
-  assert.match(markup, /\.\/assets\/showcase\/card-library\.png/);
   assert.match(markup, /\.\/assets\/showcase\/card-insert\.png/);
-  assert.match(markup, /\.\/assets\/showcase\/gitadora-stream\.png/);
   assert.match(markup, /\.\/assets\/showcase\/iidx-16-segment-display\.mp4/);
+  assert.match(markup, /id="showcase-stream-carousel"/);
+  assert.match(markup, /id="showcase-cards-carousel"/);
+  assert.match(
+    script,
+    /showcaseStream[\s\S]*?iidx-stream\.png[\s\S]*?gitadora-stream\.png/,
+  );
+  assert.match(
+    script,
+    /showcaseCards[\s\S]*?card-create\.png[\s\S]*?card-library\.png/,
+  );
   assert.match(
     markup,
-    /class="showcase-feature-list"[\s\S]*showcase\.streamLabel[\s\S]*showcase\.libraryLabel/,
+    /class="showcase-feature-list"[\s\S]*showcase\.streamLabel[\s\S]*showcase\.libraryLabel[\s\S]*showcase\.cardsLabel[\s\S]*showcase\.insertLabel/,
   );
   assert.match(
     markup,
     /class="showcase-video-section"[\s\S]*class="showcase-privacy-section"[\s\S]*href="https:\/\/github\.com\/Avimitin\/spicefe"[\s\S]*class="showcase-cta"/,
+  );
+  assert.match(
+    markup,
+    /showcase\.localTitle[\s\S]*showcase\.openTitle[\s\S]*showcase\.creditsTitle[\s\S]*public\/THIRD_PARTY_NOTICES\.md/,
   );
   assert.doesNotMatch(
     markup.slice(markup.indexOf('id="usage-guide-page"'), markup.indexOf('id="server-library"')),
