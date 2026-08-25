@@ -24,7 +24,7 @@ export class SpiceSession {
   static STREAM_STALL_MS = 8000;
   static STREAM_RETRY_MAX_MS = 15000;
   static API_RETRY_MAX_MS = 15000;
-  static PING_MS = 10000;
+  static MEMORY_POLL_MS = 10000;
   static TICKER_POLL_MS = 100;
   static TICKER_RETRY_MS = 1000;
 
@@ -52,7 +52,7 @@ export class SpiceSession {
     this.apiRetryTimer = null;
     this.stallTimer = null;
     this.stallDeadline = 0;
-    this.pingTimer = null;
+    this.memoryTimer = null;
     this.tickerTimer = null;
     this.tickerText = BLANK_IIDX_TICKER;
     this.mjpegActive = false;
@@ -63,6 +63,7 @@ export class SpiceSession {
     this.onnotice = () => {};
     this.onframe = () => {};
     this.onapi = () => {};
+    this.onmemory = () => {};
     this.onticker = () => {};
 
     this.webCodecsPlayer.onresponse = () => this.videoResponse('webcodecs');
@@ -127,10 +128,10 @@ export class SpiceSession {
     clearTimeout(this.apiRetryTimer);
     clearTimeout(this.tickerTimer);
     this.stopStallWatchdog();
-    clearInterval(this.pingTimer);
+    clearInterval(this.memoryTimer);
     this.streamRetryTimer = null;
     this.apiRetryTimer = null;
-    this.pingTimer = null;
+    this.memoryTimer = null;
     this.tickerTimer = null;
 
     this.stopH264();
@@ -138,6 +139,7 @@ export class SpiceSession {
     this.api?.close();
     this.api = null;
     this.onapi(null);
+    this.onmemory(null);
     this.clearStreamViews();
 
     this.videoState = 'idle';
@@ -408,8 +410,11 @@ export class SpiceSession {
     }
     clearTimeout(this.apiRetryTimer);
     clearTimeout(this.tickerTimer);
+    clearInterval(this.memoryTimer);
     this.apiRetryTimer = null;
+    this.memoryTimer = null;
     this.tickerTimer = null;
+    this.onmemory(null);
     this.api?.close();
 
     if (this.profile?.tickerEnabled) {
@@ -446,6 +451,9 @@ export class SpiceSession {
     }
 
     if (state === 'error') {
+      clearInterval(this.memoryTimer);
+      this.memoryTimer = null;
+      this.onmemory(null);
       this.apiState = 'error';
       this.failTickerWithApi();
       this.emitState();
@@ -453,6 +461,9 @@ export class SpiceSession {
     }
 
     if (state === 'closed') {
+      clearInterval(this.memoryTimer);
+      this.memoryTimer = null;
+      this.onmemory(null);
       this.apiState = 'error';
       this.failTickerWithApi();
       this.emitState();
@@ -476,7 +487,7 @@ export class SpiceSession {
       if (this.profile.tickerEnabled) {
         this.startTicker(api);
       } else {
-        this.startPing(api);
+        this.startMemoryPolling(api);
       }
       this.emitState();
     } catch (error) {
@@ -497,21 +508,35 @@ export class SpiceSession {
     if (!this.wanted || this.apiRetryTimer) {
       return;
     }
-    clearInterval(this.pingTimer);
+    clearInterval(this.memoryTimer);
     clearTimeout(this.tickerTimer);
-    this.pingTimer = null;
+    this.memoryTimer = null;
     this.tickerTimer = null;
+    this.onmemory(null);
     this.apiRetryTimer = setTimeout(() => this.startApi(), this.apiRetryDelay);
     this.apiRetryDelay = Math.min(this.apiRetryDelay * 2, SpiceSession.API_RETRY_MAX_MS);
   }
 
-  startPing(api) {
-    clearInterval(this.pingTimer);
-    this.pingTimer = setInterval(() => {
-      if (this.api === api && api.connected) {
-        api.request('info', 'avs').catch(() => {});
+  startMemoryPolling(api) {
+    clearInterval(this.memoryTimer);
+    const updateMemory = async () => {
+      if (this.api !== api || !api.connected || this.profile?.tickerEnabled) {
+        return;
       }
-    }, SpiceSession.PING_MS);
+      try {
+        const memory = await api.getMemoryInfo();
+        if (this.api === api && api.connected && !this.profile?.tickerEnabled) {
+          this.onmemory(memory);
+        }
+      } catch {
+        // Memory telemetry is optional and must not interrupt video or touch.
+      }
+    };
+    void updateMemory();
+    this.memoryTimer = setInterval(
+      () => void updateMemory(),
+      SpiceSession.MEMORY_POLL_MS,
+    );
   }
 
   failTickerWithApi(error = this.apiError) {

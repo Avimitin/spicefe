@@ -178,3 +178,51 @@ test('ticker mode continuously polls the native API and clears the display on di
   assert.equal(session.snapshot.tickerText, '         ');
   assert.equal(values.at(-1), '         ');
 });
+
+test('polls host memory on the live API and clears telemetry on disconnect', async () => {
+  const session = new SpiceSession(new FakeCanvas(), new FakeVideo(), new FakeImage());
+  const values = [];
+  let calls = 0;
+  let reachedSecondPoll;
+  const secondPoll = new Promise((resolve) => { reachedSecondPoll = resolve; });
+  const memory = { totalBytes: 32, usedBytes: 12, processBytes: 2 };
+  const api = {
+    connected: true,
+    getMemoryInfo: async () => {
+      calls += 1;
+      if (calls === 2) {
+        reachedSecondPoll();
+      }
+      return memory;
+    },
+    close() {},
+  };
+  session.profile = { tickerEnabled: false };
+  session.wanted = true;
+  session.api = api;
+  session.onmemory = (value) => values.push(value);
+
+  const originalPollMs = SpiceSession.MEMORY_POLL_MS;
+  let pollTimeout;
+  SpiceSession.MEMORY_POLL_MS = 2;
+  try {
+    session.startMemoryPolling(api);
+    await Promise.race([
+      secondPoll,
+      new Promise((_, reject) => {
+        pollTimeout = setTimeout(() => reject(new Error('memory polling did not repeat')), 250);
+      }),
+    ]);
+  } finally {
+    clearTimeout(pollTimeout);
+    SpiceSession.MEMORY_POLL_MS = originalPollMs;
+  }
+
+  assert.ok(calls >= 2);
+  assert.deepEqual(values.at(-1), memory);
+  const callsBeforeDisconnect = calls;
+  session.disconnect();
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.equal(calls, callsBeforeDisconnect);
+  assert.equal(values.at(-1), null);
+});

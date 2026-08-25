@@ -52,6 +52,7 @@ import {
   IIDX_TICKER_PREVIEW_STEP_MS,
 } from '../public/lib/iidx-ticker.js';
 import { configuredProfiles, mainView } from '../public/lib/main-view.js';
+import { memoryPresentation } from '../public/lib/memory-metric.js';
 import {
   newProfile,
   ProfileStore,
@@ -84,6 +85,12 @@ interface StreamMetric {
   height: number;
   fps: number;
   decodedFrames: number;
+}
+
+interface HostMemoryMetric {
+  totalBytes: number;
+  usedBytes: number;
+  processBytes: number;
 }
 
 interface MarkerPosition {
@@ -222,6 +229,8 @@ function renderReact(root: ReturnType<typeof createRoot>, content: React.ReactNo
 
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
 let currentMetric: StreamMetric | null = null;
+let currentHostMemory: HostMemoryMetric | null = null;
+let videoMetricFallback: 'idle' | 'waiting' | 'ticker' = 'idle';
 let lastMetricPaint = 0;
 let bannerDismissed = false;
 let renderedMainView: MainView | null = null;
@@ -1036,6 +1045,35 @@ session.onticker = (text: string) => {
     ? t('ticker.ariaText', { text: readable })
     : t('ticker.ariaBlank'));
 };
+
+function renderVideoMetric() {
+  let value: string;
+  if (currentMetric) {
+    const fps = currentMetric.fps > 0 ? ` · ${currentMetric.fps.toFixed(0)} fps` : '';
+    value = `${currentMetric.width}×${currentMetric.height}${fps}`;
+  } else if (videoMetricFallback === 'waiting') {
+    value = t('metric.waiting');
+  } else if (videoMetricFallback === 'ticker') {
+    value = t('metric.ticker');
+  } else {
+    value = '—';
+  }
+
+  const memory = memoryPresentation(currentHostMemory, i18n.locale);
+  if (memory) {
+    value += ` · ${t('metric.memory', { percent: memory.percent })}`;
+  }
+  const metric = element('video-metric');
+  metric.textContent = value;
+  metric.title = memory
+    ? t('metric.memoryTitle', { used: memory.used, total: memory.total })
+    : t('hud.video');
+}
+
+session.onmemory = (memory: HostMemoryMetric | null) => {
+  currentHostMemory = memory;
+  renderVideoMetric();
+};
 session.onframe = (metric: StreamMetric) => {
   currentMetric = metric;
   const now = performance.now();
@@ -1043,8 +1081,7 @@ session.onframe = (metric: StreamMetric) => {
     return;
   }
   lastMetricPaint = now;
-  const fps = metric.fps > 0 ? ` · ${metric.fps.toFixed(0)} fps` : '';
-  element('video-metric').textContent = `${metric.width}×${metric.height}${fps}`;
+  renderVideoMetric();
 };
 
 function checkedTime(timestamp: number | null) {
@@ -1584,13 +1621,17 @@ function renderSnapshot(snapshot: SessionSnapshot, announce = true) {
 
   if (!snapshot.wanted) {
     currentMetric = null;
+    currentHostMemory = null;
+    videoMetricFallback = 'idle';
     lastMetricPaint = 0;
-    element('video-metric').textContent = '—';
+    renderVideoMetric();
     touchMarker.hidden = true;
   } else if (tickerMode) {
-    element('video-metric').textContent = t('metric.ticker');
+    videoMetricFallback = 'ticker';
+    renderVideoMetric();
   } else if (snapshot.videoState === 'connecting' && currentMetric === null) {
-    element('video-metric').textContent = t('metric.waiting');
+    videoMetricFallback = 'waiting';
+    renderVideoMetric();
   }
 
   const presentation = connectionPresentation(snapshot, i18n.locale);
@@ -1638,10 +1679,10 @@ function connectSelected() {
   }
 
   currentMetric = null;
+  currentHostMemory = null;
+  videoMetricFallback = profile.tickerEnabled ? 'ticker' : 'waiting';
   lastMetricPaint = 0;
-  element('video-metric').textContent = t(
-    profile.tickerEnabled ? 'metric.ticker' : 'metric.waiting',
-  );
+  renderVideoMetric();
   useLibraryPageForConnection();
   session.connect(profile);
 }
@@ -2186,10 +2227,10 @@ form.addEventListener('submit', (event: Event) => {
   }
   closeSettings();
   currentMetric = null;
+  currentHostMemory = null;
+  videoMetricFallback = profile.tickerEnabled ? 'ticker' : 'waiting';
   lastMetricPaint = 0;
-  element('video-metric').textContent = t(
-    profile.tickerEnabled ? 'metric.ticker' : 'metric.waiting',
-  );
+  renderVideoMetric();
   useLibraryPageForConnection();
   session.connect(profile);
 });
@@ -2354,6 +2395,7 @@ function renderLocalizedUi() {
   renderConnectionButton();
   renderCompatibility();
   renderSnapshot(session.snapshot, false);
+  renderVideoMetric();
   element('show-password').textContent = t(
     element('password').type === 'text' ? 'button.hide' : 'button.show',
   );

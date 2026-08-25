@@ -220,6 +220,41 @@ test('reads and normalizes the native nine-character IIDX ticker', async () => {
   api.close();
 });
 
+test('reads and validates native host memory telemetry', async () => {
+  const api = new SpiceApi(profile(), { WebSocketImpl: FakeWebSocket, requestTimeout: 1000 });
+  api.connect();
+  const socket = FakeWebSocket.instances.at(-1);
+  socket.open();
+
+  const pending = api.getMemoryInfo();
+  const request = JSON.parse(new TextDecoder().decode(socket.sent[0]));
+  assert.deepEqual(request, {
+    id: 1,
+    module: 'info',
+    function: 'memory',
+    params: [],
+  });
+
+  socket.receive(new TextEncoder().encode(JSON.stringify({
+    id: 1,
+    errors: [],
+    data: [{
+      mem_total: 34_359_738_368,
+      mem_total_used: 12_884_901_888,
+      mem_used: 1_073_741_824,
+      vmem_total: 0,
+      vmem_total_used: 0,
+      vmem_used: 0,
+    }],
+  }) + '\0'));
+  assert.deepEqual(await pending, {
+    totalBytes: 34_359_738_368,
+    usedBytes: 12_884_901_888,
+    processBytes: 1_073_741_824,
+  });
+  api.close();
+});
+
 test('rejects invalid card insertion before sending it', async () => {
   const api = new SpiceApi(profile(), { WebSocketImpl: FakeWebSocket, requestTimeout: 1000 });
   api.connect();

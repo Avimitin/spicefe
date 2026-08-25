@@ -55,7 +55,7 @@ the LAN.
   failure details, refreshed every minute while the server library is visible
 - mouse, single-touch, and multi-touch input
 - aspect-preserving video fitting with matching touch coordinates
-- live resolution and measured frame rate in the compact stream top bar
+- live resolution, measured frame rate, and host RAM usage in the compact stream top bar
 - a browser-local e-amusement card library with native-format card generation,
   selective import from spice2x card files and overrides, P1/P2 insertion from
   the stream toolbar, selective ZIP backup, customizable card artwork, and

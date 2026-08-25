@@ -419,7 +419,7 @@ function ChannelStatus({ channel, presentation }: {
     <StatusBadge
       tone={tone}
       pulse={presentation.state === 'connecting'}
-      className="server-status-tag bg-black/20 text-white ring-white/20 backdrop-blur-sm"
+      className="server-status-tag"
       title={presentation.detail}
       aria-label={`${channel}: ${presentation.label}. ${presentation.detail}`}
     >
@@ -517,8 +517,15 @@ function ServerCard({
               <strong ref={nameRef} className="server-name" title={profile.name}>
                 <span className="server-name-text">{profile.name}</span>
               </strong>
-              <span className="server-address">
-                {t('library.address', { host: profile.host, port: profile.apiPort })}
+              <span
+                className="server-address"
+                tabIndex={0}
+                title={t('library.addressReveal')}
+              >
+                <span className="server-address-prefix">IP:</span>
+                <span className="server-address-value">
+                  {t('library.address', { host: profile.host, port: profile.apiPort })}
+                </span>
               </span>
             </div>
           </div>
@@ -529,7 +536,7 @@ function ServerCard({
             <StatusBadge
               tone={availabilityTone}
               pulse={availability.state === 'checking'}
-              className="server-status-tag bg-black/20 text-white ring-white/20 backdrop-blur-sm"
+              className="server-status-tag"
               title={availability.detail}
               aria-label={`${availability.label}. ${availability.detail}`}
             >

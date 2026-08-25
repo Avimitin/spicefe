@@ -182,6 +182,24 @@ export class SpiceApi {
     return normalizeIidxTickerText(data[0]);
   }
 
+  async getMemoryInfo() {
+    const data = await this.request('info', 'memory', []);
+    const info = data[0];
+    const totalBytes = Number(info?.mem_total);
+    const usedBytes = Number(info?.mem_total_used);
+    const processBytes = Number(info?.mem_used);
+    if (!Number.isSafeInteger(totalBytes)
+      || !Number.isSafeInteger(usedBytes)
+      || !Number.isSafeInteger(processBytes)
+      || totalBytes <= 0
+      || usedBytes < 0
+      || usedBytes > totalBytes
+      || processBytes < 0) {
+      throw new SpiceApiError('Malformed memory data from the input API', 'protocol');
+    }
+    return { totalBytes, usedBytes, processBytes };
+  }
+
   enqueue(entry) {
     if (!this.connected) {
       return false;

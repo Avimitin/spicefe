@@ -73,6 +73,14 @@ test('keeps responsive server cards and modal surfaces centered', () => {
   assert.match(application, /\.server-list\s*\{[\s\S]*?columns:\s*5 196px/);
   assert.match(application, /@media \(max-width: 520px\)[\s\S]*?\.server-list\s*\{[\s\S]*?columns:\s*2 156px/);
   assert.match(application, /@container \(max-width: 220px\)/);
+  assert.match(
+    application,
+    /\.server-card-details-backdrop\s*\{[\s\S]*?filter:\s*blur\(12px\) saturate\(0\.9\) brightness\(1\.8\)/,
+  );
+  assert.match(
+    application,
+    /\.server-card-details-surface\s*\{[\s\S]*?background:\s*rgba\(229, 238, 246, 0\.62\)/,
+  );
   assert.match(application, /\.profile-share-dialog\s*\{[\s\S]*?margin:\s*auto/);
   assert.match(application, /\.card-editor-dialog\s*\{[\s\S]*?margin:\s*auto/);
   assert.match(application, /\.card-import-dialog\s*\{[\s\S]*?margin:\s*auto/);
@@ -82,6 +90,14 @@ test('keeps responsive server cards and modal surfaces centered', () => {
   );
   assert.match(components, /className="server-status-tags"/);
   assert.match(components, /className="server-status-tag/);
+  assert.doesNotMatch(components, /server-status-tag bg-black/);
+  assert.match(components, /className="server-address"[\s\S]*?tabIndex=\{0\}[\s\S]*?library\.addressReveal/);
+  assert.match(components, /className="server-address-prefix">IP:<\/span>/);
+  assert.match(application, /\.server-address-value\s*\{[\s\S]*?filter:\s*blur\(5px\)/);
+  assert.match(
+    application,
+    /\.server-card \.server-address:hover \.server-address-value,[\s\S]*?\.server-card \.server-address:focus \.server-address-value\s*\{[\s\S]*?filter:\s*blur\(0\)/,
+  );
   assert.match(
     components,
     /className="server-card-actions"[\s\S]*className="server-card-icon-button server-edit-button"[\s\S]*className="server-card-icon-button server-share-button"/,
@@ -151,6 +167,8 @@ test('keeps stream telemetry in the topbar without a bottom control bar', () => 
 
   assert.match(html, /id="stream-metric" class="topbar-stream-metric"/);
   assert.match(html, /id="video-metric"/);
+  assert.match(app, /session\.onmemory =/);
+  assert.match(app, /metric\.memory/);
   assert.doesNotMatch(html, /id="stage-hud"|id="hud-show-button"/);
   assert.doesNotMatch(html, /id="view-mode"|id="view-mode-button"/);
   assert.doesNotMatch(app, /setViewMode|dataset\.viewMode|hudDismissed/);
