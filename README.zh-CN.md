@@ -398,19 +398,21 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
 
 ## 依赖策略
 
-浏览器依赖均为纯 JavaScript 包：`react@19.2.8`、`react-dom@19.2.8`、
-`scheduler@0.27.0`、`jmuxer@2.1.1` 与 `qrcode-generator@2.0.4`。npm
-完整性元数据将它们锁定在精确版本，并禁用安装生命周期脚本。TypeScript 与
-esbuild 由固定的 Nixpkgs 提供，而非 npm。完整许可证和来源记录位于
+浏览器直接依赖均为纯 JavaScript 包：`react@19.2.8`、`react-dom@19.2.8`、
+`react-aria-components@1.20.0`、`tailwind-merge@3.6.0`、`jmuxer@2.1.1`
+与 `qrcode-generator@2.0.4`。npm 完整性元数据将直接和间接依赖锁定在精确
+版本，并禁用安装生命周期脚本。TypeScript、esbuild 与 Tailwind CSS 4.3.3
+均由固定的 Nixpkgs 提供，而非 npm。完整许可证和来源记录位于
 `public/vendor/`；构建不会下载或运行任何来自 npm 包的可执行二进制文件。
 
 ## 界面与字体资源
 
-界面借鉴了采用 MIT 许可证的开源
-[`untitleduico/react`](https://github.com/untitleduico/react) 设计系统，包括其中性
-配色、紧凑组件尺寸、焦点状态及克制的阴影。交互式集合正迁移至 React 与
-TypeScript，部署结果仍然是纯客户端静态站点；Tailwind CSS 与 React Aria
-都不是运行时或构建依赖。
+共享的 Button、Checkbox 与 Status Badge 组件，以及中性配色、紧凑尺寸、焦点
+状态和克制的阴影，均改编自采用 MIT 许可证的开源
+[`untitleduico/react`](https://github.com/untitleduico/react) 设计系统；flake
+固定了准确的上游版本。组件使用 React Aria 提供无障碍交互，并由 Nix 提供的
+Tailwind 编译工具类。各功能的专用布局继续保留在维护中的应用 CSS 中；部署结果
+仍是纯客户端静态站点，不会从 CDN 加载 CSS 或组件运行时。
 
 界面首选 IBM Plex Sans。站点固定使用 IBM
 [`@ibm/plex-sans@1.1.0`](https://github.com/IBM/plex/releases/tag/%40ibm%2Fplex-sans%401.1.0)

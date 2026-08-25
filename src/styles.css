@@ -1,0 +1,102 @@
+@import "tailwindcss" source(none);
+@import "./styles/application.css";
+
+@source "./app.tsx";
+@source "./components.tsx";
+@source "./ui/**/*.tsx";
+
+@theme {
+  --font-body: "IBM Plex Sans", "IBM Plex Sans SC", "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+  --text-xs: 12px;
+  --text-xs--line-height: 18px;
+  --text-sm: 14px;
+  --text-sm--line-height: 20px;
+  --text-md: 16px;
+  --text-md--line-height: 24px;
+  --color-brand-50: rgb(249 245 255);
+  --color-brand-100: rgb(244 235 255);
+  --color-brand-200: rgb(233 215 254);
+  --color-brand-300: rgb(214 187 251);
+  --color-brand-500: rgb(158 119 237);
+  --color-brand-600: rgb(127 86 217);
+  --color-brand-700: rgb(105 65 198);
+  --color-error-50: rgb(254 243 242);
+  --color-error-200: rgb(254 205 202);
+  --color-error-600: rgb(217 45 32);
+  --color-error-700: rgb(180 35 24);
+  --color-warning-50: rgb(255 250 235);
+  --color-warning-200: rgb(254 223 137);
+  --color-warning-500: rgb(247 144 9);
+  --color-warning-700: rgb(181 71 8);
+  --color-success-50: rgb(236 253 243);
+  --color-success-200: rgb(171 239 198);
+  --color-success-500: rgb(23 178 106);
+  --color-success-700: rgb(6 118 71);
+  --color-neutral-25: rgb(252 252 253);
+  --color-neutral-50: rgb(250 250 250);
+  --color-neutral-100: rgb(245 245 245);
+  --color-neutral-200: rgb(229 229 229);
+  --color-neutral-300: rgb(212 212 212);
+  --color-neutral-400: rgb(163 163 163);
+  --color-neutral-500: rgb(115 115 115);
+  --color-neutral-600: rgb(82 82 82);
+  --color-neutral-700: rgb(64 64 64);
+  --color-neutral-800: rgb(38 38 38);
+  --color-neutral-900: rgb(23 23 23);
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.05);
+  --shadow-xs-skeuomorphic: 0 0 0 1px rgb(0 0 0 / 0.18) inset, 0 -2px 0 rgb(0 0 0 / 0.05) inset, var(--shadow-xs);
+}
+
+@utility transition-inherit-all {
+  transition-property: inherit;
+  transition-duration: inherit;
+  transition-timing-function: inherit;
+}
+
+/* Static page islands and React-owned controls share the same Untitled UI
+ * button foundation. New React surfaces use src/ui/button.tsx directly; these
+ * selectors keep the remaining document-owned controls visually identical. */
+.primary-button,
+.secondary-button,
+.danger-button {
+  @apply relative inline-flex h-max min-h-9 cursor-pointer items-center justify-center gap-1 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition duration-100 ease-linear;
+  @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.primary-button {
+  @apply bg-brand-600 text-white shadow-xs-skeuomorphic ring-1 ring-transparent ring-inset hover:bg-brand-700;
+}
+
+.primary-button::before {
+  position: absolute;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 7px;
+  pointer-events: none;
+  content: "";
+  inset: 1px;
+  mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
+}
+
+.primary-button.large {
+  @apply min-h-10 px-4 py-2.5 text-md;
+}
+
+.secondary-button {
+  @apply bg-white text-neutral-700 shadow-xs-skeuomorphic ring-1 ring-neutral-300 ring-inset hover:bg-neutral-50 hover:text-neutral-800;
+}
+
+.danger-button {
+  @apply bg-white text-error-700 shadow-xs ring-1 ring-error-200 ring-inset hover:bg-error-50;
+}
+
+.icon-button {
+  @apply grid size-9 shrink-0 cursor-pointer place-items-center rounded-lg bg-white text-neutral-500 shadow-xs-skeuomorphic ring-1 ring-neutral-300 ring-inset transition duration-100 hover:bg-neutral-50 hover:text-neutral-800;
+  @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.icon-button svg {
+  @apply size-5 fill-none stroke-current;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}

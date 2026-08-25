@@ -162,7 +162,7 @@ test('saved servers expose explicit QR export and query restore controls', () =>
   assert.match(markup, /id="profile-share-restore"[^>]*hidden/);
   assert.match(
     components,
-    /className="server-share-button"[\s\S]*onClick=\{\(\) => onShare\(profile\.id\)\}/,
+    /className="server-card-icon-button server-share-button"[\s\S]*onPress=\{\(\) => onShare\(profile\.id\)\}/,
   );
   assert.match(
     script,

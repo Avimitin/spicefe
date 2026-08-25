@@ -59,21 +59,40 @@ complete license, checksum, and source record ship in
 ## React
 
 The browser application uses `react@19.2.8`, `react-dom@19.2.8`, and their
-`scheduler@0.27.0` runtime dependency from the official
+`scheduler@0.27.0`, `use-sync-external-store@1.6.0`, and `client-only@0.0.1`
+runtime dependencies from the official
 [`facebook/react`](https://github.com/facebook/react) project. They are
 licensed under the MIT License, Copyright (c) Meta Platforms, Inc. and
 affiliates. Exact versions, npm integrity values, source links, and the
 complete shared license ship in `public/vendor/react/`.
 
+## React Aria
+
+The Untitled UI controls use `react-aria-components@1.20.0` with its
+version-locked `react-aria`, `react-stately`, and `@internationalized/*`
+runtime dependencies from Adobe's
+[`react-spectrum`](https://github.com/adobe/react-spectrum) project. These
+packages provide accessible browser interaction and state behavior and are
+licensed under the Apache License 2.0. Exact versions, source details, and the
+complete shared license ship in `public/vendor/react-aria/`.
+
 ## Untitled UI React
 
-The visual tokens and component treatment are adapted for the existing static
-HTML/CSS application from the open-source
+The Button, Checkbox, Status Badge, class-merging utility, visual tokens, and
+credit-card treatments are adapted from the free, open-source
 [`untitleduico/react`](https://github.com/untitleduico/react) design system,
-revision `548c28ad9c9449bcc20751c84c542d5739f1e17e`. No Untitled UI PRO
-assets or examples are included. The referenced source is licensed under the
-MIT License, Copyright (c) 2025 Untitled UI. The complete license and source
-record ship in `public/vendor/untitled-ui/`.
+revision `d29a2adf6909e5aaeb234bccf82dcffeb67fdb2e`. No Untitled UI PRO source,
+assets, or examples are included. The referenced source is licensed under the
+MIT License, Copyright (c) 2025 Untitled UI. The complete license and exact
+component source record ship in `public/vendor/untitled-ui/`.
+
+## tailwind-merge and clsx
+
+The component bundle uses `tailwind-merge@3.6.0`, licensed under the MIT
+License, Copyright (c) 2021 Dany Castillo, and the React Aria dependency tree
+uses `clsx@2.1.1`, licensed under the MIT License, Copyright (c) Luke Edwards.
+Exact source records and complete licenses ship in
+`public/vendor/tailwind-merge/` and `public/vendor/clsx/`.
 
 ## IBM Plex Sans
 

@@ -463,21 +463,25 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
 
 ## Dependency policy
 
-The browser dependencies are pure-JavaScript packages: `react@19.2.8`,
-`react-dom@19.2.8`, `scheduler@0.27.0`, `jmuxer@2.1.1`, and
-`qrcode-generator@2.0.4`. They are exact-version locked with npm integrity
-metadata, and install lifecycle scripts are disabled. TypeScript and esbuild
-come from pinned Nixpkgs instead of npm. Complete license and source records
-ship in `public/vendor/`; no executable npm binary is downloaded or run.
+The direct browser dependencies are pure-JavaScript packages: `react@19.2.8`,
+`react-dom@19.2.8`, `react-aria-components@1.20.0`,
+`tailwind-merge@3.6.0`, `jmuxer@2.1.1`, and `qrcode-generator@2.0.4`. Direct
+and transitive packages are exact-version locked with npm integrity metadata,
+and install lifecycle scripts are disabled. TypeScript, esbuild, and Tailwind
+CSS 4.3.3 come from pinned Nixpkgs instead of npm. Complete license and source
+records ship in `public/vendor/`; no executable npm binary is downloaded or
+run.
 
 ## Interface and font assets
 
-The interface adapts the neutral palette, compact component geometry, focus
-states, and restrained shadows of the MIT-licensed open-source
-[`untitleduico/react`](https://github.com/untitleduico/react) design system.
-The interactive collections are being migrated to React and TypeScript while
-the deployable result remains a client-only static site. Tailwind CSS and React
-Aria are not runtime or build dependencies.
+The shared Button, Checkbox, and Status Badge components, plus the neutral
+palette, compact geometry, focus states, and restrained shadows, are adapted
+from the MIT-licensed open-source
+[`untitleduico/react`](https://github.com/untitleduico/react) design system at
+the exact revision pinned by the flake. They use React Aria for accessible
+interaction and Tailwind utility classes compiled by Nix. Feature-specific
+layouts remain in maintained application CSS, and the deployable result remains
+a client-only static site with no CSS or component runtime loaded from a CDN.
 
 IBM Plex Sans is the primary interface font. Four small Latin-1 and symbol
 subsets (Regular and Medium) are pinned to IBM's

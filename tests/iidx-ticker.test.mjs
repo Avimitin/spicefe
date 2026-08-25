@@ -12,6 +12,8 @@ import {
   normalizeIidxTickerText,
 } from '../public/lib/iidx-ticker.js';
 
+const styles = readFileSync(new URL('../src/styles/application.css', import.meta.url), 'utf8');
+
 test('normalizes the cabinet ticker to exactly nine display characters', () => {
   assert.equal(IIDX_TICKER_LENGTH, 9);
   assert.equal(BLANK_IIDX_TICKER, '         ');
@@ -42,10 +44,6 @@ test('vendors the attributed display font and applies the red-on-black cabinet t
     import.meta.url,
   );
   const bytes = readFileSync(font);
-  const styles = readFileSync(
-    new URL('../public/assets/styles.css', import.meta.url),
-    'utf8',
-  );
   const source = readFileSync(
     new URL('../public/vendor/sixteen-font/SOURCE.md', import.meta.url),
     'utf8',
@@ -67,10 +65,6 @@ test('vendors the attributed display font and applies the red-on-black cabinet t
 test('offers a texture-backed frameless preview with a clean screenshot view', () => {
   const markup = readFileSync(
     new URL('../public/index.html', import.meta.url),
-    'utf8',
-  );
-  const styles = readFileSync(
-    new URL('../public/assets/styles.css', import.meta.url),
     'utf8',
   );
   const logo = new URL(

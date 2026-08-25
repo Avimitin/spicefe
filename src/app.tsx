@@ -238,6 +238,7 @@ let cardImportController: AbortController | null = null;
 let cardImportRun = 0;
 let cardImportProfile: Profile | null = null;
 let cardImportCandidates: any[] = [];
+const selectedCardImportIds = new Set<string>();
 let profileShareCandidate: any = null;
 let profileShareExisting: Profile | null = null;
 let tickerPreviewOffset = 0;
@@ -636,7 +637,7 @@ function cardImportErrorPresentation(error: any) {
 }
 
 function updateCardImportSelection() {
-  const selected = cardImportList.querySelectorAll('input:checked').length;
+  const selected = selectedCardImportIds.size;
   const available = cardImportCandidates.filter((candidate) => !candidate.saved).length;
   element('card-import-selection').textContent = available === 0
     ? t('cards.importAllSaved')
@@ -644,23 +645,37 @@ function updateCardImportSelection() {
   cardImportConfirm.disabled = selected === 0;
 }
 
+function renderCardImportOptions() {
+  renderReact(reactRoots.cardImportList, (
+    <CardImportOptions
+      candidates={cardImportCandidates}
+      selection={selectedCardImportIds}
+      t={t}
+      onSelectionChange={(id, selected) => {
+        if (selected) {
+          selectedCardImportIds.add(id);
+        } else {
+          selectedCardImportIds.delete(id);
+        }
+        renderCardImportOptions();
+        updateCardImportSelection();
+      }}
+    />
+  ));
+}
+
 function setCardImportResults(profile: Profile, remoteCards: any[]) {
   cardImportCandidates = prepareCardImportCandidates(
     remoteCards,
     cardStore.list().map((card: Card) => card.number),
   );
+  selectedCardImportIds.clear();
 
   setCardImportView('results');
   element('card-import-found-copy').textContent = t('cards.importFoundCopy', {
     name: profile.name,
   });
-  renderReact(reactRoots.cardImportList, (
-    <CardImportOptions
-      candidates={cardImportCandidates}
-      t={t}
-      onSelectionChange={updateCardImportSelection}
-    />
-  ));
+  renderCardImportOptions();
   element('card-import-selection').hidden = false;
   cardImportConfirm.hidden = false;
   cardImportDismiss.textContent = t('cards.importCloseButton');
@@ -688,6 +703,7 @@ async function importRemoteCards() {
   }
 
   cardImportCandidates = [];
+  selectedCardImportIds.clear();
   cardImportProfile = store.selected();
   cardImportFooter.hidden = true;
   setCardImportPending(false);
@@ -743,10 +759,7 @@ async function importRemoteCards() {
 }
 
 function importSelectedRemoteCards() {
-  const selectedNumbers = new Set(
-    [...cardImportList.querySelectorAll('input:checked')].map((input) => input.value),
-  );
-  const selected = selectedCardImportCandidates(cardImportCandidates, selectedNumbers);
+  const selected = selectedCardImportCandidates(cardImportCandidates, selectedCardImportIds);
   if (selected.length === 0) {
     updateCardImportSelection();
     return;

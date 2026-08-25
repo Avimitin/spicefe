@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "npm run typecheck && esbuild src/app.tsx --bundle --format=esm --platform=browser --target=es2022 --define:process.env.NODE_ENV=\"'production'\" --minify --legal-comments=none --outfile=public/app.js",
+    "build": "npm run typecheck && npm run styles && esbuild src/app.tsx --bundle --format=esm --platform=browser --target=es2022 --define:process.env.NODE_ENV=\"'production'\" --minify --legal-comments=none --outfile=public/app.js",
+    "styles": "tailwindcss -i src/styles.css -o public/assets/styles.css --minify",
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.mjs"
   },
@@ -16,6 +17,8 @@
     "jmuxer": "2.1.1",
     "qrcode-generator": "2.0.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-aria-components": "1.20.0",
+    "react-dom": "19.2.8",
+    "tailwind-merge": "3.6.0"
   }
 }

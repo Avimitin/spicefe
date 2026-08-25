@@ -5,6 +5,7 @@ import {
   syncCreditCardName,
 } from '../public/lib/credit-card.js';
 import { gameIconById } from '../public/lib/game-icons.js';
+import { Button, Checkbox, StatusBadge, type StatusTone } from './ui';
 
 type Translate = (key: string, parameters?: Record<string, unknown>) => string;
 
@@ -237,15 +238,16 @@ function GameIconOption({ icon, selectedId, t, onSelect, onRemove }: {
   return (
     <div className="custom-game-icon-option">
       {option}
-      <button
-        type="button"
+      <Button
+        color="tertiary"
+        size="xs"
         className="custom-game-icon-remove"
         aria-label={t('icon.removeLabel', { name: icon.label })}
         title={t('icon.remove')}
         onClick={() => onRemove(icon)}
       >
         <CloseIcon />
-      </button>
+      </Button>
     </div>
   );
 }
@@ -315,60 +317,57 @@ export function CardCollection({
           className="ea-card-library-preview"
         />
         {backupMode ? (
-          <label className="managed-card-backup-select">
-            <input
-              type="checkbox"
-              checked={selectedForBackup}
-              aria-label={t('cards.backupSelectLabel', { name: displayName })}
-              onChange={(event) => onBackupSelectionChange(card.id, event.currentTarget.checked)}
-            />
-            <span>{t('cards.backupSelect')}</span>
-          </label>
+          <Checkbox
+            className="managed-card-backup-select"
+            isSelected={selectedForBackup}
+            aria-label={t('cards.backupSelectLabel', { name: displayName })}
+            label={t('cards.backupSelect')}
+            onChange={(selected) => onBackupSelectionChange(card.id, selected)}
+          />
         ) : null}
       </article>
     );
   });
 }
 
-export function CardImportOptions({ candidates, t, onSelectionChange }: {
+export function CardImportOptions({ candidates, selection, t, onSelectionChange }: {
   candidates: CardImportCandidate[];
+  selection: ReadonlySet<string>;
   t: Translate;
-  onSelectionChange: React.ChangeEventHandler<HTMLInputElement>;
+  onSelectionChange: (id: string, selected: boolean) => void;
 }) {
   return candidates.map((candidate) => {
     const players = candidate.players
       .map((player) => t('cards.importPlayer', { player }))
       .join(' · ');
     return (
-      <label
-        key={candidate.cardId}
-        className="card-import-option"
-        data-saved={candidate.saved}
-        role="listitem"
-      >
-        <input
-          type="checkbox"
+      <div key={candidate.cardId} role="listitem">
+        <Checkbox
+          className="card-import-option"
+          data-saved={candidate.saved}
           value={candidate.cardId}
-          disabled={candidate.saved}
+          isDisabled={candidate.saved}
+          isSelected={selection.has(candidate.cardId)}
           aria-label={t('cards.importSelectLabel', {
             name: candidate.fileName,
             number: formatCardNumber(candidate.cardId),
           })}
-          onChange={onSelectionChange}
-        />
-        <span className="card-import-option-copy">
-          <strong>{candidate.fileName}</strong>
-          <code>{formatCardNumber(candidate.cardId)}</code>
-          <span>
-            {players}
-            {' · '}
-            {t(candidate.source === 'override' ? 'cards.importOverride' : 'cards.importFile')}
+          onChange={(selected) => onSelectionChange(candidate.cardId, selected)}
+        >
+          <span className="card-import-option-copy">
+            <strong>{candidate.fileName}</strong>
+            <code>{formatCardNumber(candidate.cardId)}</code>
+            <span>
+              {players}
+              {' · '}
+              {t(candidate.source === 'override' ? 'cards.importOverride' : 'cards.importFile')}
+            </span>
           </span>
-        </span>
-        <span className="card-import-option-badge">
-          {t(candidate.saved ? 'cards.importAlreadySaved' : 'cards.importAvailable')}
-        </span>
-      </label>
+          <span className="card-import-option-badge">
+            {t(candidate.saved ? 'cards.importAlreadySaved' : 'cards.importAvailable')}
+          </span>
+        </Checkbox>
+      </div>
     );
   });
 }
@@ -409,19 +408,23 @@ function ChannelStatus({ channel, presentation }: {
   channel: string;
   presentation: ChannelPresentation;
 }) {
+  const tone: StatusTone = presentation.state === 'connected'
+    ? 'success'
+    : presentation.state === 'connecting'
+      ? 'warning'
+      : presentation.state === 'error'
+        ? 'error'
+        : 'gray';
   return (
-    <span
-      className="connection-status"
-      data-state={presentation.state}
+    <StatusBadge
+      tone={tone}
+      pulse={presentation.state === 'connecting'}
+      className="server-status-tag bg-black/20 text-white ring-white/20 backdrop-blur-sm"
       title={presentation.detail}
-      aria-label={presentation.detail}
+      aria-label={`${channel}: ${presentation.label}. ${presentation.detail}`}
     >
-      <span className="status-dot" aria-hidden="true" />
-      <span className="status-copy">
-        <span className="status-channel">{channel}</span>
-        <strong className="status-value">{presentation.label}</strong>
-      </span>
-    </span>
+      <span className="server-status-tag-label">{channel}</span>
+    </StatusBadge>
   );
 }
 
@@ -448,6 +451,13 @@ function ServerCard({
   const active = snapshot.wanted && snapshot.profile?.id === profile.id;
   const icon = gameIconById(profile.iconId);
   const outputChannel = profile.tickerEnabled ? 'ticker' : 'video';
+  const availabilityTone: StatusTone = availability.state === 'reachable'
+    ? 'success'
+    : availability.state === 'checking'
+      ? 'warning'
+      : availability.state === 'unreachable'
+        ? 'error'
+        : 'gray';
 
   useLayoutEffect(() => {
     const name = nameRef.current;
@@ -492,17 +502,6 @@ function ServerCard({
           decoding="async"
         />
       </div>
-      <button
-        type="button"
-        className="server-share-button"
-        aria-label={t('profileShare.openLabel', { name: profile.name })}
-        title={t('profileShare.openLabel', { name: profile.name })}
-        onClick={() => onShare(profile.id)}
-      >
-        <svg aria-hidden="true" viewBox="0 0 24 24">
-          <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v6h-6v-2h4z" />
-        </svg>
-      </button>
       <div className="server-card-details">
         <img
           className="server-card-details-backdrop"
@@ -522,20 +521,20 @@ function ServerCard({
                 {t('library.address', { host: profile.host, port: profile.apiPort })}
               </span>
             </div>
-            <span
-              className="server-reachability"
-              data-state={availability.state}
-              title={availability.detail}
-              aria-label={availability.detail}
-            >
-              <span className="status-dot" aria-hidden="true" />
-              <span>{availability.label}</span>
-            </span>
           </div>
           <div
-            className="server-channel-statuses"
+            className="server-status-tags"
             aria-label={t('library.statusFor', { name: profile.name })}
           >
+            <StatusBadge
+              tone={availabilityTone}
+              pulse={availability.state === 'checking'}
+              className="server-status-tag bg-black/20 text-white ring-white/20 backdrop-blur-sm"
+              title={availability.detail}
+              aria-label={`${availability.label}. ${availability.detail}`}
+            >
+              <span className="server-status-tag-label">{availability.label}</span>
+            </StatusBadge>
             <ChannelStatus channel="API" presentation={presentation.api} />
             <ChannelStatus
               channel={outputChannel === 'ticker' ? t('nav.ticker') : t('nav.video')}
@@ -543,12 +542,37 @@ function ServerCard({
             />
           </div>
           <div className="server-card-actions">
-            <button className="secondary-button" type="button" onClick={() => onEdit(profile.id)}>
-              {t('button.edit')}
-            </button>
-            <button className="primary-button" type="button" onClick={() => onConnect(profile.id)}>
+            <Button
+              size="xs"
+              className="w-full bg-white/95 text-neutral-800 ring-white hover:bg-white"
+              onPress={() => onConnect(profile.id)}
+            >
               {t(active ? 'button.disconnect' : snapshot.wanted ? 'button.switch' : 'button.connect')}
-            </button>
+            </Button>
+            <Button
+              color="secondary"
+              size="xs"
+              className="server-card-icon-button server-edit-button"
+              aria-label={`${t('button.edit')}: ${profile.name}`}
+              title={t('button.edit')}
+              onPress={() => onEdit(profile.id)}
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M13.5 6.5 17.5 10.5M4 20l4.25-1 10.4-10.4a2.83 2.83 0 0 0-4-4L4.25 15 4 20Z" />
+              </svg>
+            </Button>
+            <Button
+              color="secondary"
+              size="xs"
+              className="server-card-icon-button server-share-button"
+              aria-label={t('profileShare.openLabel', { name: profile.name })}
+              title={t('profileShare.openLabel', { name: profile.name })}
+              onPress={() => onShare(profile.id)}
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v6h-6v-2h4z" />
+              </svg>
+            </Button>
           </div>
           {active && presentation.streamMessage ? (
             <p className="server-card-diagnostic" data-state={presentation.streamMessage.state}>

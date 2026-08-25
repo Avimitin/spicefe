@@ -4,14 +4,14 @@ import test from 'node:test';
 
 import { formatCardNumber } from '../public/lib/credit-card.js';
 
+const styles = readFileSync(new URL('../src/styles/application.css', import.meta.url), 'utf8');
+
 test('groups the 16-character card ID into the native four-digit display', () => {
   assert.equal(formatCardNumber('e00401001234abcd'), 'E004 0100 1234 ABCD');
   assert.equal(formatCardNumber('E004 0100'), 'E004 0100');
 });
 
 test('constrains movable card names to the safe band between edge rows', () => {
-  const styles = readFileSync(new URL('../public/assets/styles.css', import.meta.url), 'utf8');
-
   assert.match(styles, /--ea-card-name-top:\s*42px/);
   assert.match(styles, /--ea-card-name-bottom:\s*44px/);
   assert.match(
@@ -26,8 +26,6 @@ test('constrains movable card names to the safe band between edge rows', () => {
 });
 
 test('keeps saved cards at the canonical 316 by 190 size', () => {
-  const styles = readFileSync(new URL('../public/assets/styles.css', import.meta.url), 'utf8');
-
   assert.match(
     styles,
     /\.card-list\s*\{[\s\S]*?grid-template-columns:\s*repeat\(auto-fill, 322px\)[\s\S]*?justify-content:\s*center/,
