@@ -54,7 +54,8 @@ the LAN.
 - Fit, Fill, and Stretch display modes with correct touch coordinate mapping
 - a dismissible in-stream adjustment bar, restorable from the top bar
 - a browser-local e-amusement card library with native-format card generation,
-  P1/P2 insertion from the stream toolbar, and customizable card artwork
+  selective import from spice2x card files and overrides, P1/P2 insertion from
+  the stream toolbar, and customizable card artwork
 - multiple named connection profiles in `localStorage`, each with a selectable
   categorized game icon or locally uploaded, center-cropped artwork shown beside
   the PC name
@@ -76,7 +77,7 @@ The API port entered in the UI is the spice2x base port:
 
 | Purpose | Browser endpoint for API port 1337 | Protection |
 | --- | --- | --- |
-| Touch, game info, card insertion, and IIDX ticker | `ws://PC:1338` | Optional spice2x password; legacy RC4 |
+| Touch, game info, card import/insertion, and IIDX ticker | `ws://PC:1338` | Card import requires a spice2x password; legacy RC4 |
 | H.264 or MJPEG video | `http://PC:1339` | None |
 
 The CDN never proxies either connection. H.264 is decoded directly with
@@ -135,10 +136,16 @@ only a subscreen; use normal video mode for those releases.
 
 Open **Card library** from the top-left page menu to create and edit virtual
 e-amusement cards. New cards start with a blank ID. Use **Generate** for the
-native `E0040100` pattern followed by eight random hexadecimal digits, or copy
-an existing ID from `card0.txt` in the spice directory if you previously used
-spice's card generator. Manually entered IDs must contain exactly 16
-hexadecimal characters.
+native `E0040100` pattern followed by eight random hexadecimal digits. To reuse
+cards generated on the gaming PC, select **Import from PC**. spicefe opens a
+short-lived API connection and shows the card selected for each active reader.
+Choose only the cards you want, then select **Import selected**. Closing the
+picker while it is scanning immediately closes that temporary connection.
+File-backed cards retain their file name. Cards whose API source is `override`,
+including `-card0` and `-card1`, are named `card0` and `card1`. Existing IDs are
+shown but cannot be selected or overwritten. Import requires an API password in
+both spice2x and the saved server profile. Manually entered IDs must contain
+exactly 16 hexadecimal characters.
 
 Cards use the Untitled UI gray-light treatment by default. Each card can
 instead use the matching gray-dark style, a solid color, the
@@ -175,7 +182,8 @@ spice64.exe ... -api 1337 -apipass choose-a-lan-password
 The password is optional, though recommended by spice2x. Permit inbound TCP to
 port 1338 for the browser API, plus port 1339 when using video. The browser does
 not use the raw TCP listener on 1337, but spice2x still requires `-api` to create
-the browser-facing listener.
+the browser-facing listener. Card import requires a spice2x build with the
+password-gated `card.get_cards()` API and does not run when `-apipass` is omitted.
 
 On the client device, enter the PC's private IPv4 address when possible, such
 as `192.168.1.50`. Both devices must be on the same LAN and client isolation
@@ -188,7 +196,7 @@ an unavoidable browser-security boundary for a globally served page:
 
 > [!IMPORTANT]
 > When the instructions below call for the HTTP page, manually enter the whole
-> address: **`http://spicefe.avimit.in/`**. Do not enter only the domain name;
+> address: **`http://spice.nimabe.net/`**. Do not enter only the domain name;
 > browser history and address-bar autocomplete may choose the previously visited
 > HTTPS address instead.
 

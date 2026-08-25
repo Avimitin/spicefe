@@ -122,6 +122,80 @@ test('serializes native card insertion with a reader and uppercase card ID', asy
   api.close();
 });
 
+test('reads file and override card sources and assigns import names', async () => {
+  const api = new SpiceApi(profile('cabinet'), {
+    WebSocketImpl: FakeWebSocket,
+    requestTimeout: 1000,
+  });
+  api.connect();
+  const socket = FakeWebSocket.instances.at(-1);
+  socket.open();
+
+  const pending = api.getCards();
+  const cipher = new RC4(new TextEncoder().encode('cabinet'));
+  const request = JSON.parse(new TextDecoder().decode(
+    cipher.crypt(Uint8Array.from(socket.sent[0])),
+  ));
+  assert.deepEqual(request, {
+    id: 1,
+    module: 'card',
+    function: 'get_cards',
+    params: [],
+  });
+
+  const response = new TextEncoder().encode(JSON.stringify({
+    id: 1,
+    errors: [],
+    data: [
+      {
+        index: 0,
+        card_id: 'e00401001234abcd',
+        source: 'file',
+        file_name: 'card0.txt',
+      },
+      {
+        index: 1,
+        card_id: 'e0040100deadbeef',
+        source: 'override',
+      },
+    ],
+  }) + '\0');
+  socket.receive(cipher.crypt(response));
+
+  assert.deepEqual(await pending, [
+    {
+      index: 0,
+      cardId: 'E00401001234ABCD',
+      source: 'file',
+      fileName: 'card0.txt',
+    },
+    {
+      index: 1,
+      cardId: 'E0040100DEADBEEF',
+      source: 'override',
+      fileName: 'card1',
+    },
+  ]);
+  api.close();
+});
+
+test('rejects malformed configured card data', async () => {
+  const api = new SpiceApi(profile(), { WebSocketImpl: FakeWebSocket, requestTimeout: 1000 });
+  api.connect();
+  const socket = FakeWebSocket.instances.at(-1);
+  socket.open();
+
+  const pending = api.getCards();
+  socket.receive(new TextEncoder().encode(JSON.stringify({
+    id: 1,
+    errors: [],
+    data: [{ index: 0, card_id: '1234', source: 'file', file_name: 'card0.txt' }],
+  }) + '\0'));
+
+  await assert.rejects(pending, /Malformed card data/);
+  api.close();
+});
+
 test('reads and normalizes the native nine-character IIDX ticker', async () => {
   const api = new SpiceApi(profile(), { WebSocketImpl: FakeWebSocket, requestTimeout: 1000 });
   api.connect();

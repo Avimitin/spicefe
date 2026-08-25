@@ -96,3 +96,41 @@ test('rolls back an update when browser storage is full', () => {
   assert.throws(() => store.upsert(newCard({ id: 'too-large' })), /could not be saved/);
   assert.deepEqual(store.list(), []);
 });
+
+test('imports new card IDs atomically and preserves existing cards', () => {
+  const storage = new MemoryStorage();
+  const store = new CardStore(storage);
+  store.upsert(newCard({
+    id: 'existing',
+    number: 'E004010000000001',
+    name: 'Customized name',
+    appearance: 'gray-dark',
+  }));
+
+  const imported = store.importCards([
+    newCard({ number: 'E004010000000001', name: 'card0.txt' }),
+    newCard({ number: 'E004010000000002', name: 'second.txt' }),
+    newCard({ number: 'E004010000000002', name: 'duplicate.txt' }),
+  ]);
+
+  assert.equal(imported.length, 1);
+  assert.equal(imported[0].number, 'E004010000000002');
+  assert.equal(imported[0].name, 'second.txt');
+  assert.equal(store.list().length, 2);
+  assert.equal(store.get('existing').name, 'Customized name');
+  assert.equal(store.get('existing').appearance, 'gray-dark');
+});
+
+test('rolls back a batch import when browser storage is full', () => {
+  const storage = new MemoryStorage();
+  const store = new CardStore(storage);
+  storage.setItem = () => {
+    throw new Error('QuotaExceededError');
+  };
+
+  assert.throws(() => store.importCards([
+    newCard({ number: 'E004010000000003' }),
+    newCard({ number: 'E004010000000004' }),
+  ]), /could not be saved/);
+  assert.deepEqual(store.list(), []);
+});

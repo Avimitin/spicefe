@@ -187,6 +187,37 @@ export class CardStore {
     return cloneCard(card);
   }
 
+  importCards(candidates) {
+    if (!Array.isArray(candidates)) {
+      throw new TypeError('Cards must be provided as an array');
+    }
+
+    const previous = this.cards;
+    const next = this.list();
+    const numbers = new Set(next.map((card) => card.number));
+    const imported = [];
+    for (const candidate of candidates) {
+      const card = sanitizeCard(candidate);
+      if (numbers.has(card.number)) {
+        continue;
+      }
+      numbers.add(card.number);
+      next.push(card);
+      imported.push(card);
+    }
+
+    if (imported.length === 0) {
+      return [];
+    }
+
+    this.cards = next;
+    if (!this.persist()) {
+      this.cards = previous;
+      throw new CardStoreError('The cards could not be saved in this browser');
+    }
+    return imported.map(cloneCard);
+  }
+
   remove(id) {
     const position = this.cards.findIndex((card) => card.id === id);
     if (position < 0) {

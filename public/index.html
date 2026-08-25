@@ -411,7 +411,15 @@
               <h1 id="card-library-title" data-i18n="cards.title">Your e-amusement cards</h1>
               <p data-i18n="cards.copy">Create cards once, then insert one from the stream toolbar.</p>
             </div>
-            <button id="add-card" class="primary-button" type="button" data-i18n="cards.add">Add card</button>
+            <div class="card-library-actions">
+              <button id="import-cards" class="secondary-button" type="button"
+                      data-i18n="cards.import">
+                Import from PC
+              </button>
+              <button id="add-card" class="primary-button" type="button" data-i18n="cards.add">
+                Add card
+              </button>
+            </div>
           </header>
 
           <div class="card-manager-layout">
@@ -453,7 +461,9 @@
                       <input id="card-number" type="text" inputmode="text" minlength="16" maxlength="16" pattern="[0-9A-Fa-f]{16}" autocomplete="off" autocapitalize="characters" spellcheck="false" required placeholder="E0040100FFFFFFFF">
                       <button id="generate-card-number" class="inline-button" type="button" data-i18n="cards.generate">Generate</button>
                     </span>
-                    <small data-i18n="cards.idHelp">Generate a new ID here, or copy the existing ID from card0.txt in your spice directory if you previously used spice’s card generator.</small>
+                    <small data-i18n="cards.idHelp">
+                      Generate a new ID, import cards from your gaming PC, or enter a 16-character ID.
+                    </small>
                   </label>
 
                   <fieldset class="card-appearance-picker">
@@ -535,7 +545,7 @@
               <strong id="http-entry-title"><span data-i18n="browserSetup.httpTitle">Type the full address beginning with</span> <code>http://</code></strong>
               <p data-i18n="browserSetup.httpCopy">Do not enter only the domain name. Address-bar autocomplete can reuse your HTTPS visit and put you back in the blocked mode.</p>
               <div class="http-address-row">
-                <code id="http-mode-url">http://spicefe.avimit.in/</code>
+                <code id="http-mode-url">http://spice.nimabe.net/</code>
                 <button id="copy-http-url" class="secondary-button" type="button" data-i18n="browserSetup.copyAddress">Copy address</button>
               </div>
               <p class="http-address-check" data-i18n="browserSetup.httpCheck">After loading it, inspect the address bar and verify that the address begins with http://. A “Not secure” label is expected.</p>
@@ -1070,6 +1080,55 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run</code></pre>
         <button value="confirm" class="danger-button" data-i18n="button.delete">Delete</button>
       </footer>
     </form>
+  </dialog>
+
+  <dialog id="card-import-dialog" class="card-import-dialog" aria-labelledby="card-import-title">
+    <div class="card-import-shell">
+      <header class="card-import-header">
+        <div>
+          <p class="eyebrow" data-i18n="cards.importEyebrow">IMPORT FROM PC</p>
+          <h2 id="card-import-title" data-i18n="cards.importTitle">Choose cards to import</h2>
+        </div>
+        <button id="card-import-close" class="card-import-close" type="button"
+                aria-label="Close card import" title="Close card import"
+                data-i18n-aria-label="cards.importClose"
+                data-i18n-title="cards.importClose">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+      </header>
+
+      <div id="card-import-content" class="card-import-content" aria-live="polite">
+        <div id="card-import-loading" class="card-import-loading" hidden>
+          <span class="card-import-spinner" aria-hidden="true"></span>
+          <strong data-i18n="cards.importScanningTitle">Scanning your gaming PC…</strong>
+          <p id="card-import-scanning-copy"></p>
+        </div>
+
+        <div id="card-import-message" class="card-import-message" hidden>
+          <span id="card-import-message-icon" class="card-import-message-icon" aria-hidden="true"></span>
+          <strong id="card-import-message-title"></strong>
+          <p id="card-import-message-copy"></p>
+        </div>
+
+        <div id="card-import-results" class="card-import-results" hidden>
+          <header>
+            <strong data-i18n="cards.importFoundTitle">Select the cards you want</strong>
+            <p id="card-import-found-copy"></p>
+          </header>
+          <div id="card-import-list" class="card-import-list" role="list"
+               aria-label="Cards available to import"
+               data-i18n-aria-label="cards.importListAria"></div>
+        </div>
+      </div>
+
+      <footer id="card-import-footer" class="card-import-footer" hidden>
+        <span id="card-import-selection" aria-live="polite"></span>
+        <button id="card-import-dismiss" class="secondary-button" type="button"
+                data-i18n="cards.importCloseButton">Close</button>
+        <button id="card-import-confirm" class="primary-button" type="button"
+                data-i18n="cards.importSelected" disabled>Import selected</button>
+      </footer>
+    </div>
   </dialog>
 
   <div id="toast" class="toast" hidden role="status" aria-live="polite"></div>

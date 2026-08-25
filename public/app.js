@@ -1,12 +1,22 @@
 import { likelyNeedsBrowserSetup, plainHttpPageUrl } from './lib/endpoints.js';
+import {
+  fetchRemoteCards,
+  prepareCardImportCandidates,
+  selectedCardImportCandidates,
+} from './lib/card-import.js';
 import { cardImageDataUrl } from './lib/card-image.js';
 import {
   CardStore,
   generateCardNumber,
+  newCard,
   newCardDraft,
   normalizeCardNumberInput,
 } from './lib/card-store.js';
-import { createCreditCard, measureCreditCardNames } from './lib/credit-card.js';
+import {
+  createCreditCard,
+  formatCardNumber,
+  measureCreditCardNames,
+} from './lib/credit-card.js';
 import { CustomIconStore } from './lib/custom-icon-store.js';
 import {
   customIconLabel,
@@ -93,6 +103,16 @@ const cardList = element('card-list');
 const cardEmpty = element('card-empty');
 const cardForm = element('card-form');
 const cardPreview = element('card-preview');
+const importCardsButton = element('import-cards');
+const cardImportDialog = element('card-import-dialog');
+const cardImportContent = element('card-import-content');
+const cardImportLoading = element('card-import-loading');
+const cardImportMessage = element('card-import-message');
+const cardImportResults = element('card-import-results');
+const cardImportList = element('card-import-list');
+const cardImportFooter = element('card-import-footer');
+const cardImportDismiss = element('card-import-dismiss');
+const cardImportConfirm = element('card-import-confirm');
 const cardControls = element('card-controls');
 const cardMenuButton = element('card-menu-button');
 const cardMenu = element('card-menu');
@@ -134,6 +154,11 @@ let editingCardId = null;
 let cardDraft = null;
 let selectedCardReader = 0;
 let cardInsertPending = false;
+let cardImportPending = false;
+let cardImportController = null;
+let cardImportRun = 0;
+let cardImportProfile = null;
+let cardImportCandidates = [];
 let tickerPreviewOffset = 0;
 let tickerPreviewTimer = null;
 let editingProfile = null;
@@ -463,6 +488,246 @@ function renderCardManager() {
   ensureCardEditor();
   renderCardCollection();
   renderCardPreview();
+}
+
+function setCardImportPending(pending) {
+  cardImportPending = pending;
+  importCardsButton.disabled = pending;
+  cardImportContent.setAttribute('aria-busy', String(pending));
+}
+
+function setCardImportView(view) {
+  cardImportLoading.hidden = view !== 'loading';
+  cardImportMessage.hidden = view !== 'message';
+  cardImportResults.hidden = view !== 'results';
+}
+
+function setCardImportMessage(kind, title, copy) {
+  setCardImportView('message');
+  cardImportMessage.dataset.kind = kind;
+  element('card-import-message-icon').dataset.kind = kind;
+  element('card-import-message-title').textContent = title;
+  element('card-import-message-copy').textContent = copy;
+  element('card-import-selection').hidden = true;
+  cardImportConfirm.hidden = true;
+  cardImportDismiss.textContent = t('cards.importCloseButton');
+  cardImportFooter.hidden = false;
+}
+
+function cardImportErrorPresentation(error) {
+  if (error?.code === 'password-required') {
+    return {
+      title: t('cards.importPasswordTitle'),
+      copy: t('cards.importPasswordRequired'),
+    };
+  }
+  if (error?.code === 'remote' && error?.message === 'Unknown function.') {
+    return {
+      title: t('cards.importUnsupportedTitle'),
+      copy: t('cards.importUnsupported'),
+    };
+  }
+  if (error?.code === 'timeout') {
+    return {
+      title: t('cards.importTimeoutTitle'),
+      copy: t('cards.importTimeout'),
+    };
+  }
+  return {
+    title: t('cards.importFailedTitle'),
+    copy: t('cards.importFailed', {
+      error: localizeError(i18n.locale, error, 'status.apiDefaultError'),
+    }),
+  };
+}
+
+function cardImportPlayers(candidate) {
+  return candidate.players
+    .map((player) => t('cards.importPlayer', { player }))
+    .join(' · ');
+}
+
+function createCardImportOption(candidate) {
+  const item = document.createElement('label');
+  const checkbox = document.createElement('input');
+  const details = document.createElement('span');
+  const name = document.createElement('strong');
+  const number = document.createElement('code');
+  const meta = document.createElement('span');
+  const badge = document.createElement('span');
+
+  item.className = 'card-import-option';
+  item.dataset.saved = String(candidate.saved);
+  item.setAttribute('role', 'listitem');
+
+  checkbox.type = 'checkbox';
+  checkbox.value = candidate.cardId;
+  checkbox.disabled = candidate.saved;
+  checkbox.setAttribute('aria-label', t('cards.importSelectLabel', {
+    name: candidate.fileName,
+    number: formatCardNumber(candidate.cardId),
+  }));
+  checkbox.addEventListener('change', updateCardImportSelection);
+
+  details.className = 'card-import-option-copy';
+  name.textContent = candidate.fileName;
+  number.textContent = formatCardNumber(candidate.cardId);
+  meta.textContent = `${cardImportPlayers(candidate)} · ${t(
+    candidate.source === 'override' ? 'cards.importOverride' : 'cards.importFile',
+  )}`;
+  details.append(name, number, meta);
+
+  badge.className = 'card-import-option-badge';
+  badge.textContent = t(candidate.saved
+    ? 'cards.importAlreadySaved'
+    : 'cards.importAvailable');
+  item.append(checkbox, details, badge);
+  return item;
+}
+
+function updateCardImportSelection() {
+  const selected = cardImportList.querySelectorAll('input:checked').length;
+  const available = cardImportCandidates.filter((candidate) => !candidate.saved).length;
+  element('card-import-selection').textContent = available === 0
+    ? t('cards.importAllSaved')
+    : t('cards.importSelection', { selected, available });
+  cardImportConfirm.disabled = selected === 0;
+}
+
+function setCardImportResults(profile, remoteCards) {
+  cardImportCandidates = prepareCardImportCandidates(
+    remoteCards,
+    cardStore.list().map((card) => card.number),
+  );
+
+  setCardImportView('results');
+  element('card-import-found-copy').textContent = t('cards.importFoundCopy', {
+    name: profile.name,
+  });
+  cardImportList.replaceChildren(...cardImportCandidates.map(createCardImportOption));
+  element('card-import-selection').hidden = false;
+  cardImportConfirm.hidden = false;
+  cardImportDismiss.textContent = t('cards.importCloseButton');
+  cardImportFooter.hidden = false;
+  updateCardImportSelection();
+}
+
+function stopCardImportScan() {
+  cardImportRun += 1;
+  cardImportController?.abort();
+  cardImportController = null;
+  setCardImportPending(false);
+}
+
+function closeCardImportDialog() {
+  stopCardImportScan();
+  if (cardImportDialog.open) {
+    cardImportDialog.close();
+  }
+}
+
+async function importRemoteCards() {
+  if (cardImportPending || cardImportDialog.open) {
+    return;
+  }
+
+  cardImportCandidates = [];
+  cardImportProfile = store.selected();
+  cardImportFooter.hidden = true;
+  setCardImportPending(false);
+  cardImportDialog.showModal();
+
+  if (!cardImportProfile?.host) {
+    setCardImportMessage(
+      'info',
+      t('cards.importNoServerTitle'),
+      t('cards.importNoServer'),
+    );
+    return;
+  }
+
+  const controller = new AbortController();
+  const run = cardImportRun + 1;
+  cardImportRun = run;
+  cardImportController = controller;
+  setCardImportView('loading');
+  element('card-import-scanning-copy').textContent = t('cards.importScanningCopy', {
+    name: cardImportProfile.name,
+  });
+
+  setCardImportPending(true);
+  try {
+    const remoteCards = await fetchRemoteCards(cardImportProfile, {
+      signal: controller.signal,
+    });
+    if (run !== cardImportRun || controller.signal.aborted || !cardImportDialog.open) {
+      return;
+    }
+    if (remoteCards.length === 0) {
+      setCardImportMessage(
+        'info',
+        t('cards.importNoneTitle'),
+        t('cards.importNone', { name: cardImportProfile.name }),
+      );
+      return;
+    }
+    setCardImportResults(cardImportProfile, remoteCards);
+  } catch (error) {
+    if (run !== cardImportRun || controller.signal.aborted || error?.code === 'aborted') {
+      return;
+    }
+    const presentation = cardImportErrorPresentation(error);
+    setCardImportMessage('error', presentation.title, presentation.copy);
+  } finally {
+    if (run === cardImportRun) {
+      cardImportController = null;
+      setCardImportPending(false);
+    }
+  }
+}
+
+function importSelectedRemoteCards() {
+  const selectedNumbers = new Set(
+    [...cardImportList.querySelectorAll('input:checked')].map((input) => input.value),
+  );
+  const selected = selectedCardImportCandidates(cardImportCandidates, selectedNumbers);
+  if (selected.length === 0) {
+    updateCardImportSelection();
+    return;
+  }
+
+  try {
+    const wasEmpty = cardStore.list().length === 0;
+    const imported = cardStore.importCards(selected.map((card) => newCard({
+      number: card.cardId,
+      name: card.fileName,
+    })));
+    const editorIsBlank = !editingCardId
+      && !element('card-name').value.trim()
+      && !normalizeCardNumberInput(element('card-number').value);
+    if (wasEmpty && editorIsBlank && imported[0]) {
+      fillCardEditor(imported[0], true);
+    }
+    renderCardCollection();
+    renderCardPreview();
+    if (!cardMenu.hidden) {
+      renderStreamCardMenu();
+    }
+    setCardImportMessage(
+      imported.length > 0 ? 'success' : 'info',
+      t(imported.length > 0 ? 'cards.importCompleteTitle' : 'cards.importExistingTitle'),
+      t(imported.length > 0 ? 'cards.imported' : 'cards.importExisting', {
+        count: imported.length,
+        name: cardImportProfile.name,
+      }),
+    );
+  } catch {
+    setCardImportMessage(
+      'error',
+      t('cards.importSaveFailedTitle'),
+      t('cards.importSaveFailed'),
+    );
+  }
 }
 
 function setCardMenuOpen(open) {
@@ -1537,6 +1802,15 @@ element('guide-self-host').addEventListener('click', (event) => {
 });
 element('add-server').addEventListener('click', createProfileAndEdit);
 element('add-card').addEventListener('click', () => startNewCard());
+importCardsButton.addEventListener('click', importRemoteCards);
+element('card-import-close').addEventListener('click', closeCardImportDialog);
+cardImportDismiss.addEventListener('click', closeCardImportDialog);
+cardImportConfirm.addEventListener('click', importSelectedRemoteCards);
+cardImportDialog.addEventListener('cancel', (event) => {
+  event.preventDefault();
+  closeCardImportDialog();
+});
+cardImportDialog.addEventListener('close', stopCardImportScan);
 element('close-settings').addEventListener('click', closeSettings);
 connectButton.addEventListener('click', connectSelected);
 

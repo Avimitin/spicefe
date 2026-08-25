@@ -151,6 +151,32 @@ export class SpiceApi {
     return this.request('card', 'insert', [reader, number]);
   }
 
+  async getCards() {
+    const data = await this.request('card', 'get_cards', []);
+    return data.map((entry) => {
+      const index = Number(entry?.index);
+      const cardId = String(entry?.card_id ?? '').toUpperCase();
+      const source = entry?.source;
+      const fileName = source === 'override'
+        ? `card${index}`
+        : (typeof entry?.file_name === 'string' ? entry.file_name : '');
+      if (!Number.isInteger(index)
+        || index < 0
+        || index > 1
+        || !/^[0-9A-F]{16}$/.test(cardId)
+        || (source !== 'file' && source !== 'override')
+        || !fileName) {
+        throw new SpiceApiError('Malformed card data from the input API', 'protocol');
+      }
+      return {
+        index,
+        cardId,
+        source,
+        fileName,
+      };
+    });
+  }
+
   async tickerGet() {
     const data = await this.request('iidx', 'ticker_get', []);
     return normalizeIidxTickerText(data[0]);
