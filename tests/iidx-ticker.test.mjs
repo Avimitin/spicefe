@@ -55,11 +55,11 @@ test('vendors the attributed display font and applies the red-on-black cabinet t
   assert.ok(statSync(font).size < 4 * 1024);
   assert.match(styles, /font-family:\s*"Sixteen Mono"/);
   assert.match(styles, /\.ticker-display-panel\s*\{[\s\S]*?aspect-ratio:\s*27\s*\/\s*5/);
-  assert.match(styles, /\.ticker-display-panel\s*\{[\s\S]*?background:\s*#000000/);
+  assert.match(styles, /\.ticker-display-panel\s*\{[\s\S]*?background:\s*#151414/);
   assert.match(styles, /\.ticker-text\s*\{[\s\S]*?color:\s*#ff0000/);
   assert.match(styles, /\.ticker-text\s*\{[\s\S]*?monospace/);
   assert.match(styles, /\.ticker-text::before\s*\{[\s\S]*?content:\s*";;;;;;;;;"/);
-  assert.match(styles, /\.ticker-text::before\s*\{[\s\S]*?color:\s*#12120f/);
+  assert.match(styles, /\.ticker-text::before\s*\{[\s\S]*?color:\s*#1f1f1a/);
   assert.match(source, /Sixteen by Jack Sivak/i);
   assert.match(source, /SIL Open Font License 1\.1/);
 });

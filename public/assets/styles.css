@@ -360,12 +360,6 @@ code {
   gap: 8px;
 }
 
-.connection-statuses {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
 .connection-status {
   display: flex;
   min-width: 92px;
@@ -2017,10 +2011,6 @@ code {
   color: var(--text);
 }
 
-.connection-statuses {
-  gap: 8px;
-}
-
 .connection-status {
   min-width: 96px;
   gap: 8px;
@@ -3148,10 +3138,6 @@ body {
   font-size: 12px;
 }
 
-.connection-statuses {
-  gap: 6px;
-}
-
 .connection-status {
   min-width: 86px;
   gap: 7px;
@@ -3822,10 +3808,6 @@ body {
 
   .active-server {
     max-width: 150px;
-  }
-
-  .connection-statuses {
-    gap: 4px;
   }
 
   .connection-status {
@@ -6795,14 +6777,6 @@ body {
     grid-template-columns: 1fr;
   }
 
-  #app[data-main-view="stream"] .connection-statuses {
-    gap: 2px;
-  }
-
-  #app[data-main-view="stream"] .connection-status {
-    padding-right: 3px;
-    padding-left: 3px;
-  }
 }
 
 @media (max-height: 520px) and (orientation: landscape) {
@@ -7328,7 +7302,7 @@ body {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: #000000;
+  background: #151414;
   box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.86);
   container-type: inline-size;
 }
@@ -7358,7 +7332,7 @@ body {
   position: absolute;
   z-index: -1;
   inset: 0;
-  color: #12120f;
+  color: #1f1f1a;
   content: ";;;;;;;;;";
   text-shadow: none;
 }

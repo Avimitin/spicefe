@@ -197,10 +197,6 @@ const hudCloseButton = element('hud-close-button');
 element('self-host-guide-slot').replaceWith(selfHostGuide);
 selfHostGuide.hidden = false;
 const activeServer = element('active-server');
-const connectionStatuses = element('connection-statuses');
-const apiStatus = element('api-status');
-const videoStatus = element('video-status');
-const displayStatusChannel = element('display-status-channel');
 const apiWarning = element('api-warning');
 const touchMarker = element('touch-marker');
 const compatBanner = element('compat-banner');
@@ -984,13 +980,6 @@ session.onframe = (metric: StreamMetric) => {
   element('video-metric').textContent = `${metric.width}×${metric.height}${fps}`;
 };
 
-function renderChannelStatus(node: HTMLElement, label: HTMLElement, presentation: any) {
-  node.dataset.state = presentation.state;
-  node.title = presentation.detail;
-  node.setAttribute('aria-label', presentation.detail);
-  label.textContent = presentation.label;
-}
-
 function checkedTime(timestamp: number | null) {
   if (timestamp === null) {
     return '—';
@@ -1469,7 +1458,6 @@ function renderMainView(snapshot: SessionSnapshot): MainView {
   const streaming = view === 'stream';
   const tickerStreaming = streaming && snapshot.profile?.tickerEnabled;
   activeServer.hidden = !streaming;
-  connectionStatuses.hidden = !streaming;
   languagePicker.hidden = streaming;
   settingsButton.hidden = streaming;
   connectButton.hidden = !streaming;
@@ -1478,9 +1466,6 @@ function renderMainView(snapshot: SessionSnapshot): MainView {
   brandIcon.hidden = !streaming;
   tickerView.hidden = !tickerStreaming;
   stage.dataset.outputMode = tickerStreaming ? 'ticker' : 'video';
-  displayStatusChannel.textContent = t(snapshot.profile?.tickerEnabled
-    ? 'nav.ticker'
-    : 'nav.video');
   if (snapshot.profile?.tickerEnabled) {
     session.onticker(snapshot.tickerText);
   }
@@ -1542,8 +1527,6 @@ function renderSnapshot(snapshot: SessionSnapshot, announce = true) {
   }
 
   const presentation = connectionPresentation(snapshot, i18n.locale);
-  renderChannelStatus(apiStatus, element('api-status-label'), presentation.api);
-  renderChannelStatus(videoStatus, element('video-status-label'), presentation.video);
 
   const message = presentation.streamMessage;
   streamMessage.hidden = view !== 'stream' || !message;

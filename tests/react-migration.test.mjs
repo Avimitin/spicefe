@@ -59,6 +59,18 @@ test('React owns the repeated interactive collections', () => {
   assert.doesNotMatch(app, /function createIconOption\(/);
 });
 
+test('keeps connection diagnostics in the server library instead of the streaming topbar', () => {
+  const html = read('../public/index.html');
+  const app = read('../src/app.tsx');
+  const components = read('../src/components.tsx');
+
+  assert.doesNotMatch(html, /id="connection-statuses"/);
+  assert.doesNotMatch(html, /id="(?:api|video)-status"/);
+  assert.doesNotMatch(app, /element\('connection-statuses'\)/);
+  assert.match(components, /className="server-channel-statuses"/);
+  assert.match(components, /<ChannelStatus channel="API"/);
+});
+
 test('ships React runtime provenance and its complete shared license', () => {
   const source = read('../public/vendor/react/SOURCE.md');
   const license = read('../public/vendor/react/LICENSE.MIT.txt');
