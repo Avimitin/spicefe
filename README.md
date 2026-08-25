@@ -419,11 +419,13 @@ while playing and press **Ctrl+C** to stop it.
 
 ## Local development
 
-The flake pins Nixpkgs and supplies Node.js and Python. No global npm install is
-needed.
+The flake pins Nixpkgs and supplies Node.js, TypeScript, esbuild, and Python.
+No global npm package or npm-delivered build binary is needed.
 
 ```sh
 nix develop
+npm ci --ignore-scripts
+npm run build
 npm test
 python tools/check_static.py public
 ```
@@ -442,21 +444,21 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
 
 ## Dependency policy
 
-The browser dependencies are the pure-JavaScript packages `jmuxer@2.1.1` and
-`qrcode-generator@2.0.4`; neither has runtime transitive dependencies or an
-install lifecycle script. Both are exact-version locked with npm integrity
-metadata. The Nix build passes `--ignore-scripts`, downloads them through a
-fixed-output Nix derivation, and byte-compares their vendored browser
-distributions before producing the site. Complete license and source records
-ship in `public/vendor/`. No executable npm binary is downloaded or run.
+The browser dependencies are pure-JavaScript packages: `react@19.2.8`,
+`react-dom@19.2.8`, `scheduler@0.27.0`, `jmuxer@2.1.1`, and
+`qrcode-generator@2.0.4`. They are exact-version locked with npm integrity
+metadata, and install lifecycle scripts are disabled. TypeScript and esbuild
+come from pinned Nixpkgs instead of npm. Complete license and source records
+ship in `public/vendor/`; no executable npm binary is downloaded or run.
 
 ## Interface and font assets
 
 The interface adapts the neutral palette, compact component geometry, focus
 states, and restrained shadows of the MIT-licensed open-source
 [`untitleduico/react`](https://github.com/untitleduico/react) design system.
-It remains plain static HTML, CSS, and JavaScript; React, Tailwind CSS, and
-React Aria are not runtime or build dependencies.
+The interactive collections are being migrated to React and TypeScript while
+the deployable result remains a client-only static site. Tailwind CSS and React
+Aria are not runtime or build dependencies.
 
 IBM Plex Sans is the primary interface font. Four small Latin-1 and symbol
 subsets (Regular and Medium) are pinned to IBM's

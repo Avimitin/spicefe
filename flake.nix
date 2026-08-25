@@ -120,9 +120,12 @@
             pname = "spicefe";
             version = "0.1.2";
             src = self;
-            npmDepsHash = "sha256-vznUTQEPcaem9tA9eBH2zKGfb9zPEbGa/IqyKPgo63s=";
+            npmDepsHash = "sha256-aBUIDjhEy4nqftEVhAFOoTV5/nPqezBuwKWexdeg8oc=";
             npmFlags = [ "--ignore-scripts" ];
-            dontNpmBuild = true;
+            nativeBuildInputs = [
+              pkgs.esbuild
+              pkgs.typescript
+            ];
             installPhase = ''
               runHook preInstall
               cmp public/vendor/jmuxer.min.js node_modules/jmuxer/dist/jmuxer.min.js
@@ -131,6 +134,12 @@
               grep -Fx '  "version": "2.0.4",' node_modules/qrcode-generator/package.json
               grep -Fx '  "license": "MIT",' node_modules/qrcode-generator/package.json
               grep -Fx 'Copyright (c) 2009 Kazuhiko Arase' public/vendor/qrcode-generator/LICENSE.MIT.txt
+              grep -Fx '  "version": "19.2.8",' node_modules/react/package.json
+              grep -Fx '  "version": "19.2.8",' node_modules/react-dom/package.json
+              grep -Fx '  "version": "0.27.0",' node_modules/scheduler/package.json
+              cmp public/vendor/react/LICENSE.MIT.txt node_modules/react/LICENSE
+              cmp public/vendor/react/LICENSE.MIT.txt node_modules/react-dom/LICENSE
+              cmp public/vendor/react/LICENSE.MIT.txt node_modules/scheduler/LICENSE
               cmp public/vendor/bemani-fan-site-icons/UPSTREAM_README.md ${bemaniIcons}/README.md
               cmp public/assets/spice2x.ico ${spice2xSource}/src/spice2x/build/icon.ico
               cmp public/vendor/spice2x/LICENSE.GPL-3.0.txt ${spice2xSource}/LICENSE
@@ -287,9 +296,11 @@
           default = pkgs.mkShellNoCC {
             packages = [
               pkgs.actionlint
+              pkgs.esbuild
               pkgs.nodejs
               pkgs.python3
               pkgs.shellcheck
+              pkgs.typescript
             ];
           };
         });

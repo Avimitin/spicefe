@@ -56,6 +56,15 @@ License, Copyright (c) 2009 Kazuhiko Arase. The unmodified browser module,
 complete license, checksum, and source record ship in
 `public/vendor/qrcode-generator/`.
 
+## React
+
+The browser application uses `react@19.2.8`, `react-dom@19.2.8`, and their
+`scheduler@0.27.0` runtime dependency from the official
+[`facebook/react`](https://github.com/facebook/react) project. They are
+licensed under the MIT License, Copyright (c) Meta Platforms, Inc. and
+affiliates. Exact versions, npm integrity values, source links, and the
+complete shared license ship in `public/vendor/react/`.
+
 ## Untitled UI React
 
 The visual tokens and component treatment are adapted for the existing static
