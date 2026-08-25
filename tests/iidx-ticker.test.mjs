@@ -133,6 +133,9 @@ test('offers a texture-backed frameless preview with a clean screenshot view', (
   assert.match(styles, /\.ticker-info-panel\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 15fr\) minmax\(0, 108fr\)/);
   assert.doesNotMatch(styles, /\.ticker-logo-panel\s*\{[\s\S]*?border-right/);
   assert.match(styles, /\.ticker-logo-panel::after,\s*\n\.ticker-info-panel::after\s*\{[\s\S]*?inset 0 0/);
+  assert.match(styles, /\.ticker-logo-panel::before,\s*\n\.ticker-caption::before\s*\{[\s\S]*?linear-gradient/);
+  assert.match(styles, /\.ticker-logo-panel::before,\s*\n\.ticker-caption::before\s*\{[\s\S]*?mix-blend-mode:\s*screen/);
+  assert.doesNotMatch(styles, /\.ticker-display-panel::(?:before|after)/);
   assert.match(styles, /\.ticker-caption\s*\{[\s\S]*?padding-left:\s*1\.718cqi/);
   assert.match(styles, /\.ticker-caption-image\s*\{[\s\S]*?object-fit:\s*contain/);
   assert.doesNotMatch(styles, /\.ticker-caption-(?:title|copy|rule)\s*\{/);

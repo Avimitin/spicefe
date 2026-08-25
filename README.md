@@ -158,7 +158,9 @@ spice2x and the original cabinet hardware. It keeps a fixed 27:5 aspect ratio,
 scales with the available screen, and renders pure red characters on a pure
 black panel with a restrained fluorescent glow. The separate enclosure has
 been removed: the logo, caption, and display sit directly in a brushed-metal
-background that fills the complete ticker surface, including fullscreen.
+background that fills the complete ticker surface, including fullscreen. A
+restrained clear-plastic reflection covers only the logo and caption artwork;
+the red segment window remains unobstructed.
 Recent IIDX releases may offer only a subscreen; use normal video mode for
 those releases.
 
