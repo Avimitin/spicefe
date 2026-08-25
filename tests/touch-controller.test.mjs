@@ -6,21 +6,12 @@ import { mapClientPoint, renderedContentRect } from '../public/lib/touch-control
 const elementRect = { left: 10, top: 20, width: 200, height: 100 };
 const portrait = { width: 100, height: 200 };
 
-test('computes contain letterboxing', () => {
-  assert.deepEqual(renderedContentRect(elementRect, portrait, 'contain'), {
+test('computes aspect-preserving fit geometry for touch mapping', () => {
+  assert.deepEqual(renderedContentRect(elementRect, portrait), {
     left: 85,
     top: 20,
     width: 50,
     height: 100,
-  });
-});
-
-test('computes cover cropping', () => {
-  assert.deepEqual(renderedContentRect(elementRect, portrait, 'cover'), {
-    left: 10,
-    top: -130,
-    width: 200,
-    height: 400,
   });
 });
 

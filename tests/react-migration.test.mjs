@@ -144,6 +144,20 @@ test('keeps connection diagnostics in the server library instead of the streamin
   assert.match(components, /<ChannelStatus channel="API"/);
 });
 
+test('keeps stream telemetry in the topbar without a bottom control bar', () => {
+  const html = read('../public/index.html');
+  const app = read('../src/app.tsx');
+  const styles = read('../src/styles/application.css');
+
+  assert.match(html, /id="stream-metric" class="topbar-stream-metric"/);
+  assert.match(html, /id="video-metric"/);
+  assert.doesNotMatch(html, /id="stage-hud"|id="hud-show-button"/);
+  assert.doesNotMatch(html, /id="view-mode"|id="view-mode-button"/);
+  assert.doesNotMatch(app, /setViewMode|dataset\.viewMode|hudDismissed/);
+  assert.match(styles, /\.stream-view \{[\s\S]*?object-fit: contain;/);
+  assert.doesNotMatch(styles, /stage-hud|data-view-mode/);
+});
+
 test('card position controls feed the shared React card renderer', () => {
   const html = read('../public/index.html');
   const app = read('../src/app.tsx');

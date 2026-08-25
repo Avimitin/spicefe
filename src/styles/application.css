@@ -230,6 +230,20 @@ code {
   white-space: nowrap;
 }
 
+.topbar-stream-metric {
+  display: flex;
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.topbar-stream-metric strong {
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .topbar-spacer {
   min-width: 0;
   flex: 1 1 auto;
@@ -264,8 +278,6 @@ code {
 
 .quiet-button,
 .inline-button,
-.hud-button,
-.hud-close-button,
 .game-icon-button,
 .game-icon-option {
   cursor: pointer;
@@ -348,6 +360,7 @@ code {
   inset: 0;
   background: #000;
   image-rendering: auto;
+  object-fit: contain;
   /* Decoders initialize before the first frame; do not cover the server list meanwhile. */
   opacity: 0;
   pointer-events: none;
@@ -355,18 +368,6 @@ code {
 
 .stage[data-main-view="stream"] .stream-view:not([hidden]) {
   opacity: 1;
-}
-
-.stage[data-view-mode="contain"] .stream-view {
-  object-fit: contain;
-}
-
-.stage[data-view-mode="cover"] .stream-view {
-  object-fit: cover;
-}
-
-.stage[data-view-mode="fill"] .stream-view {
-  object-fit: fill;
 }
 
 .empty-state {
@@ -569,68 +570,6 @@ code {
   transform: translate(-50%, -50%);
 }
 
-.stage-hud {
-  position: absolute;
-  z-index: 8;
-  display: flex;
-  align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  right: 12px;
-  bottom: 12px;
-  left: 12px;
-  transition: opacity 180ms ease;
-  color: #f8fafc;
-  color-scheme: dark;
-}
-
-.hud-metric {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-}
-
-.hud-metric strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.hud-spacer {
-  flex: 1;
-}
-
-.hud-button {
-  height: 32px;
-  padding: 0 10px;
-  border: 1px solid #343a47;
-  border-radius: 8px;
-  background: #1b1f28;
-}
-
-.hud-close-button {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid #343a47;
-  border-radius: 8px;
-  background: #1b1f28;
-}
-
-.hud-close-button:hover {
-  color: #ffffff;
-}
-
-.hud-close-button svg {
-  width: 17px;
-  height: 17px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-}
-
 .settings-dialog,
 .icon-dialog,
 .confirm-dialog {
@@ -765,7 +704,7 @@ code {
 
 .stream-options {
   display: grid;
-  grid-template-columns: 1.35fr 1.35fr 80px 90px 1fr;
+  grid-template-columns: 1.35fr 1.35fr 80px 90px;
 }
 
 .stream-options .field small {
@@ -1223,6 +1162,19 @@ code {
 
 .active-server-copy strong {
   font-weight: 600;
+}
+
+.topbar-stream-metric {
+  min-height: 28px;
+  padding-left: 12px;
+  border-left: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.topbar-stream-metric strong {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
 }
 
 .profile-icon {
@@ -1781,51 +1733,6 @@ code {
   font-size: 12px;
 }
 
-.stage-hud {
-  gap: 16px;
-  padding: 10px 12px;
-  border-color: rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  background: rgba(23, 23, 23, 0.94);
-  box-shadow: var(--shadow-lg);
-}
-
-.hud-metric span {
-  color: #a1a1a1;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0;
-}
-
-.hud-metric strong {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.hud-button,
-.hud-close-button {
-  border-color: #525252;
-  border-radius: 8px;
-  background: #262626;
-  box-shadow: var(--shadow-xs);
-}
-
-.hud-button {
-  min-width: 56px;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.hud-close-button {
-  color: #d4d4d4;
-}
-
-.hud-close-button:hover {
-  border-color: #737373;
-  background: #404040;
-}
-
 .touch-marker {
   border-color: rgba(255, 255, 255, 0.8);
   background: rgba(127, 86, 217, 0.25);
@@ -1884,8 +1791,7 @@ body {
 .game-icon-option span,
 .stream-message strong,
 .api-warning strong,
-.hud-metric strong,
-.hud-button {
+.topbar-stream-metric strong {
   font-weight: 500;
 }
 
@@ -2427,6 +2333,11 @@ body {
   color: #ffffff;
 }
 
+#app[data-main-view="stream"] .topbar-stream-metric {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #d4d4d4;
+}
+
 #app[data-main-view="stream"] .brand-server-icon {
   border: 0;
   background: #262626;
@@ -2566,9 +2477,6 @@ body {
     grid-column: auto;
   }
 
-  .optional-metric {
-    display: none;
-  }
 }
 
 @media (max-width: 620px) {
@@ -2656,14 +2564,6 @@ body {
   .stream-settings {
     margin-right: 18px;
     margin-left: 18px;
-  }
-
-  .stage-hud {
-    gap: 8px;
-    padding: 7px 8px;
-    right: 8px;
-    bottom: 8px;
-    left: 8px;
   }
 
   .setup-list li {
@@ -2754,14 +2654,6 @@ body {
     display: none;
   }
 
-  .stage-hud {
-    opacity: 0.56;
-  }
-
-  .stage-hud:hover,
-.stage-hud:focus-within {
-    opacity: 1;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

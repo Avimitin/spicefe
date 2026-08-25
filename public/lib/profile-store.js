@@ -4,7 +4,6 @@ export const PROFILE_STORAGE_KEY = 'spicefe.connections.v1';
 
 const FORMATS = new Set(['auto', 'h264', 'mjpg']);
 const SCREENS = new Set(['', '0', '1', '2', '3']);
-const VIEW_MODES = new Set(['contain', 'cover', 'fill']);
 
 const clampInteger = (value, fallback, minimum, maximum) => {
   const parsed = Number.parseInt(value, 10);
@@ -71,10 +70,6 @@ export function sanitizeProfile(input = {}) {
   const id = String(input.id ?? '').trim().slice(0, 96) || createId();
   const format = FORMATS.has(String(input.format)) ? String(input.format) : 'auto';
   const screen = SCREENS.has(String(input.screen ?? '')) ? String(input.screen ?? '') : '';
-  const viewMode = VIEW_MODES.has(String(input.viewMode))
-    ? String(input.viewMode)
-    : 'contain';
-
   return {
     id,
     name,
@@ -86,7 +81,9 @@ export function sanitizeProfile(input = {}) {
     screen,
     fps: clampInteger(input.fps, 30, 1, 60),
     quality: clampInteger(input.quality, 70, 1, 100),
-    viewMode,
+    // Retain the v1 field for saved-profile and QR compatibility. Alternate
+    // layouts were removed; every profile now uses aspect-preserving Fit.
+    viewMode: 'contain',
     tickerEnabled: input.tickerEnabled === true,
   };
 }

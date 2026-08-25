@@ -56,6 +56,11 @@
         </span>
       </div>
 
+      <div id="stream-metric" class="topbar-stream-metric" hidden>
+        <span class="sr-only" data-i18n="hud.video">Video</span>
+        <strong id="video-metric">—</strong>
+      </div>
+
       <span class="topbar-spacer"></span>
 
       <div id="card-controls" class="card-controls" hidden>
@@ -100,10 +105,6 @@
         <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"/></svg>
       </button>
 
-      <button id="hud-show-button" class="icon-button" type="button" hidden aria-controls="stage-hud" aria-label="Show screen controls" title="Show screen controls" data-i18n-aria-label="hud.show" data-i18n-title="hud.show">
-        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 15h16M8 17.5h8"/></svg>
-      </button>
-
       <button id="connect-button" class="primary-button topbar-connect-button" type="button" hidden aria-label="Connect" title="Connect">
         <svg class="topbar-connect-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M2 8.8a15 15 0 0 1 3.5-2.1M10.7 5.1A15.4 15.4 0 0 1 22 8.8M5 12.9A10 10 0 0 1 7.9 11M12.4 9a10 10 0 0 1 6.6 3.9M8.5 16.4a5 5 0 0 1 4.9-1.1M12 20h.01M3 3l18 18"/></svg>
         <span id="connect-button-label" data-i18n="button.connect">Connect</span>
@@ -123,7 +124,7 @@
       <button id="compat-dismiss" class="quiet-button" type="button" aria-label="Dismiss browser setup message" data-i18n="button.dismiss" data-i18n-aria-label="compat.dismiss">Dismiss</button>
     </aside>
 
-    <main id="stage" class="stage" data-view-mode="contain">
+    <main id="stage" class="stage">
       <div class="stage-backdrop" aria-hidden="true"></div>
       <canvas id="h264-view" class="stream-view" hidden></canvas>
       <video id="mse-view" class="stream-view" autoplay muted playsinline hidden aria-label="Spice subscreen stream" data-i18n-aria-label="stream.aria"></video>
@@ -929,21 +930,6 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run</code></pre>
 
       <div id="touch-marker" class="touch-marker" hidden aria-hidden="true"></div>
 
-      <footer id="stage-hud" class="stage-hud" hidden>
-        <div class="hud-metric">
-          <span data-i18n="hud.video">VIDEO</span>
-          <strong id="video-metric">—</strong>
-        </div>
-        <div class="hud-metric optional-metric">
-          <span data-i18n="hud.latency">LATENCY MODE</span>
-          <strong data-i18n="hud.live">LIVE</strong>
-        </div>
-        <span class="hud-spacer"></span>
-        <button id="view-mode-button" class="hud-button" type="button" title="Change how the video fits the screen" data-i18n="display.contain" data-i18n-title="hud.viewModeTitle">Fit</button>
-        <button id="hud-close-button" class="hud-close-button" type="button" aria-label="Hide screen controls" title="Hide screen controls" data-i18n-aria-label="hud.hide" data-i18n-title="hud.hide">
-          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>
-        </button>
-      </footer>
     </main>
   </div>
 
@@ -1043,14 +1029,6 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run</code></pre>
           <label class="field compact-field">
             <span data-i18n="settings.quality">Quality</span>
             <input id="quality" type="number" inputmode="numeric" min="1" max="100" value="70">
-          </label>
-          <label class="field">
-            <span data-i18n="settings.display">Display</span>
-            <select id="view-mode">
-              <option value="contain" selected data-i18n="display.contain">Fit</option>
-              <option value="cover" data-i18n="display.cover">Fill</option>
-              <option value="fill" data-i18n="display.fill">Stretch</option>
-            </select>
           </label>
         </div>
       </details>

@@ -39,6 +39,7 @@ test('sanitizes profile ranges and drops connection state', () => {
     fps: 0,
     quality: 500,
     iconId: '../../not-an-icon',
+    viewMode: 'fill',
     tickerEnabled: 'false',
     connected: true,
   });
@@ -47,6 +48,7 @@ test('sanitizes profile ranges and drops connection state', () => {
   assert.equal(profile.fps, 1);
   assert.equal(profile.quality, 100);
   assert.equal(profile.iconId, 'spice2x');
+  assert.equal(profile.viewMode, 'contain');
   assert.equal(profile.tickerEnabled, false);
   assert.equal('connected' in profile, false);
 });

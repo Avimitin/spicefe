@@ -1,17 +1,14 @@
 const clamp = (value, minimum, maximum) => Math.min(Math.max(value, minimum), maximum);
 
-export function renderedContentRect(elementRect, sourceSize, viewMode = 'contain') {
+export function renderedContentRect(elementRect, sourceSize) {
   if (!elementRect.width || !elementRect.height || !sourceSize.width || !sourceSize.height) {
     return null;
   }
 
-  if (viewMode === 'fill') {
-    return { ...elementRect };
-  }
-
-  const scale = viewMode === 'cover'
-    ? Math.max(elementRect.width / sourceSize.width, elementRect.height / sourceSize.height)
-    : Math.min(elementRect.width / sourceSize.width, elementRect.height / sourceSize.height);
+  const scale = Math.min(
+    elementRect.width / sourceSize.width,
+    elementRect.height / sourceSize.height,
+  );
   const width = sourceSize.width * scale;
   const height = sourceSize.height * scale;
   return {
@@ -47,7 +44,6 @@ export class TouchController {
     this.onmarker = options.onmarker || (() => {});
     this.api = null;
     this.canvasSize = null;
-    this.viewMode = 'contain';
     this.enabled = false;
     this.pointers = new Map();
     this.resets = [];
@@ -91,14 +87,10 @@ export class TouchController {
     this.canvasSize = size?.width > 0 && size?.height > 0 ? { ...size } : null;
   }
 
-  setViewMode(mode) {
-    this.viewMode = mode;
-  }
-
   contentRect() {
     const view = this.activeView();
     const source = this.viewSize();
-    return view ? renderedContentRect(view.getBoundingClientRect(), source, this.viewMode) : null;
+    return view ? renderedContentRect(view.getBoundingClientRect(), source) : null;
   }
 
   pointFromEvent(event, requireInside) {

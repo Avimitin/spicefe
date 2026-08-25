@@ -29,7 +29,7 @@ const profile = (overrides = {}) => ({
   ...overrides,
 });
 
-test('round-trips every portable connection field without local state or ID', () => {
+test('round-trips portable fields and normalizes the retired view mode', () => {
   const restored = decodeSharedProfile(encodeSharedProfile(profile()));
 
   assert.deepEqual(restored, {
@@ -42,7 +42,7 @@ test('round-trips every portable connection field without local state or ID', ()
     screen: '1',
     fps: 60,
     quality: 82,
-    viewMode: 'cover',
+    viewMode: 'contain',
     tickerEnabled: true,
   });
   assert.equal('id' in restored, false);

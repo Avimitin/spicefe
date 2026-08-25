@@ -192,9 +192,7 @@ const cardMenuEmpty = element('card-menu-empty');
 const cardMenuApiNote = element('card-menu-api-note');
 const deleteCardDialog = element('delete-card-dialog');
 const streamMessage = element('stream-message');
-const stageHud = element('stage-hud');
-const hudShowButton = element('hud-show-button');
-const hudCloseButton = element('hud-close-button');
+const streamMetric = element('stream-metric');
 
 // Keep the long deployment guide next to the browser guide in source while
 // presenting connection setup and self-hosting as one continuous usage page.
@@ -226,7 +224,6 @@ let toastTimer: ReturnType<typeof setTimeout> | null = null;
 let currentMetric: StreamMetric | null = null;
 let lastMetricPaint = 0;
 let bannerDismissed = false;
-let hudDismissed = false;
 let renderedMainView: MainView | null = null;
 const reachability = new Map();
 const reachabilityInFlight = new Map();
@@ -889,12 +886,8 @@ function fillForm(profile: Profile) {
   element('screen').value = profile.screen;
   element('fps').value = String(profile.fps);
   element('quality').value = String(profile.quality);
-  element('view-mode').value = profile.viewMode;
   setTickerModeEnabled(profile.tickerEnabled);
   syncTickerModeControls();
-  element('view-mode-button').textContent = t(`display.${profile.viewMode}`);
-  stage.dataset.viewMode = profile.viewMode;
-  touch.setViewMode(profile.viewMode);
 }
 
 function profileFromForm() {
@@ -910,7 +903,6 @@ function profileFromForm() {
     screen: element('screen').value,
     fps: element('fps').value,
     quality: element('quality').value,
-    viewMode: element('view-mode').value,
     tickerEnabled: tickerEnabledDraft,
   });
 }
@@ -1214,7 +1206,6 @@ function profileShareFormat(profile: Profile) {
     format,
     fps: profile.fps,
     quality: profile.quality,
-    view: t(`display.${profile.viewMode}`),
   });
 }
 
@@ -1536,6 +1527,7 @@ function renderMainView(snapshot: SessionSnapshot): MainView {
   const streaming = view === 'stream';
   const tickerStreaming = streaming && snapshot.profile?.tickerEnabled;
   activeServer.hidden = !streaming;
+  streamMetric.hidden = !streaming || tickerStreaming;
   languagePicker.hidden = streaming;
   settingsButton.hidden = streaming;
   connectButton.hidden = !streaming;
@@ -1585,9 +1577,6 @@ function renderSnapshot(snapshot: SessionSnapshot, announce = true) {
   const view = renderMainView(snapshot);
   renderServerList(snapshot);
   const tickerMode = snapshot.profile?.tickerEnabled === true;
-  const hudAvailable = snapshot.videoState === 'live' && !tickerMode;
-  stageHud.hidden = !hudAvailable || hudDismissed;
-  hudShowButton.hidden = !hudAvailable || !hudDismissed;
   touch.setEnabled(
     snapshot.videoState === 'live' && snapshot.apiState === 'live' && !tickerMode,
   );
@@ -1653,8 +1642,6 @@ function connectSelected() {
   element('video-metric').textContent = t(
     profile.tickerEnabled ? 'metric.ticker' : 'metric.waiting',
   );
-  stage.dataset.viewMode = profile.viewMode;
-  touch.setViewMode(profile.viewMode);
   useLibraryPageForConnection();
   session.connect(profile);
 }
@@ -1993,18 +1980,6 @@ profileShareDialog.addEventListener('close', () => {
 element('close-settings').addEventListener('click', closeSettings);
 connectButton.addEventListener('click', connectSelected);
 
-hudCloseButton.addEventListener('click', () => {
-  hudDismissed = true;
-  renderSnapshot(session.snapshot, false);
-  hudShowButton.focus();
-});
-
-hudShowButton.addEventListener('click', () => {
-  hudDismissed = false;
-  renderSnapshot(session.snapshot, false);
-  hudCloseButton.focus();
-});
-
 element('delete-profile').addEventListener('click', () => {
   if (!editingProfile || editingProfileIsNew) {
     return;
@@ -2311,27 +2286,6 @@ streamSettings.addEventListener('toggle', () => {
   }
 });
 
-element('view-mode').addEventListener('change', () => {
-  const mode = element('view-mode').value;
-  stage.dataset.viewMode = mode;
-  touch.setViewMode(mode);
-  element('view-mode-button').textContent = t(`display.${mode}`);
-});
-
-const VIEW_MODES = ['contain', 'cover', 'fill'];
-
-element('view-mode-button').addEventListener('click', () => {
-  const current = stage.dataset.viewMode || 'contain';
-  const next = VIEW_MODES[(VIEW_MODES.indexOf(current) + 1)
-    % VIEW_MODES.length];
-  stage.dataset.viewMode = next;
-  touch.setViewMode(next);
-  element('view-mode').value = next;
-  element('view-mode-button').textContent = t(`display.${next}`);
-  const profile = store.selected();
-  store.upsert({ ...profile, viewMode: next });
-});
-
 type FullscreenDocument = Document & {
   webkitExitFullscreen?: () => Promise<void> | void;
   webkitFullscreenElement?: Element | null;
@@ -2400,7 +2354,6 @@ function renderLocalizedUi() {
   renderConnectionButton();
   renderCompatibility();
   renderSnapshot(session.snapshot, false);
-  element('view-mode-button').textContent = t(`display.${stage.dataset.viewMode || 'contain'}`);
   element('show-password').textContent = t(
     element('password').type === 'text' ? 'button.hide' : 'button.show',
   );
