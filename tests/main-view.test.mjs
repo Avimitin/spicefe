@@ -142,3 +142,32 @@ test('connection entry points expose the usage guide and a clear primary icon', 
     /settings-guide-link'\)\.addEventListener\('click',[\s\S]*navigateToBrowsePage\('guide'\)/,
   );
 });
+
+test('saved servers expose explicit QR export and query restore controls', () => {
+  const markup = readFileSync(
+    new URL('../public/index.html', import.meta.url),
+    'utf8',
+  );
+  const script = readFileSync(
+    new URL('../public/app.js', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(markup, /id="profile-share-dialog"/);
+  assert.match(markup, /id="profile-share-qr"[\s\S]*id="profile-share-link"/);
+  assert.match(markup, /id="profile-share-restore"[^>]*hidden/);
+  assert.match(
+    script,
+    /shareButton\.addEventListener\('click',[\s\S]*store\.get\(profile\.id\)[\s\S]*openProfileShare\(latestProfile\)/,
+  );
+  assert.match(
+    script,
+    /const incomingProfileShare = extractSharedProfile\(location\.href\);[\s\S]*history\.replaceState\(null, '', incomingProfileShare\.cleanPath\)/,
+  );
+  assert.match(
+    script,
+    /if \(incomingProfileShare\.profile\) \{[\s\S]*showProfileRestore\(incomingProfileShare\.profile\)/,
+  );
+  assert.match(script, /profileShareRestore\.addEventListener\('click', restoreSharedProfile\)/);
+  assert.doesNotMatch(script, /showProfileRestore\([^)]+\)[\s\S]{0,200}session\.connect/);
+});

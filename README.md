@@ -6,7 +6,10 @@
 > passwords as plain text in browser `localStorage`. A copy of spicefe loaded
 > over HTTP can also be modified in transit. Prefer a supported per-site HTTPS
 > exception on desktop, and deploy only reviewed artifacts through a static
-> host you trust.
+> host you trust. Server-sharing links and QR codes can include the API
+> password; their Base64URL payload is encoded, not encrypted, and may be
+> visible to the static host in request logs. Share them only with trusted
+> devices and people.
 
 [简体中文](./README.zh-CN.md)
 
@@ -59,6 +62,8 @@ the LAN.
 - multiple named connection profiles in `localStorage`, each with a selectable
   categorized game icon or locally uploaded, center-cropped artwork shown beside
   the PC name
+- QR-code and direct-link export for saved server profiles, with an explicit
+  preview-and-save restore flow on the receiving device
 - explicit Connect, Disconnect, and Switch behavior; a reload never reconnects
 - English and Simplified Chinese UI with browser-language detection and a saved
   manual language choice
@@ -110,6 +115,28 @@ resizes it to at most 384×384 on the device, and saves only that result in brow
 top of the picker under **Custom Icons** and can be reused by multiple server
 profiles. Up to 24 custom icons are kept. Removing one makes profiles that
 referenced it display the default spice2x icon instead.
+
+## Sharing server configurations
+
+Select the QR button on a saved-server card to create a scannable code and a
+direct link. The portable profile includes its name, host, API port, API
+password, built-in game icon, video settings, view mode, and IIDX ticker mode.
+Browser-local uploaded icon artwork is deliberately excluded; the receiving
+device uses the default spice2x icon instead.
+
+Opening the link reads the versioned `spicefe-profile` query parameter, removes
+it from the visible address immediately, and presents the decoded settings for
+confirmation. **Save server** adds the profile, or updates an existing profile
+with the same host and API port. It never starts a connection automatically.
+The readable `spicefe-host` and `spicefe-port` parameters identify which
+spice2x connection is inside the link; the page address at the beginning still
+identifies the static spicefe host and therefore does not change when editing a
+gaming PC. Receiving clients reject links whose readable address disagrees with
+the encoded profile.
+The payload is validated before it can be stored, but it is Base64URL-encoded,
+not encrypted. If it contains a password, anyone with the link can recover that
+password, and the initial request URL may appear in static-host or browser
+records. Use this convenience only between trusted devices on the trusted LAN.
 
 ## Old IIDX 16-segment display
 
@@ -415,13 +442,13 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
 
 ## Dependency policy
 
-The only browser dependency is `jmuxer@2.1.1`, a pure-JavaScript package with
-no transitive dependencies. It is exact-version locked with npm integrity
-metadata and has no install lifecycle scripts. The Nix build passes
-`--ignore-scripts`, downloads the dependency through a fixed-output Nix
-derivation, and byte-compares its distribution and license with the copies in
-`public/vendor/` before producing the site. No executable npm binary is
-downloaded or run.
+The browser dependencies are the pure-JavaScript packages `jmuxer@2.1.1` and
+`qrcode-generator@2.0.4`; neither has runtime transitive dependencies or an
+install lifecycle script. Both are exact-version locked with npm integrity
+metadata. The Nix build passes `--ignore-scripts`, downloads them through a
+fixed-output Nix derivation, and byte-compares their vendored browser
+distributions before producing the site. Complete license and source records
+ship in `public/vendor/`. No executable npm binary is downloaded or run.
 
 ## Interface and font assets
 

@@ -47,6 +47,15 @@ The deployable site includes `jmuxer@2.1.1` from
 licensed under the MIT License, Copyright (c) 2018 Samir Das. The complete
 license ships with the browser asset as `public/vendor/jmuxer.LICENSE.txt`.
 
+## qrcode-generator
+
+The server-profile sharing dialog uses `qrcode-generator@2.0.4` from
+[`kazuhikoarase/qrcode-generator`](https://github.com/kazuhikoarase/qrcode-generator)
+to create QR codes entirely in the browser. It is licensed under the MIT
+License, Copyright (c) 2009 Kazuhiko Arase. The unmodified browser module,
+complete license, checksum, and source record ship in
+`public/vendor/qrcode-generator/`.
+
 ## Untitled UI React
 
 The visual tokens and component treatment are adapted for the existing static

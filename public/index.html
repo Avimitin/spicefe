@@ -1131,6 +1131,118 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run</code></pre>
     </div>
   </dialog>
 
+  <dialog id="profile-share-dialog" class="profile-share-dialog"
+          aria-labelledby="profile-share-title">
+    <div class="profile-share-shell">
+      <header class="profile-share-header">
+        <div>
+          <p id="profile-share-eyebrow" class="eyebrow" data-i18n="profileShare.exportEyebrow">
+            SHARE CONNECTION
+          </p>
+          <h2 id="profile-share-title" data-i18n="profileShare.exportTitle">
+            Scan to restore this server
+          </h2>
+        </div>
+        <button id="profile-share-close" class="profile-share-close" type="button"
+                aria-label="Close connection sharing" title="Close connection sharing"
+                data-i18n-aria-label="profileShare.close"
+                data-i18n-title="profileShare.close">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+      </header>
+
+      <div class="profile-share-content" aria-live="polite">
+        <section id="profile-share-export" class="profile-share-export">
+          <div class="profile-share-qr-column">
+            <div id="profile-share-qr" class="profile-share-qr" role="img"
+                 aria-label="QR code for this server connection"
+                 data-i18n-aria-label="profileShare.qrAria"></div>
+            <p id="profile-share-qr-error" class="profile-share-qr-error" hidden></p>
+          </div>
+
+          <div class="profile-share-details">
+            <div class="profile-share-server">
+              <img id="profile-share-export-icon" class="profile-icon large" alt="">
+              <span>
+                <strong id="profile-share-export-name"></strong>
+                <small id="profile-share-export-address"></small>
+              </span>
+            </div>
+
+            <aside id="profile-share-security" class="profile-share-notice" role="note">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 8v4M12 16h.01M10.3 4.6 2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4.6a2 2 0 0 0-3.4 0Z"/></svg>
+              <div>
+                <strong data-i18n="profileShare.securityTitle">Treat this link as private</strong>
+                <p id="profile-share-security-copy"></p>
+              </div>
+            </aside>
+
+            <label class="profile-share-link-field">
+              <span data-i18n="profileShare.directLink">Direct restore link</span>
+              <span class="profile-share-link-row">
+                <input id="profile-share-link" type="text" readonly autocomplete="off"
+                       spellcheck="false" aria-label="Direct restore link"
+                       data-i18n-aria-label="profileShare.directLink">
+                <button id="profile-share-copy" class="secondary-button" type="button"
+                        data-i18n="profileShare.copy">Copy</button>
+              </span>
+            </label>
+            <p class="profile-share-local-note" data-i18n="profileShare.localArtwork">
+              Uploaded custom artwork stays on this device and is not included.
+            </p>
+          </div>
+        </section>
+
+        <section id="profile-share-import" class="profile-share-import" hidden>
+          <div class="profile-share-import-server">
+            <img id="profile-share-import-icon" class="profile-icon large" alt="">
+            <span>
+              <strong id="profile-share-import-name"></strong>
+              <small id="profile-share-import-address"></small>
+            </span>
+          </div>
+
+          <dl class="profile-share-summary">
+            <div>
+              <dt data-i18n="profileShare.output">Output</dt>
+              <dd id="profile-share-import-output"></dd>
+            </div>
+            <div>
+              <dt data-i18n="profileShare.password">API password</dt>
+              <dd id="profile-share-import-password"></dd>
+            </div>
+            <div>
+              <dt data-i18n="profileShare.streamSettings">Stream settings</dt>
+              <dd id="profile-share-import-stream"></dd>
+            </div>
+          </dl>
+
+          <aside class="profile-share-notice profile-share-restore-notice" role="note">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 8v4M12 16h.01M10.3 4.6 2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4.6a2 2 0 0 0-3.4 0Z"/></svg>
+            <div>
+              <strong data-i18n="profileShare.reviewTitle">Review before saving</strong>
+              <p id="profile-share-import-action"></p>
+            </div>
+          </aside>
+        </section>
+
+        <section id="profile-share-error" class="profile-share-error" hidden>
+          <span class="profile-share-error-icon" aria-hidden="true">!</span>
+          <strong data-i18n="profileShare.invalidTitle">Invalid connection link</strong>
+          <p id="profile-share-error-copy"></p>
+        </section>
+      </div>
+
+      <footer class="profile-share-footer">
+        <span id="profile-share-status" aria-live="polite"></span>
+        <button id="profile-share-dismiss" class="secondary-button" type="button"
+                data-i18n="profileShare.closeButton">Close</button>
+        <button id="profile-share-restore" class="primary-button" type="button" hidden
+                data-i18n="profileShare.restore">Save server</button>
+      </footer>
+    </div>
+  </dialog>
+
   <div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
 
   <script src="./vendor/jmuxer.min.js"></script>

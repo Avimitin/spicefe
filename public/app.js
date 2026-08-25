@@ -43,6 +43,11 @@ import {
   sanitizeProfile,
 } from './lib/profile-store.js';
 import {
+  extractSharedProfile,
+  sharedProfileUrl,
+} from './lib/profile-share.js';
+import { createQrCodeSvg } from './lib/qr-code.js';
+import {
   deriveReachability,
   probeSpiceApi,
   probeSpiceTicker,
@@ -73,6 +78,11 @@ const tickerPreviewDialog = element('ticker-preview-dialog');
 const tickerPreviewInput = element('ticker-preview-input');
 const tickerPreviewText = element('ticker-preview-text');
 const settingsDialog = element('settings-dialog');
+const profileShareDialog = element('profile-share-dialog');
+const profileShareExport = element('profile-share-export');
+const profileShareImport = element('profile-share-import');
+const profileShareError = element('profile-share-error');
+const profileShareRestore = element('profile-share-restore');
 const iconDialog = element('icon-dialog');
 const deleteDialog = element('delete-dialog');
 const form = element('profile-form');
@@ -159,6 +169,8 @@ let cardImportController = null;
 let cardImportRun = 0;
 let cardImportProfile = null;
 let cardImportCandidates = [];
+let profileShareCandidate = null;
+let profileShareExisting = null;
 let tickerPreviewOffset = 0;
 let tickerPreviewTimer = null;
 let editingProfile = null;
@@ -238,6 +250,11 @@ function showToast(message, timeout = 4500) {
 // changing schemes. Never import it; only remove it from legacy bookmarks.
 if (new URLSearchParams(location.hash.slice(1)).has('spicefe-profile')) {
   history.replaceState(null, '', `${location.pathname}${location.search}`);
+}
+
+const incomingProfileShare = extractSharedProfile(location.href);
+if (incomingProfileShare.found) {
+  history.replaceState(null, '', incomingProfileShare.cleanPath);
 }
 
 function requestedBrowsePage() {
@@ -1123,6 +1140,182 @@ function reachabilityPresentation(profile) {
   };
 }
 
+function setProfileShareHeader(eyebrowKey, titleKey) {
+  const eyebrow = element('profile-share-eyebrow');
+  const title = element('profile-share-title');
+  eyebrow.dataset.i18n = eyebrowKey;
+  eyebrow.textContent = t(eyebrowKey);
+  title.dataset.i18n = titleKey;
+  title.textContent = t(titleKey);
+}
+
+function setProfileShareView(view) {
+  profileShareExport.hidden = view !== 'export';
+  profileShareImport.hidden = view !== 'import';
+  profileShareError.hidden = view !== 'error';
+  profileShareRestore.hidden = view !== 'import';
+  element('profile-share-status').textContent = '';
+}
+
+function profileShareAddress(profile) {
+  return t('library.address', {
+    host: profile.host,
+    port: profile.apiPort,
+  });
+}
+
+function profileShareFormat(profile) {
+  const format = {
+    auto: t('settings.formatAuto'),
+    h264: t('settings.formatH264'),
+    mjpg: 'MJPEG',
+  }[profile.format];
+  return t('profileShare.streamSummary', {
+    format,
+    fps: profile.fps,
+    quality: profile.quality,
+    view: t(`display.${profile.viewMode}`),
+  });
+}
+
+function profileShareOutput(profile) {
+  if (profile.tickerEnabled) {
+    return t('profileShare.outputTicker');
+  }
+  const screen = profile.screen
+    ? t('profileShare.screenNumber', { screen: profile.screen })
+    : t('profileShare.screenAuto');
+  return t('profileShare.outputVideo', { screen });
+}
+
+function showProfileShareDialog() {
+  if (!profileShareDialog.open) {
+    profileShareDialog.showModal();
+  }
+}
+
+function showProfileShareError(error) {
+  profileShareCandidate = null;
+  profileShareExisting = null;
+  setProfileShareHeader('profileShare.importEyebrow', 'profileShare.invalidTitle');
+  setProfileShareView('error');
+  element('profile-share-error-copy').textContent = t(
+    error?.code === 'unsupported'
+      ? 'profileShare.unsupportedCopy'
+      : 'profileShare.invalidCopy',
+  );
+  showProfileShareDialog();
+}
+
+function openProfileShare(profile) {
+  let link;
+  try {
+    link = sharedProfileUrl(profile, location.href);
+  } catch (error) {
+    showProfileShareError(error);
+    return;
+  }
+
+  profileShareCandidate = null;
+  profileShareExisting = null;
+  setProfileShareHeader('profileShare.exportEyebrow', 'profileShare.exportTitle');
+  setProfileShareView('export');
+  setProfileIcon(element('profile-share-export-icon'), profile.iconId);
+  element('profile-share-export-name').textContent = profile.name;
+  element('profile-share-export-address').textContent = profileShareAddress(profile);
+  element('profile-share-security-copy').textContent = t(profile.password
+    ? 'profileShare.securityPassword'
+    : 'profileShare.securityNoPassword');
+  element('profile-share-link').value = link;
+
+  const qr = element('profile-share-qr');
+  const qrError = element('profile-share-qr-error');
+  qr.hidden = false;
+  qrError.hidden = true;
+  qr.replaceChildren();
+  try {
+    qr.innerHTML = createQrCodeSvg(link, {
+      title: t('profileShare.exportTitle'),
+      alt: t('profileShare.qrAria'),
+    });
+  } catch {
+    qr.hidden = true;
+    qrError.textContent = t('profileShare.qrTooLarge');
+    qrError.hidden = false;
+  }
+  showProfileShareDialog();
+}
+
+function matchingSharedProfile(candidate) {
+  const host = candidate.host.toLowerCase();
+  return configuredProfiles(store.list()).find((profile) => (
+    profile.host.toLowerCase() === host && profile.apiPort === candidate.apiPort
+  )) || null;
+}
+
+function showProfileRestore(candidate) {
+  profileShareCandidate = { ...candidate };
+  profileShareExisting = matchingSharedProfile(candidate);
+  setProfileShareHeader('profileShare.importEyebrow', 'profileShare.importTitle');
+  setProfileShareView('import');
+  setProfileIcon(element('profile-share-import-icon'), candidate.iconId);
+  element('profile-share-import-name').textContent = candidate.name;
+  element('profile-share-import-address').textContent = profileShareAddress(candidate);
+  element('profile-share-import-output').textContent = profileShareOutput(candidate);
+  element('profile-share-import-password').textContent = t(candidate.password
+    ? 'profileShare.passwordIncluded'
+    : 'profileShare.passwordNone');
+  element('profile-share-import-stream').textContent = profileShareFormat(candidate);
+  element('profile-share-import-action').textContent = profileShareExisting
+    ? t('profileShare.replaceCopy', { name: profileShareExisting.name })
+    : t('profileShare.addCopy');
+  showProfileShareDialog();
+}
+
+function closeProfileShareDialog() {
+  if (profileShareDialog.open) {
+    profileShareDialog.close();
+  }
+}
+
+async function copyProfileShareLink() {
+  const input = element('profile-share-link');
+  let copied = false;
+  try {
+    await navigator.clipboard.writeText(input.value);
+    copied = true;
+  } catch {
+    input.focus();
+    input.select();
+    copied = document.execCommand?.('copy') || false;
+  }
+  element('profile-share-status').textContent = t(copied
+    ? 'profileShare.copied'
+    : 'profileShare.copyFailed');
+}
+
+function restoreSharedProfile() {
+  if (!profileShareCandidate) {
+    return;
+  }
+  const candidate = profileShareCandidate;
+  const reusableDraft = store.list().find((profile) => !profile.host);
+  const base = profileShareExisting || reusableDraft || newProfile();
+  const restored = store.upsert({
+    ...base,
+    ...candidate,
+    id: base.id,
+  });
+
+  closeProfileShareDialog();
+  browsePage = 'servers';
+  updateBrowsePageHistory('servers', 'replace');
+  fillForm(restored);
+  renderProfileLists();
+  void probeProfileReachability(restored, true);
+  showToast(t('profileShare.restored'));
+}
+
 function createServerCard(profile, snapshot) {
   const active = snapshot.wanted && snapshot.profile?.id === profile.id;
   const saved = probeStatus(profile);
@@ -1150,6 +1343,7 @@ function createServerCard(profile, snapshot) {
   const reachableLabel = document.createElement('span');
   const statuses = document.createElement('div');
   const actions = document.createElement('div');
+  const shareButton = document.createElement('button');
   const editButton = document.createElement('button');
   const connectionButton = document.createElement('button');
 
@@ -1166,6 +1360,18 @@ function createServerCard(profile, snapshot) {
   artworkImage.decoding = 'async';
   setProfileIcon(artworkImage, profile.iconId);
   artwork.append(artworkImage);
+
+  shareButton.type = 'button';
+  shareButton.className = 'server-share-button';
+  shareButton.setAttribute('aria-label', t('profileShare.openLabel', { name: profile.name }));
+  shareButton.title = t('profileShare.openLabel', { name: profile.name });
+  shareButton.innerHTML = '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v6h-6v-2h4z"/></svg>';
+  shareButton.addEventListener('click', () => {
+    const latestProfile = store.get(profile.id);
+    if (latestProfile) {
+      openProfileShare(latestProfile);
+    }
+  });
 
   details.className = 'server-card-details';
   detailsBackdrop.className = 'server-card-details-backdrop';
@@ -1239,7 +1445,7 @@ function createServerCard(profile, snapshot) {
     detailsSurface.append(diagnostic);
   }
   details.append(detailsBackdrop, detailsSurface);
-  card.append(artwork, details);
+  card.append(artwork, shareButton, details);
   return card;
 }
 
@@ -1811,6 +2017,21 @@ cardImportDialog.addEventListener('cancel', (event) => {
   closeCardImportDialog();
 });
 cardImportDialog.addEventListener('close', stopCardImportScan);
+element('profile-share-close').addEventListener('click', closeProfileShareDialog);
+element('profile-share-dismiss').addEventListener('click', closeProfileShareDialog);
+element('profile-share-copy').addEventListener('click', copyProfileShareLink);
+profileShareRestore.addEventListener('click', restoreSharedProfile);
+profileShareDialog.addEventListener('cancel', (event) => {
+  event.preventDefault();
+  closeProfileShareDialog();
+});
+profileShareDialog.addEventListener('close', () => {
+  profileShareCandidate = null;
+  profileShareExisting = null;
+  element('profile-share-qr').replaceChildren();
+  element('profile-share-link').value = '';
+  element('profile-share-status').textContent = '';
+});
 element('close-settings').addEventListener('click', closeSettings);
 connectButton.addEventListener('click', connectSelected);
 
@@ -2269,6 +2490,13 @@ renderProfileLists();
 fillForm(store.selected());
 renderCompatibility();
 renderSnapshot(session.snapshot);
+if (incomingProfileShare.found) {
+  if (incomingProfileShare.profile) {
+    showProfileRestore(incomingProfileShare.profile);
+  } else {
+    showProfileShareError(incomingProfileShare.error);
+  }
+}
 if (browsePage === 'welcome' && location.hash === '#showcase') {
   requestAnimationFrame(() => scrollWithinPage(emptyState, element('showcase'), { behavior: 'auto' }));
 } else if (browsePage === 'guide' && location.hash === '#self-host-guide') {

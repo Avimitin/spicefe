@@ -120,13 +120,17 @@
             pname = "spicefe";
             version = "0.1.2";
             src = self;
-            npmDepsHash = "sha256-OYqWCj+HoZ+MaZPizQYlqJfVTUI5Sr2bZY3neM+JNq8=";
+            npmDepsHash = "sha256-vznUTQEPcaem9tA9eBH2zKGfb9zPEbGa/IqyKPgo63s=";
             npmFlags = [ "--ignore-scripts" ];
             dontNpmBuild = true;
             installPhase = ''
               runHook preInstall
               cmp public/vendor/jmuxer.min.js node_modules/jmuxer/dist/jmuxer.min.js
               cmp public/vendor/jmuxer.LICENSE.txt node_modules/jmuxer/LICENSE
+              cmp public/vendor/qrcode-generator/qrcode.js node_modules/qrcode-generator/dist/qrcode.mjs
+              grep -Fx '  "version": "2.0.4",' node_modules/qrcode-generator/package.json
+              grep -Fx '  "license": "MIT",' node_modules/qrcode-generator/package.json
+              grep -Fx 'Copyright (c) 2009 Kazuhiko Arase' public/vendor/qrcode-generator/LICENSE.MIT.txt
               cmp public/vendor/bemani-fan-site-icons/UPSTREAM_README.md ${bemaniIcons}/README.md
               cmp public/assets/spice2x.ico ${spice2xSource}/src/spice2x/build/icon.ico
               cmp public/vendor/spice2x/LICENSE.GPL-3.0.txt ${spice2xSource}/LICENSE
