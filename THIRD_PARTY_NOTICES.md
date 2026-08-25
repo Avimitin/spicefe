@@ -128,6 +128,15 @@ SIL Open Font License 1.1, Copyright 1980 The Bitcount Project Authors. The
 license, upstream FONTLOG, hashes, and provenance record ship in
 `public/vendor/bitcount-single/`.
 
+## Inter
+
+Virtual card names use the unmodified Inter Bold WOFF2 from the official
+[`rsms/inter`](https://github.com/rsms/inter) release 4.1 pinned through
+Nixpkgs. CSS checks for a locally installed copy before requesting the
+self-hosted asset. Inter is licensed under the SIL Open Font License 1.1,
+Copyright (c) 2016 The Inter Project Authors. The complete license ships in
+`public/vendor/inter/`.
+
 ## Sixteen
 
 The old beatmania IIDX ticker view uses the **Sixteen Mono** regular face by

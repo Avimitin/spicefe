@@ -494,7 +494,9 @@ pinned to an exact upstream revision as a non-flake Nix input. Nix converts the
 upstream TTF to WOFF2 reproducibly and verifies the checked-in browser asset.
 CSS checks for a locally installed copy first, and Chinese uses a local serif
 fallback. Other scripts use local system fallbacks, and no font CDN or live
-third-party request is used. Virtual card numbers use
+third-party request is used. Virtual card names use self-hosted
+[Inter](https://github.com/rsms/inter) Bold 4.1 from pinned Nixpkgs, with a
+locally installed copy preferred. Virtual card numbers use
 [Bitcount Single](https://github.com/petrvanblokland/TYPETR-Bitcount), pinned
 to an exact revision and reproducibly converted from the requested variable TTF
 to WOFF2 by Nix; the asset is served locally with a system monospace fallback.

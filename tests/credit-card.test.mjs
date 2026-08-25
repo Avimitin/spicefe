@@ -12,8 +12,8 @@ test('groups the 16-character card ID into the native four-digit display', () =>
 });
 
 test('constrains movable card names to the safe band between edge rows', () => {
-  assert.match(styles, /--ea-card-name-top:\s*42px/);
-  assert.match(styles, /--ea-card-name-bottom:\s*44px/);
+  assert.match(styles, /--ea-card-name-top:\s*40px/);
+  assert.match(styles, /--ea-card-name-bottom:\s*40px/);
   assert.match(
     styles,
     /\.ea-card-name\[data-position="top-left"\]\s*\{[\s\S]*?top:\s*var\(--ea-card-name-top\)/,
@@ -23,6 +23,18 @@ test('constrains movable card names to the safe band between edge rows', () => {
     /\.ea-card-name\[data-position="bottom-left"\]\s*\{[\s\S]*?bottom:\s*var\(--ea-card-name-bottom\)/,
   );
   assert.match(styles, /\.ea-card-name\[data-position="center"\]/);
+});
+
+test('keeps card names and IDs compact, weighted, and shadowed', () => {
+  const nameRule = styles.match(/(?:^|\n)\.ea-card-name \{(?<body>[^}]+)\}/)?.groups?.body || '';
+  const numberRule = styles.match(/(?:^|\n)\.ea-card-number \{(?<body>[^}]+)\}/)?.groups?.body || '';
+
+  assert.match(nameRule, /font-family:\s*"Inter",[^;]+sans-serif;/);
+  assert.match(nameRule, /font-weight:\s*700;/);
+  assert.match(nameRule, /text-shadow:/);
+  assert.match(numberRule, /font-size:\s*17px;/);
+  assert.match(numberRule, /font-weight:\s*300;/);
+  assert.match(numberRule, /text-shadow:/);
 });
 
 test('keeps saved cards at the canonical 316 by 190 size', () => {

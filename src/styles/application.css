@@ -38,6 +38,14 @@
 }
 
 @font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local("Inter Bold"), local("Inter-Bold"), url("../vendor/inter/fonts/Inter-Bold.woff2") format("woff2");
+}
+
+@font-face {
   font-family: "Sixteen Mono";
   font-style: normal;
   font-weight: 400;
@@ -3767,8 +3775,8 @@ body {
 
 .ea-card {
   --ea-card-edge: 16px;
-  --ea-card-name-top: 42px;
-  --ea-card-name-bottom: 44px;
+  --ea-card-name-top: 40px;
+  --ea-card-name-bottom: 40px;
   position: relative;
   display: block;
   width: 316px;
@@ -3841,12 +3849,6 @@ body {
   pointer-events: none;
 }
 
-.ea-card[data-appearance="image"] .ea-card-brand,
-.ea-card[data-appearance="image"] .ea-card-name,
-.ea-card[data-appearance="image"] .ea-card-number {
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.72), 0 2px 7px rgba(0, 0, 0, 0.5);
-}
-
 .ea-card[data-tone="light"] {
   color: #ffffff;
 }
@@ -3917,10 +3919,11 @@ body {
   height: 20px;
   overflow: hidden;
   font-size: 13px;
-  font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  font-weight: 500;
+  font-family: "Inter", "IBM Plex Sans", "IBM Plex Sans SC", "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+  font-weight: 700;
   letter-spacing: normal;
   line-height: 20px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.32), 0 2px 5px rgba(0, 0, 0, 0.18);
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -3991,13 +3994,14 @@ body {
   width: max-content;
   max-width: calc(100% - var(--ea-card-edge) - var(--ea-card-edge));
   overflow: hidden;
-  font-size: 15px;
+  font-size: 17px;
   font-family: "Bitcount Single", ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-variant-numeric: tabular-nums;
-  font-weight: 500;
-  font-variation-settings: "CRSV" 0, "ELSH" 0, "ELXP" 0, "slnt" 0, "wght" 500;
+  font-weight: 300;
+  font-variation-settings: "CRSV" 0, "ELSH" 0, "ELXP" 0, "slnt" 0, "wght" 300;
   letter-spacing: normal;
   line-height: 20px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.32), 0 2px 5px rgba(0, 0, 0, 0.18);
   text-overflow: clip;
   white-space: nowrap;
 }
@@ -4055,8 +4059,8 @@ body {
 }
 
 .ea-card-compact .ea-card-number {
-  font-size: 12px;
-  line-height: 17px;
+  font-size: 17px;
+  line-height: 20px;
 }
 
 .ea-card-compact .ea-card-logo,

@@ -15,7 +15,7 @@ revision `ffb3c9b700e759be2ef13237c9d8f953b32a1e46`, then byte-compares that
 result with the checked-in browser asset. The conversion changes only the
 container format; it does not subset the font or remove its variable axes.
 
-CSS uses the upright Medium instance for card numbers and limits the web-font
+CSS uses the upright weight-300 instance for card numbers and limits the web-font
 range to spaces, digits, and uppercase hexadecimal letters. If the local asset
 cannot load, the existing system monospace stack remains the fallback. No font
 is requested from a third party at runtime.

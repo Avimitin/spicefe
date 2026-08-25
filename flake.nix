@@ -65,6 +65,7 @@
       packages = forAllSystems (system:
         let
           pkgs = import nixpkgs { inherit system; };
+          interSource = assert pkgs.inter.version == "4.1"; pkgs.inter.src;
           ibmPlexBase = "https://raw.githubusercontent.com/IBM/plex/1da12f02587b630c07e92692d21492d722f53614/packages/plex-sans";
           ibmPlexRegularLatin1 = pkgs.fetchurl {
             url = "${ibmPlexBase}/fonts/split/woff2/IBMPlexSans-Regular-Latin1.woff2";
@@ -184,6 +185,8 @@
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Regular-Pi.woff2 ${ibmPlexRegularPi}
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Medium-Latin1.woff2 ${ibmPlexMediumLatin1}
               cmp public/vendor/ibm-plex-sans/fonts/IBMPlexSans-Medium-Pi.woff2 ${ibmPlexMediumPi}
+              cmp public/vendor/inter/fonts/Inter-Bold.woff2 ${interSource}/web/Inter-Bold.woff2
+              cmp public/vendor/inter/LICENSE.OFL-1.1.txt ${interSource}/LICENSE.txt
               cmp public/vendor/libre-caslon-text/fonts/LibreCaslonText-Regular.woff2 ${libreCaslonTextRegularWoff2}
               cmp public/vendor/bitcount-single/fonts/BitcountSingle-Variable.woff2 ${bitcountSingleVariableWoff2}
               cmp public/vendor/sixteen-font/fonts/Sixteen-Mono.woff2 ${sixteenMonoWoff2}
