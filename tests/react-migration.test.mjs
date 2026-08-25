@@ -91,6 +91,14 @@ test('keeps responsive server cards and modal surfaces centered', () => {
   assert.match(components, /className="server-status-tags"/);
   assert.match(components, /className="server-status-tag/);
   assert.doesNotMatch(components, /server-status-tag bg-black/);
+  assert.match(
+    application,
+    /\.server-card \.server-status-tag\s*\{[\s\S]*?background:\s*#f5f5f5;[\s\S]*?color:\s*#171717;/,
+  );
+  assert.match(
+    application,
+    /\.server-card \.server-status-tag > \[aria-hidden="true"\]\s*\{[\s\S]*?box-shadow:\s*none;/,
+  );
   assert.match(components, /className="server-address"[\s\S]*?tabIndex=\{0\}[\s\S]*?library\.addressReveal/);
   assert.match(components, /className="server-address-prefix">IP:<\/span>/);
   assert.match(application, /\.server-address-value\s*\{[\s\S]*?filter:\s*blur\(5px\)/);
