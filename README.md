@@ -58,7 +58,7 @@ the LAN.
 - a dismissible in-stream adjustment bar, restorable from the top bar
 - a browser-local e-amusement card library with native-format card generation,
   selective import from spice2x card files and overrides, P1/P2 insertion from
-  the stream toolbar, and customizable card artwork
+  the stream toolbar, selective ZIP backup, and customizable card artwork
 - multiple named connection profiles in `localStorage`, each with a selectable
   categorized game icon or locally uploaded, center-cropped artwork shown beside
   the PC name
@@ -182,6 +182,14 @@ Uploaded artwork is resized on the device and stored with the card in browser
 line and scroll within their fixed name area. Card numbers use the locally
 served Bitcount Single variable font, with the device's monospace font as a
 fallback.
+
+To reuse browser-created cards on the gaming PC, select **Back up** beneath each
+card you want and then select **Export backup**. The downloaded ZIP contains one
+`<card name>.txt` file per selected card. Each file contains exactly its
+16-character card ID and no browser metadata, so it can be selected directly in
+spice2x's card manager. Existing `.txt` suffixes are preserved; unsafe or
+overlong Windows filenames and duplicate names are adjusted during export so no
+card is lost when the archive is extracted.
 
 While a video or ticker session is live, select the card icon in the top bar,
 choose Player 1 or Player 2, then select a card. spicefe sends the native

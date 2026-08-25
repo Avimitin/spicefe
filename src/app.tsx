@@ -10,6 +10,10 @@ import {
   ServerList,
   StreamCardList,
 } from './components';
+import {
+  cardBackupArchiveName,
+  createCardBackupArchive,
+} from './card-backup';
 
 import { likelyNeedsBrowserSetup, plainHttpPageUrl } from '../public/lib/endpoints.js';
 import {
@@ -166,6 +170,7 @@ const cardEmpty = element('card-empty');
 const cardForm = element('card-form');
 const cardPreview = element('card-preview');
 const importCardsButton = element('import-cards');
+const exportCardsButton = element('export-cards');
 const cardImportDialog = element('card-import-dialog');
 const cardImportContent = element('card-import-content');
 const cardImportLoading = element('card-import-loading');
@@ -226,6 +231,7 @@ const reachability = new Map();
 const reachabilityInFlight = new Map();
 let editingCardId: string | null = null;
 let cardDraft: CardDraft | Card | null = null;
+const selectedCardBackupIds = new Set<string>();
 let selectedCardReader = 0;
 let cardInsertPending = false;
 let cardImportPending = false;
@@ -457,20 +463,69 @@ function editCard(id: string, focus = true) {
   }
 }
 
+function updateCardBackupControls(cards: Card[]) {
+  const savedIds = new Set(cards.map((card) => card.id));
+  for (const id of selectedCardBackupIds) {
+    if (!savedIds.has(id)) {
+      selectedCardBackupIds.delete(id);
+    }
+  }
+  const count = selectedCardBackupIds.size;
+  exportCardsButton.disabled = count === 0;
+  exportCardsButton.textContent = t(count === 0 ? 'cards.export' : 'cards.exportCount', { count });
+}
+
+function setCardBackupSelection(id: string, selected: boolean) {
+  if (selected) {
+    selectedCardBackupIds.add(id);
+  } else {
+    selectedCardBackupIds.delete(id);
+  }
+  renderCardCollection();
+}
+
 function renderCardCollection() {
   const cards = cardStore.list();
+  updateCardBackupControls(cards);
   renderReact(reactRoots.cardList, (
     <CardCollection
       cards={cards}
       editingCardId={editingCardId}
+      backupSelection={selectedCardBackupIds}
       t={t}
       onEdit={editCard}
+      onBackupSelectionChange={setCardBackupSelection}
     />
   ));
   cardList.hidden = cards.length === 0;
   cardEmpty.hidden = cards.length !== 0;
   element('card-count').textContent = t('cards.count', { count: cards.length });
   requestAnimationFrame(() => measureCreditCardNames(cardLibrary));
+}
+
+function exportSelectedCards() {
+  const cards = cardStore.list().filter((card: Card) => selectedCardBackupIds.has(card.id));
+  if (cards.length === 0) {
+    updateCardBackupControls(cardStore.list());
+    return;
+  }
+
+  try {
+    const createdAt = new Date();
+    const archive = createCardBackupArchive(cards, createdAt);
+    const url = URL.createObjectURL(new Blob([archive], { type: 'application/zip' }));
+    const download = document.createElement('a');
+    download.href = url;
+    download.download = cardBackupArchiveName(createdAt);
+    download.hidden = true;
+    document.body.append(download);
+    download.click();
+    download.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    showToast(t('cards.exported', { count: cards.length }));
+  } catch {
+    showToast(t('cards.exportFailed'), 7000);
+  }
 }
 
 function ensureCardEditor() {
@@ -1849,6 +1904,7 @@ element('guide-self-host').addEventListener('click', (event: Event) => {
 });
 element('add-server').addEventListener('click', createProfileAndEdit);
 element('add-card').addEventListener('click', () => startNewCard());
+exportCardsButton.addEventListener('click', exportSelectedCards);
 importCardsButton.addEventListener('click', importRemoteCards);
 element('card-import-close').addEventListener('click', closeCardImportDialog);
 cardImportDismiss.addEventListener('click', closeCardImportDialog);

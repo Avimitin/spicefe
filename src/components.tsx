@@ -261,28 +261,51 @@ export function GameIconGroups({ groups, selectedId, t, onSelect, onRemove }: {
   });
 }
 
-export function CardCollection({ cards, editingCardId, t, onEdit }: {
+export function CardCollection({
+  cards,
+  editingCardId,
+  backupSelection,
+  t,
+  onEdit,
+  onBackupSelectionChange,
+}: {
   cards: Card[];
   editingCardId: string | null;
+  backupSelection: ReadonlySet<string>;
   t: Translate;
   onEdit: (id: string) => void;
+  onBackupSelectionChange: (id: string, selected: boolean) => void;
 }) {
-  return cards.map((card) => (
-    <article
-      key={card.id}
-      className="managed-card"
-      data-selected={card.id === editingCardId}
-      role="listitem"
-    >
-      <CreditCard
-        card={card}
-        unnamed={t('cards.unnamed')}
-        label={t('cards.editLabel', { name: card.name || t('cards.unnamed') })}
-        onActivate={() => onEdit(card.id)}
-        className="ea-card-library-preview"
-      />
-    </article>
-  ));
+  return cards.map((card) => {
+    const displayName = card.name || t('cards.unnamed');
+    const selectedForBackup = backupSelection.has(card.id);
+    return (
+      <article
+        key={card.id}
+        className="managed-card"
+        data-selected={card.id === editingCardId}
+        data-backup-selected={selectedForBackup}
+        role="listitem"
+      >
+        <CreditCard
+          card={card}
+          unnamed={t('cards.unnamed')}
+          label={t('cards.editLabel', { name: displayName })}
+          onActivate={() => onEdit(card.id)}
+          className="ea-card-library-preview"
+        />
+        <label className="managed-card-backup-select">
+          <input
+            type="checkbox"
+            checked={selectedForBackup}
+            aria-label={t('cards.backupSelectLabel', { name: displayName })}
+            onChange={(event) => onBackupSelectionChange(card.id, event.currentTarget.checked)}
+          />
+          <span>{t('cards.backupSelect')}</span>
+        </label>
+      </article>
+    );
+  });
 }
 
 export function CardImportOptions({ candidates, t, onSelectionChange }: {
