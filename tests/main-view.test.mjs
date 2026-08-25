@@ -116,6 +116,10 @@ test('the welcome page leads into README showcases while setup has its own page'
   assert.match(markup, /\.\/assets\/showcase\/iidx-16-segment-display\.mp4/);
   assert.match(
     markup,
+    /class="showcase-feature-list"[\s\S]*showcase\.streamLabel[\s\S]*showcase\.libraryLabel/,
+  );
+  assert.match(
+    markup,
     /class="showcase-video-section"[\s\S]*class="showcase-privacy-section"[\s\S]*href="https:\/\/github\.com\/Avimitin\/spicefe"[\s\S]*class="showcase-cta"/,
   );
   assert.doesNotMatch(
