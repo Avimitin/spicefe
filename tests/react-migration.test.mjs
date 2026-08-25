@@ -47,6 +47,7 @@ test('uses the pinned Untitled UI React foundation for shared controls', () => {
   assert.match(badge, /export function StatusBadge/);
   assert.match(carousel, /useEmblaCarousel/);
   assert.match(carousel, /export const Carousel/);
+  assert.match(carousel, /export type CarouselApi/);
   assert.match(components, /<Button[\s\S]*?<Checkbox[\s\S]*?<StatusBadge/);
   assert.match(source, /d29a2adf6909e5aaeb234bccf82dcffeb67fdb2e/);
   assert.match(source, /components\/base\/buttons\/button\.tsx/);
@@ -57,6 +58,18 @@ test('uses the pinned Untitled UI React foundation for shared controls', () => {
   assert.match(markup, /id="ticker-toggle-root"/);
   assert.doesNotMatch(markup, /segment-display-control|segment-display-checkbox/);
   assert.doesNotMatch(source, /does not include React|plain CSS/);
+});
+
+test('reinitializes welcome carousels after a hidden library-first start', () => {
+  const app = read('../src/app.tsx');
+  const components = read('../src/components.tsx');
+
+  assert.match(components, /onApi\?: \(api: CarouselApi\) => void/);
+  assert.match(components, /setApi=\{onApi\}/);
+  assert.match(
+    app,
+    /view === 'welcome' && previousView !== 'welcome'[\s\S]*showcaseStreamApi\?\.reInit\(\)[\s\S]*showcaseCardsApi\?\.reInit\(\)/,
+  );
 });
 
 test('generates a compact stylesheet from maintained source files', () => {

@@ -10,6 +10,7 @@ import {
   Carousel,
   Checkbox,
   StatusBadge,
+  type CarouselApi,
   type StatusTone,
 } from './ui';
 
@@ -235,6 +236,7 @@ export function ShowcaseCarousel({
   previousLabel,
   nextLabel,
   slideLabel,
+  onApi,
 }: {
   slides: readonly ShowcaseSlide[];
   variant: 'stream' | 'cards';
@@ -242,12 +244,14 @@ export function ShowcaseCarousel({
   previousLabel: string;
   nextLabel: string;
   slideLabel: (current: number, total: number) => string;
+  onApi?: (api: CarouselApi) => void;
 }) {
   return (
     <Carousel.Root
       className={joinClasses('showcase-carousel', `showcase-carousel-${variant}`)}
       aria-label={label}
       opts={{ align: 'start', containScroll: 'trimSnaps' }}
+      setApi={onApi}
     >
       <Carousel.PrevTrigger>
         {({ isDisabled, onClick }) => (

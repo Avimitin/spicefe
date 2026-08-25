@@ -296,6 +296,11 @@ also already complete and can be directly uploaded without a build step.
 Build the downloadable ZIP, including the Windows local-server helper, with
 `nix build .#release`.
 
+The build adds content-derived version parameters to the stylesheet and
+JavaScript entry-point URLs in `index.html`. This prevents a browser or CDN
+from combining newly deployed HTML with an older cached application bundle.
+Run `npm run build` instead of editing those parameters by hand.
+
 ### GitHub Actions
 
 The [`CI` workflow](./.github/workflows/ci.yml) runs for pull requests and

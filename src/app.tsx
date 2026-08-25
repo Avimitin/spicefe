@@ -11,7 +11,7 @@ import {
   ShowcaseCarousel,
   StreamCardList,
 } from './components';
-import { Toggle } from './ui';
+import { Toggle, type CarouselApi } from './ui';
 import {
   cardBackupAction,
   cardBackupArchiveName,
@@ -228,6 +228,9 @@ const reactRoots = {
   tickerToggle: createRoot(tickerToggleRoot),
 };
 
+let showcaseCardsApi: CarouselApi = undefined;
+let showcaseStreamApi: CarouselApi = undefined;
+
 function renderReact(root: ReturnType<typeof createRoot>, content: React.ReactNode) {
   flushSync(() => root.render(content));
 }
@@ -246,6 +249,7 @@ function renderShowcaseCarousels() {
       {...labels}
       variant="stream"
       label={t('showcase.streamCarouselAria')}
+      onApi={(api) => { showcaseStreamApi = api; }}
       slides={[
         {
           src: './assets/showcase/iidx-stream.png',
@@ -263,6 +267,7 @@ function renderShowcaseCarousels() {
       {...labels}
       variant="cards"
       label={t('showcase.cardsCarouselAria')}
+      onApi={(api) => { showcaseCardsApi = api; }}
       slides={[
         {
           src: './assets/showcase/card-create.png',
@@ -1636,6 +1641,12 @@ function renderMainView(snapshot: SessionSnapshot): MainView {
   }
   renderPageNavigation(view);
   renderCompatibility(false, view);
+  if (view === 'welcome' && previousView !== 'welcome') {
+    requestAnimationFrame(() => {
+      showcaseStreamApi?.reInit();
+      showcaseCardsApi?.reInit();
+    });
+  }
   if (view === 'servers' && previousView !== 'servers') {
     queueMicrotask(() => refreshReachability());
   }

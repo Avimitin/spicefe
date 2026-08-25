@@ -252,6 +252,10 @@ nix build
 即可直接上传。运行 `nix build .#release` 可生成带有 Windows 本地服务器工具的
 下载用 ZIP。
 
+构建会在 `index.html` 中为样式表和 JavaScript 入口地址添加由文件内容生成的
+版本参数，避免浏览器或 CDN 将新部署的 HTML 与旧缓存的应用程序混用。请运行
+`npm run build` 更新这些参数，不要手工修改。
+
 ### GitHub Actions
 
 [`CI` 工作流](./.github/workflows/ci.yml)会在 Pull Request 及向 `main` 推送时
