@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   AnnexBParser,
   codecStringFromSps,
+  firstMacroblockInSlice,
   joinAnnexB,
   startCodeLength,
 } from '../public/lib/annex-b.js';
@@ -42,6 +43,15 @@ test('parses NAL units when start codes are split across network chunks', () => 
 
 test('builds the WebCodecs AVC codec string from an SPS', () => {
   assert.equal(codecStringFromSps(Uint8Array.from([0x67, 0x42, 0xc0, 0x1f])), 'avc1.42c01f');
+});
+
+test('reads first_mb_in_slice from H.264 slice headers', () => {
+  assert.equal(firstMacroblockInSlice(Uint8Array.from([0x65, 0x80])), 0);
+  assert.equal(firstMacroblockInSlice(Uint8Array.from([0x41, 0x00, 0x7d, 0x20])), 1000);
+  assert.throws(
+    () => firstMacroblockInSlice(Uint8Array.from([0x67, 0x80])),
+    /slice NAL unit/,
+  );
 });
 
 test('joins access units without changing their payload', () => {

@@ -348,7 +348,8 @@ export class SpiceSession {
       return;
     }
 
-    if (this.videoFormat === 'h264' && error?.code === 'unsupported-codec') {
+    if (this.videoFormat === 'h264'
+      && ['unsupported-codec', 'decoder', 'mse-buffer'].includes(error?.code)) {
       if (this.videoBackend) {
         this.failedH264Backends.add(this.videoBackend);
       }

@@ -5,6 +5,54 @@ export const NAL_TYPE = Object.freeze({
   PPS: 8,
 });
 
+export function firstMacroblockInSlice(nal) {
+  const type = nal instanceof Uint8Array && nal.length > 0 ? nal[0] & 0x1f : 0;
+  if (type !== NAL_TYPE.SLICE && type !== NAL_TYPE.IDR) {
+    throw new Error('Invalid H.264 slice NAL unit');
+  }
+
+  let byteOffset = 1;
+  let currentByte = 0;
+  let remainingBits = 0;
+  let zeroCount = 0;
+  const readByte = () => {
+    while (byteOffset < nal.length) {
+      const byte = nal[byteOffset];
+      byteOffset += 1;
+      if (zeroCount >= 2 && byte === 0x03
+        && byteOffset < nal.length && nal[byteOffset] <= 0x03) {
+        continue;
+      }
+      zeroCount = byte === 0 ? zeroCount + 1 : 0;
+      return byte;
+    }
+    throw new Error('Truncated H.264 slice header');
+  };
+  const readBit = () => {
+    if (remainingBits === 0) {
+      currentByte = readByte();
+      remainingBits = 8;
+    }
+    remainingBits -= 1;
+    return (currentByte >> remainingBits) & 1;
+  };
+
+  // first_mb_in_slice is the first unsigned Exp-Golomb value in the slice header.
+  let leadingZeros = 0;
+  while (readBit() === 0) {
+    leadingZeros += 1;
+    if (leadingZeros > 31) {
+      throw new Error('Invalid H.264 slice header');
+    }
+  }
+
+  let suffix = 0;
+  for (let index = 0; index < leadingZeros; index += 1) {
+    suffix = (suffix * 2) + readBit();
+  }
+  return (2 ** leadingZeros) - 1 + suffix;
+}
+
 export function startCodeLength(data, offset) {
   if (data[offset] !== 0 || data[offset + 1] !== 0) {
     return 0;

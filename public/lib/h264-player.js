@@ -1,4 +1,10 @@
-import { AnnexBParser, codecStringFromSps, joinAnnexB, NAL_TYPE } from './annex-b.js';
+import {
+  AnnexBParser,
+  codecStringFromSps,
+  firstMacroblockInSlice,
+  joinAnnexB,
+  NAL_TYPE,
+} from './annex-b.js';
 import { targetAddressSpaceForUrl } from './endpoints.js';
 
 export class H264PlayerError extends Error {
@@ -37,6 +43,8 @@ export class H264Player {
     this.decoder = null;
     this.parser = new AnnexBParser((nal) => this.pushNal(nal));
     this.accessUnit = [];
+    this.accessUnitHasVcl = false;
+    this.accessUnitKey = false;
     this.frameDuration = 1_000_000 / 30;
     this.decodeIndex = 0;
     this.decodedFrames = 0;
@@ -135,6 +143,8 @@ export class H264Player {
 
     this.parser.reset();
     this.accessUnit = [];
+    this.accessUnitHasVcl = false;
+    this.accessUnitKey = false;
     this.decodeIndex = 0;
     this.decodedFrames = 0;
     this.presentedFrames = 0;
@@ -162,10 +172,33 @@ export class H264Player {
       return;
     }
 
+    const vcl = type === NAL_TYPE.SLICE || type === NAL_TYPE.IDR;
+    let firstSlice = false;
+    if (vcl) {
+      try {
+        firstSlice = firstMacroblockInSlice(nal) === 0;
+      } catch (error) {
+        throw new H264PlayerError(error?.message || 'Invalid H.264 slice header', {
+          cause: error,
+          code: 'decoder',
+        });
+      }
+    }
+
+    // WebCodecs requires one complete picture per EncodedVideoChunk. x264 sliced
+    // threading emits several VCL NAL units for a picture, so a first slice (or
+    // parameter data ahead of the next keyframe) closes the preceding access unit.
+    if (this.accessUnitHasVcl && (!vcl || firstSlice)) {
+      this.emit(this.accessUnitKey);
+      if (!this.decoder) {
+        return;
+      }
+    }
+
     this.accessUnit.push(nal);
-    // spice2x's zerolatency x264 configuration emits one VCL NAL for each picture.
-    if (type === NAL_TYPE.SLICE || type === NAL_TYPE.IDR) {
-      this.emit(type === NAL_TYPE.IDR);
+    if (vcl) {
+      this.accessUnitHasVcl = true;
+      this.accessUnitKey ||= type === NAL_TYPE.IDR;
     }
   }
 
@@ -208,6 +241,8 @@ export class H264Player {
 
     if (this.resyncing && !key) {
       this.accessUnit = [];
+      this.accessUnitHasVcl = false;
+      this.accessUnitKey = false;
       this.droppedFrames += 1;
       return;
     }
@@ -215,6 +250,8 @@ export class H264Player {
 
     const data = joinAnnexB(this.accessUnit);
     this.accessUnit = [];
+    this.accessUnitHasVcl = false;
+    this.accessUnitKey = false;
     const timestamp = Math.round(this.decodeIndex * this.frameDuration);
     this.decodeIndex += 1;
 

@@ -106,6 +106,49 @@ test('video response headers confirm server reachability before the first frame'
   assert.equal(session.snapshot.videoResponded, false);
 });
 
+test('a WebCodecs decoder error advances to the alternate H.264 backend', () => {
+  const session = new SpiceSession(new FakeCanvas(), new FakeVideo(), new FakeImage());
+  const notices = [];
+  let starts = 0;
+  let stops = 0;
+  session.wanted = true;
+  session.profile = { format: 'auto' };
+  session.videoFormat = 'h264';
+  session.videoBackend = 'webcodecs';
+  session.onnotice = (notice) => notices.push(notice);
+  session.stopH264 = () => { stops += 1; };
+  session.nextH264Backend = () => 'mse';
+  session.startVideo = () => { starts += 1; };
+
+  session.videoFailed(Object.assign(new Error('decoder rejected a slice'), { code: 'decoder' }));
+
+  assert.deepEqual([...session.failedH264Backends], ['webcodecs']);
+  assert.deepEqual(notices, ['notice.h264Alternate']);
+  assert.equal(stops, 1);
+  assert.equal(starts, 1);
+});
+
+test('decoder errors fall back to MJPEG after all H.264 backends fail', () => {
+  const session = new SpiceSession(new FakeCanvas(), new FakeVideo(), new FakeImage());
+  const notices = [];
+  let starts = 0;
+  session.wanted = true;
+  session.profile = { format: 'auto' };
+  session.videoFormat = 'h264';
+  session.videoBackend = 'mse';
+  session.onnotice = (notice) => notices.push(notice);
+  session.stopH264 = () => {};
+  session.nextH264Backend = () => null;
+  session.startVideo = () => { starts += 1; };
+
+  session.videoFailed(Object.assign(new Error('media buffer failed'), { code: 'mse-buffer' }));
+
+  assert.deepEqual([...session.failedH264Backends], ['mse']);
+  assert.deepEqual(notices, ['notice.h264DecodeMjpeg']);
+  assert.equal(session.fellBackToMjpeg, true);
+  assert.equal(starts, 1);
+});
+
 test('ticker mode opens only the API and never starts a video stream', () => {
   const session = new SpiceSession(new FakeCanvas(), new FakeVideo(), new FakeImage());
   let videoStarts = 0;
