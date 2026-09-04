@@ -281,6 +281,10 @@ function renderShowcaseCarousels() {
           src: './assets/showcase/gitadora-stream.png',
           alt: t('showcase.streamGitadoraAlt'),
         },
+        {
+          src: './assets/showcase/keypad.png',
+          alt: t('showcase.keypadAlt'),
+        },
       ]}
     />
   ));

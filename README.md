@@ -33,6 +33,10 @@
 | :---: | :---: |
 | [![beatmania IIDX 33 subscreen streaming through spicefe](./public/assets/showcase/iidx-stream.png)](./public/assets/showcase/iidx-stream.png) | [![GITADORA GALAXY WAVE DELTA subscreen streaming through spicefe](./public/assets/showcase/gitadora-stream.png)](./public/assets/showcase/gitadora-stream.png) |
 
+**API-only full-screen keypad**
+
+[![spicefe full-screen spice2x keypad with number and cabinet control buttons](./public/assets/showcase/keypad.png)](./public/assets/showcase/keypad.png)
+
 **Old beatmania IIDX 16-segment display — updated recording**
 
 <video src="https://raw.githubusercontent.com/Avimitin/spicefe/main/public/assets/showcase/iidx-16-segment-display.mp4" controls title="Old beatmania IIDX 16-segment display in spicefe"></video>
