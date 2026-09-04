@@ -1,0 +1,118 @@
+# 浏览器连接设置
+
+spice2x 通过未启用 TLS 的局域网端点提供视频流。请按设备和浏览器完成以下设置，以便 spicefe 建立连接。
+
+> **完整输入以 `http://` 开头的地址。**
+>
+> 不要只输入域名。地址栏自动补全可能复用之前的 HTTPS 访问记录，使页面再次进入受限模式。
+>
+> <HttpAddress copyLabel="复制地址" />
+>
+> 页面加载后点击地址栏，确认地址以 `http://` 开头；浏览器显示“不安全”属于正常现象。
+
+## 选择设备和浏览器
+
+- [iPhone 与 iPad](#setup-apple)
+- [Windows](#setup-windows)
+- [Android](#setup-android)
+- [本地回退方案](#setup-local-server)
+
+<section id="setup-apple">
+
+## iPhone 与 iPad：Safari
+
+Safari 不提供允许当前 HTTPS 页面加载 spice2x HTTP 视频流的单站点开关。
+
+1. 新建 Safari 标签页，不要复用指向 HTTPS 的书签或主屏幕快捷方式。
+2. 粘贴或输入上方完整的 HTTP 地址，然后轻点“前往”。
+3. 配置游戏 PC 前，确认已加载地址以 `http://` 开头。
+
+> 如果 Safari 仍然跳回 HTTPS，请使用[下方的本地服务器方案](#setup-local-server)；其私有 IP 地址没有可被优先选择的 HTTPS 版本。
+
+[Safari 官方说明](https://support.apple.com/guide/iphone/browse-the-web-iph1fbef4daa/ios)
+
+</section>
+
+---
+
+<section id="setup-windows">
+
+## Windows：保留 HTTPS，仅允许本站
+
+桌面浏览器可以只为 spicefe 添加例外，无需降低所有网站的保护。
+
+### Microsoft Edge
+
+1. 在当前 HTTPS 页面选择地址左侧的图标，再选择“此网站的权限”。
+2. 将“不安全内容”设为“允许”；同时将“本地网络访问”设为“允许”，或在连接时允许权限请求。
+3. 重新加载 spicefe，然后再次连接。
+
+[Microsoft Edge 官方说明](https://support.microsoft.com/en-us/edge/control-a-website-s-access-to-the-local-network-in-microsoft-edge)
+
+### Google Chrome
+
+1. 在当前 HTTPS 页面选择地址左侧的图标，再选择“网站设置”。
+2. 将“不安全内容”设为“允许”；同时将“本地网络访问”设为“允许”，或在连接时允许权限请求。
+3. 重新加载 spicefe，然后再次连接。
+
+[Google Chrome 官方说明](https://support.google.com/chrome/answer/114662)
+
+### Mozilla Firefox
+
+1. 在当前 HTTPS 页面选择地址旁的挂锁，然后打开“连接安全性”。
+2. 选择“暂时关闭保护”。
+3. 再次连接并允许“本地网络设备”权限请求。Firefox 可能会在之后的会话中要求重复混合内容设置。
+
+[Mozilla Firefox 官方说明](https://support.mozilla.org/en-US/kb/mixed-content-blocking-firefox)
+
+> 也可以使用页面顶部的 HTTP 地址。请手动输入完整地址，避免浏览器从历史记录中选择 HTTPS。
+
+</section>
+
+---
+
+<section id="setup-android">
+
+## Android：明确打开 HTTP 页面
+
+Android 版 Chrome 和 Edge 不提供桌面版的单站点“不安全内容”例外。
+
+### Google Chrome
+
+1. 打开“更多”→“设置”→“隐私和安全”。如果已开启“始终使用安全连接”，请暂时关闭。
+2. 输入并打开上方显示的完整 HTTP 地址。
+3. 浏览器询问时允许“本地网络访问”。如果之前拒绝过，请打开“网站信息”→“权限”→“本地网络访问”。
+
+[Google Chrome 官方说明](https://support.google.com/chrome/answer/114662?co=GENIE.Platform%3DAndroid&hl=en)
+
+### Microsoft Edge
+
+1. 打开菜单→“设置”→“隐私和安全”→“安全性”。如果已开启“始终使用安全连接”，请暂时关闭。
+2. 输入并打开上方显示的完整 HTTP 地址。
+3. Edge 询问时允许“本地网络访问”，然后配置游戏 PC。
+
+[Microsoft Edge 官方说明](https://support.microsoft.com/en-us/edge/secure-your-web-browsing-with-https-first-mode-in-microsoft-edge)
+
+> 游戏结束后，可以重新开启“始终使用安全连接”。
+
+</section>
+
+---
+
+<section id="setup-local-server">
+
+## 本地回退方案：从游戏 PC 提供 spicefe 页面
+
+当公共域名因 HSTS、浏览器策略或网络设置而被强制升级到 HTTPS 时，请使用此方案。
+
+1. 从 [GitHub Releases](https://github.com/Avimitin/spicefe/releases) 在游戏 PC 上下载并解压最新的 spicefe Release ZIP。
+2. 双击 `serve.bat`；Windows 防火墙询问时，仅允许**专用网络**。
+3. 在手机或平板上，手动输入服务器窗口中蓝绿色的 `http://PC-IP:45000/` 地址之一。
+
+[打开完整部署指南](?page=guide#self-host-guide)
+
+</section>
+
+> **仅限可信家庭网络。** HTTP 与 `ws://` 流量无法防止他人查看或篡改。仅在你信任的局域网中使用此模式，并在结束后关闭本地服务器。
+
+<DocumentBack id="browser-setup-done" label="返回 spicefe" />

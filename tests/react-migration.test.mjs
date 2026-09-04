@@ -28,22 +28,49 @@ test('pins React source packages while Nix supplies compiler binaries', () => {
   assert.match(flake, /untitleduico\/react\/d29a2adf6909e5aaeb234bccf82dcffeb67fdb2e/);
 });
 
-test('keeps content-heavy guides in MDX and mounts them before DOM wiring', () => {
+test('keeps complete locale pages in prose-first MDX', () => {
   const html = read('../public/index.html');
   const app = read('../src/app.tsx');
   const documentation = read('../src/documentation.tsx');
-  const browserSetup = read('../src/docs/browser-setup.mdx');
-  const usageGuide = read('../src/docs/usage-guide.mdx');
+  const components = read('../src/docs/components.tsx');
+  const styles = read('../src/styles/application.css');
+  const browserSetupEnglish = read('../src/docs/browser-setup.en.mdx');
+  const browserSetupChinese = read('../src/docs/browser-setup.zh-CN.mdx');
+  const usageGuideEnglish = read('../src/docs/usage-guide.en.mdx');
+  const usageGuideChinese = read('../src/docs/usage-guide.zh-CN.mdx');
   const compiler = read('../tools/compile-mdx.mjs');
+  const documents = [
+    browserSetupEnglish,
+    browserSetupChinese,
+    usageGuideEnglish,
+    usageGuideChinese,
+  ];
 
   assert.match(html, /id="documentation-root"/);
   assert.doesNotMatch(html, /id="usage-guide-page"|id="browser-setup"/);
-  assert.match(documentation, /import BrowserSetup from '\.\/docs\/browser-setup\.mdx\.js'/);
-  assert.match(documentation, /import UsageGuide from '\.\/docs\/usage-guide\.mdx\.js'/);
-  assert.match(browserSetup, /id="browser-setup"/);
-  assert.match(usageGuide, /id="usage-guide-page"[\s\S]*id="self-host-guide"/);
-  assert.match(app, /createRoot\(element\('documentation-root'\)\)[\s\S]*documentationRoot\.render\(<Documentation \/>\)/);
+  assert.match(documentation, /import BrowserSetupEnglish from '\.\/docs\/browser-setup\.en\.mdx\.js'/);
+  assert.match(documentation, /import BrowserSetupChinese from '\.\/docs\/browser-setup\.zh-CN\.mdx\.js'/);
+  assert.match(documentation, /import UsageGuideEnglish from '\.\/docs\/usage-guide\.en\.mdx\.js'/);
+  assert.match(documentation, /import UsageGuideChinese from '\.\/docs\/usage-guide\.zh-CN\.mdx\.js'/);
+  assert.match(documentation, /const chinese = locale === 'zh-CN'/);
+  assert.match(browserSetupEnglish, /^# Browser connection setup$/m);
+  assert.match(browserSetupChinese, /^# 浏览器连接设置$/m);
+  assert.match(usageGuideEnglish, /^## 1\. Configure spice2x$/m);
+  assert.match(usageGuideChinese, /^## 1\. 配置 spice2x$/m);
+  assert.match(usageGuideEnglish, /```text[\s\S]*spice64\.exe -api 1337 -apistream[\s\S]*```/);
+  assert.match(usageGuideEnglish, /id="self-host-guide"/);
+  for (const source of documents) {
+    assert.doesNotMatch(source, /data-i18n|\bmessage=|<T\b/);
+    assert.doesNotMatch(source, /platform-guide|browser-guide-card|guide-panel|config-method/);
+  }
+  assert.match(components, /export function HttpAddress/);
+  assert.match(components, /export function DocumentBack/);
+  assert.match(styles, /\.document-page\s*\{/);
+  assert.match(styles, /\.document-article\s*\{/);
+  assert.doesNotMatch(styles, /\.platform-guide|\.browser-guide-card|\.guide-panel|\.config-method/);
+  assert.match(app, /<Documentation[\s\S]*locale=\{i18n\.locale\}[\s\S]*view=\{view\}/);
   assert.match(compiler, /compile\(source/);
+  assert.match(compiler, /unlink\(resolve\(directory, generatedName\)\)/);
 });
 
 test('uses the pinned Untitled UI React foundation for shared controls', () => {

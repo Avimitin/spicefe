@@ -128,7 +128,7 @@ const t = (key: string, parameters?: Record<string, unknown>): string => (
   i18n.t(key, parameters)
 );
 const documentationRoot = createRoot(element('documentation-root'));
-flushSync(() => documentationRoot.render(<Documentation />));
+const httpModeAddress = plainHttpPageUrl(location.href);
 const customIconStore = new CustomIconStore();
 setCustomGameIcons(customIconStore.list());
 const store: any = new (ProfileStore as any)(undefined, {
@@ -174,9 +174,6 @@ const connectButton = element('connect-button');
 const connectButtonLabel = element('connect-button-label');
 const emptyState = element('empty-state');
 const serverLibrary = element('server-library');
-const browserSetup = element('browser-setup');
-const usageGuidePage = element('usage-guide-page');
-const selfHostGuide = element('self-host-guide');
 const cardLibrary = element('card-library');
 const serverList = element('server-list');
 const cardList = element('card-list');
@@ -288,6 +285,7 @@ let videoMetricFallback: 'idle' | 'waiting' | 'ticker' = 'idle';
 let lastMetricPaint = 0;
 let bannerDismissed = false;
 let renderedMainView: MainView | null = null;
+let renderedDocumentationKey = '';
 const reachability = new Map();
 const reachabilityInFlight = new Map();
 let editingCardId: string | null = null;
@@ -1561,13 +1559,47 @@ function navigateToBrowsePage(requestedPage: Exclude<BrowsePage, undefined>) {
   updateBrowsePageHistory(browsePage);
   setPageMenuOpen(false);
   if (browsePage === 'guide') {
-    usageGuidePage.scrollTop = 0;
+    const guidePage = element('usage-guide-page');
+    if (guidePage) {
+      guidePage.scrollTop = 0;
+    }
   }
   if (session.wanted) {
     session.disconnect();
   } else {
     renderSnapshot(session.snapshot, false);
   }
+}
+
+async function copyHttpModeAddress() {
+  try {
+    await navigator.clipboard.writeText(httpModeAddress);
+    showToast(t('browserSetup.copied'));
+  } catch {
+    showToast(t('browserSetup.copyFailed'));
+  }
+}
+
+function returnFromDocumentation() {
+  const destination = configuredProfiles(store.list()).length > 0 ? 'servers' : 'welcome';
+  navigateToBrowsePage(destination);
+}
+
+function renderDocumentation(view: MainView) {
+  const key = `${i18n.locale}:${view}`;
+  if (key === renderedDocumentationKey) {
+    return;
+  }
+  renderedDocumentationKey = key;
+  renderReact(documentationRoot, (
+    <Documentation
+      locale={i18n.locale}
+      view={view}
+      httpModeAddress={httpModeAddress}
+      onBack={returnFromDocumentation}
+      onCopyAddress={copyHttpModeAddress}
+    />
+  ));
 }
 
 function scrollWithinPage(
@@ -1587,6 +1619,15 @@ function scrollWithinPage(
   }
 }
 
+function afterInitialLayout(callback: () => void) {
+  const schedule = () => requestAnimationFrame(callback);
+  if (document.readyState === 'complete') {
+    schedule();
+  } else {
+    window.addEventListener('load', schedule, { once: true });
+  }
+}
+
 function useLibraryPageForConnection() {
   browsePage = 'servers';
   updateBrowsePageHistory(browsePage, 'replace');
@@ -1603,14 +1644,13 @@ function renderMainView(snapshot: SessionSnapshot): MainView {
   }
   const previousView = renderedMainView;
   renderedMainView = view;
+  renderDocumentation(view);
   toast.dataset.theme = view === 'stream' ? 'stream' : 'default';
   app.dataset.mainView = view;
   stage.dataset.mainView = view;
   emptyState.hidden = view !== 'welcome';
   serverLibrary.hidden = view !== 'servers';
   cardLibrary.hidden = view !== 'cards';
-  browserSetup.hidden = view !== 'browser-setup';
-  usageGuidePage.hidden = view !== 'guide';
   if (view !== 'cards') {
     closeCardEditor();
   }
@@ -2047,10 +2087,6 @@ element('showcase-guide-link').addEventListener('click', (event: Event) => {
   event.preventDefault();
   navigateToBrowsePage('guide');
 });
-element('guide-self-host').addEventListener('click', (event: Event) => {
-  event.preventDefault();
-  scrollWithinPage(usageGuidePage, selfHostGuide, { updateHash: true });
-});
 element('add-server').addEventListener('click', createProfileAndEdit);
 element('add-card').addEventListener('click', () => startNewCard());
 exportCardsButton.addEventListener('click', handleCardBackupAction);
@@ -2420,34 +2456,6 @@ element('compat-dismiss').addEventListener('click', () => {
   compatBanner.hidden = true;
 });
 
-const httpModeAddress = plainHttpPageUrl(location.href);
-element('http-mode-url').textContent = httpModeAddress;
-
-element('copy-http-url').addEventListener('click', async () => {
-  try {
-    await navigator.clipboard.writeText(httpModeAddress);
-    showToast(t('browserSetup.copied'));
-  } catch {
-    showToast(t('browserSetup.copyFailed'));
-  }
-});
-
-element('browser-setup-done').addEventListener('click', () => {
-  const destination = configuredProfiles(store.list()).length > 0 ? 'servers' : 'welcome';
-  navigateToBrowsePage(destination);
-});
-
-element('browser-deployment-link').addEventListener('click', (event: Event) => {
-  event.preventDefault();
-  navigateToBrowsePage('guide');
-  requestAnimationFrame(() => scrollWithinPage(usageGuidePage, selfHostGuide));
-});
-
-element('self-host-done').addEventListener('click', () => {
-  const destination = configuredProfiles(store.list()).length > 0 ? 'servers' : 'welcome';
-  navigateToBrowsePage(destination);
-});
-
 function renderLocalizedUi() {
   applyDocumentTranslations();
   renderShowcaseCarousels();
@@ -2539,8 +2547,18 @@ if (incomingProfileShare.found) {
   }
 }
 if (browsePage === 'welcome' && location.hash === '#showcase') {
-  requestAnimationFrame(() => scrollWithinPage(emptyState, element('showcase'), { behavior: 'auto' }));
+  requestAnimationFrame(() => scrollWithinPage(
+    emptyState,
+    element('showcase'),
+    { behavior: 'auto' },
+  ));
 } else if (browsePage === 'guide' && location.hash === '#self-host-guide') {
-  requestAnimationFrame(() => scrollWithinPage(usageGuidePage, selfHostGuide, { behavior: 'auto' }));
+  afterInitialLayout(() => {
+    const guidePage = element('usage-guide-page');
+    const selfHost = element('self-host-guide');
+    if (guidePage && selfHost) {
+      scrollWithinPage(guidePage, selfHost, { behavior: 'auto' });
+    }
+  });
 }
 document.fonts?.ready?.then(() => measureCreditCardNames());

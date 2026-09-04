@@ -1,0 +1,118 @@
+# Browser connection setup
+
+spice2x serves its stream over your local network without TLS. Choose your device and browser below so spicefe can reach it.
+
+> **Type the full address beginning with `http://`.**
+>
+> Do not enter only the domain name. Address-bar autocomplete can reuse your HTTPS visit and put you back in the blocked mode.
+>
+> <HttpAddress copyLabel="Copy address" />
+>
+> After loading it, inspect the address bar and verify that the address begins with `http://`. A “Not secure” label is expected.
+
+## Choose your device and browser
+
+- [iPhone and iPad](#setup-apple)
+- [Windows](#setup-windows)
+- [Android](#setup-android)
+- [Local fallback](#setup-local-server)
+
+<section id="setup-apple">
+
+## iPhone and iPad: Safari
+
+Safari does not offer a per-site switch for loading the spice2x HTTP stream from this HTTPS page.
+
+1. Open a new Safari tab. Do not reuse an HTTPS bookmark or Home Screen shortcut.
+2. Paste or type the complete HTTP address shown above, then tap **Go**.
+3. Confirm the loaded address starts with `http://` before configuring your gaming PC.
+
+> If Safari still returns to HTTPS, use the [local-server fallback](#setup-local-server). Its private IP address has no HTTPS version to select instead.
+
+[Official Safari instructions](https://support.apple.com/guide/iphone/browse-the-web-iph1fbef4daa/ios)
+
+</section>
+
+---
+
+<section id="setup-windows">
+
+## Windows: keep HTTPS and allow this site
+
+Desktop browsers can grant an exception only to spicefe, so you do not need to weaken protection for every site.
+
+### Microsoft Edge
+
+1. On this HTTPS page, select the icon to the left of the address, then **Permissions for this site**.
+2. Set **Insecure content** to **Allow**. Set **Local network access** to **Allow** too, or allow its prompt when connecting.
+3. Reload spicefe, then connect again.
+
+[Official Microsoft Edge instructions](https://support.microsoft.com/en-us/edge/control-a-website-s-access-to-the-local-network-in-microsoft-edge)
+
+### Google Chrome
+
+1. On this HTTPS page, select the icon to the left of the address, then **Site settings**.
+2. Set **Insecure content** to **Allow**. Set **Local network access** to **Allow** too, or allow its prompt when connecting.
+3. Reload spicefe, then connect again.
+
+[Official Google Chrome instructions](https://support.google.com/chrome/answer/114662)
+
+### Mozilla Firefox
+
+1. On this HTTPS page, select the padlock beside the address and open **Connection security**.
+2. Select **Disable protection for now**.
+3. Connect again and allow the **Local network devices** prompt. Firefox may ask you to repeat the mixed-content step in a later session.
+
+[Official Mozilla Firefox instructions](https://support.mozilla.org/en-US/kb/mixed-content-blocking-firefox)
+
+> You can also use the HTTP address at the top. Enter the complete address manually so the browser does not choose HTTPS from history.
+
+</section>
+
+---
+
+<section id="setup-android">
+
+## Android: open the HTTP page explicitly
+
+Chrome and Edge on Android do not provide the desktop per-site insecure-content exception.
+
+### Google Chrome
+
+1. Open **More → Settings → Privacy and security**. If **Always use secure connections** is enabled, turn it off temporarily.
+2. Type the complete HTTP address shown above and open it.
+3. Allow **Local network access** when asked. If it was denied earlier, open **Site information → Permissions → Local network access**.
+
+[Official Google Chrome instructions](https://support.google.com/chrome/answer/114662?co=GENIE.Platform%3DAndroid&hl=en)
+
+### Microsoft Edge
+
+1. Open **Menu → Settings → Privacy and security → Security**. If **Always use secure connections** is enabled, turn it off temporarily.
+2. Type the complete HTTP address shown above and open it.
+3. Allow **Local network access** when Edge asks, then configure your gaming PC.
+
+[Official Microsoft Edge instructions](https://support.microsoft.com/en-us/edge/secure-your-web-browsing-with-https-first-mode-in-microsoft-edge)
+
+> After playing, you can turn **Always use secure connections** back on.
+
+</section>
+
+---
+
+<section id="setup-local-server">
+
+## Local fallback: serve spicefe from the gaming PC
+
+Use this when the public hostname is forced to HTTPS by HSTS, browser policy, or your network.
+
+1. Download and extract the latest spicefe release ZIP on the gaming PC from [GitHub Releases](https://github.com/Avimitin/spicefe/releases).
+2. Double-click `serve.bat`. If Windows Firewall asks, allow **Private networks only**.
+3. On the phone or tablet, manually enter one of the cyan `http://PC-IP:45000/` addresses printed in the server window.
+
+[Open the full deployment guide](?page=guide#self-host-guide)
+
+</section>
+
+> **Trusted home network only.** HTTP and `ws://` traffic is not protected against observation or modification. Use this mode only on a LAN you trust, and turn off the local server when you finish.
+
+<DocumentBack id="browser-setup-done" label="Back to spicefe" />

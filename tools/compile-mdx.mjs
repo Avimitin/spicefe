@@ -1,4 +1,4 @@
-import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { readdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -8,12 +8,20 @@ const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const documentsDirectory = resolve(projectRoot, 'src/docs');
 
 export async function compileDocuments(directory = documentsDirectory) {
-  const sourceNames = (await readdir(directory))
+  const directoryEntries = await readdir(directory);
+  const sourceNames = directoryEntries
     .filter((name) => name.endsWith('.mdx'))
     .sort();
 
   if (sourceNames.length === 0) {
     throw new Error(`No MDX documents found in ${directory}`);
+  }
+
+  const sourceNameSet = new Set(sourceNames);
+  for (const generatedName of directoryEntries.filter((name) => name.endsWith('.mdx.js'))) {
+    if (!sourceNameSet.has(generatedName.slice(0, -3))) {
+      await unlink(resolve(directory, generatedName));
+    }
   }
 
   const outputs = [];

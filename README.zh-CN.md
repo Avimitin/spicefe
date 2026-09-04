@@ -376,9 +376,10 @@ npm。`0.0.0.0` 会让页面可从局域网访问，因此应将电脑防火墙�
 flake 固定了 Nixpkgs，并提供 Node.js、TypeScript、esbuild 与 Python；无需在系统中
 全局安装 npm 包，也不会使用 npm 提供的构建二进制文件。
 
-内容较多的浏览器、使用及自托管指南位于 `src/docs/*.mdx`。构建会先把它们编译为
-已忽略的 `*.mdx.js` 模块，再由 esbuild 打包进 React 应用。请编辑 MDX 源文件，
-不要编辑生成的模块或 `public/app.js`。
+内容较多的浏览器、使用及自托管指南位于 `src/docs/*.mdx`。每种语言都是完整页面
+（`*.en.mdx` 或 `*.zh-CN.mdx`），正文不会再拆成逐行的 UI 翻译键。构建会先把它们
+编译为已忽略的 `*.mdx.js` 模块，再由 esbuild 打包进 React 应用。请编辑 MDX
+源文件，不要编辑生成的模块或 `public/app.js`。
 
 ```sh
 nix develop

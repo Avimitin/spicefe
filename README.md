@@ -444,9 +444,11 @@ The flake pins Nixpkgs and supplies Node.js, TypeScript, esbuild, and Python.
 No global npm package or npm-delivered build binary is needed.
 
 The content-heavy browser, usage, and self-hosting guides live in
-`src/docs/*.mdx`. The build compiles them to ignored `*.mdx.js` modules before
-esbuild bundles the React application; edit the MDX sources, not those generated
-modules or `public/app.js`.
+`src/docs/*.mdx`. Each locale is a complete page (`*.en.mdx` or
+`*.zh-CN.mdx`), rather than prose split across UI translation keys. The build
+compiles them to ignored `*.mdx.js` modules before esbuild bundles the React
+application; edit the MDX sources, not those generated modules or
+`public/app.js`.
 
 ```sh
 nix develop

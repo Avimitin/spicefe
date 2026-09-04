@@ -1,0 +1,161 @@
+# Set up spice2x in three steps
+
+Enable the API stream on your gaming PC, allow access from your local network, and then connect from this device.
+
+> **Latest spice2x required.**
+>
+> Install **spice2x-26-09-01** or newer for full compatibility, including current H.264 streaming and card APIs. [Download the latest spice2x release](https://github.com/spice2x/spice2x.github.io/releases).
+
+## 1. Configure spice2x
+
+Choose either spicecfg or the command line. Both methods enable the same API stream, so you only need to use one.
+
+### Option A: use spicecfg
+
+In **Options**, select **API**. Choose an **API TCP Port**, enable **API Video Stream Server**, and optionally set an **API Password**. Enter the same port and password in spicefe.
+
+[![spicecfg Options API settings with API TCP Port and API Video Stream Server Enable highlighted](./assets/spicecfg-api-stream.png)](./assets/spicecfg-api-stream.png)
+
+### Option B: use the command line
+
+Add these options when launching the game:
+
+```text
+spice64.exe -api 1337 -apistream
+```
+
+To protect API commands with a password, append `-apipass your-password` and enter the same password in spicefe.
+
+## 2. Prepare the local network
+
+Connect this device and the gaming PC to the same LAN. In Windows Firewall, allow `spice64.exe` on **Private networks**.
+
+> **Find the gaming PC address.** Run `ipconfig` in Command Prompt and note the IPv4 Address for the active network adapter.
+
+## 3. Connect with spicefe
+
+Enter that IPv4 address as **Host**. Use the same API port and password configured in spice2x, then leave **Format** and **Screen** on **Auto** for the first connection.
+
+## Recommended starting settings
+
+- Auto format prefers H.264, which uses much less battery and bandwidth than MJPEG.
+- Auto screen selects the subscreen when the game provides one.
+- Start at 30 FPS and quality 70. Lower them if Wi-Fi is slow or the game is affected.
+
+## Quick troubleshooting
+
+- If both API and video fail, recheck the PC address, API port, spice2x version, and Windows Firewall.
+- If API connects but video fails, disconnect other viewers; spice2x allows one viewer per screen.
+- On iPhone or iPad, use **Share → Add to Home Screen** for a fullscreen app experience.
+
+[Continue to self-hosting](#self-host-guide)
+
+---
+
+<section id="self-host-guide">
+
+# Serve spicefe on your LAN
+
+Run the static page on a computer you control when a public hostname is forced to HTTPS or you prefer a fully local setup.
+
+> **The Windows release is the simplest route.** It needs no installation or administrator access. The included helper serves only the extracted spicefe files and downloads nothing when it runs.
+
+- [Windows helper](#deploy-windows)
+- [Nix](#deploy-nix)
+- [Open on a device](#deploy-client)
+- [Operate and update](#deploy-operations)
+
+<section id="deploy-windows">
+
+## Windows 10 and 11: use the release ZIP
+
+Run this on the gaming PC, or on another Windows PC that stays on the same home network.
+
+1. Download the newest spicefe ZIP and its matching `.sha256` file from [GitHub Releases](https://github.com/Avimitin/spicefe/releases).
+2. Extract the entire ZIP into a normal folder. Do not run files from inside the ZIP preview.
+3. Double-click `serve.bat`. A terminal opens, starts port 45000, and opens a local test page.
+4. If Windows Firewall asks, allow **Private networks only**. Do not allow Public networks.
+5. Keep the terminal open while using spicefe; press `Ctrl+C` or close it to stop serving.
+
+Optionally, verify the downloaded ZIP in PowerShell and compare the result with the `.sha256` file:
+
+```powershell
+Get-FileHash .\spicefe-vX.Y.Z.zip -Algorithm SHA256
+```
+
+> `serve.bat` uses Windows PowerShell 5.1 and .NET already included with Windows. It does not install a service, edit firewall rules, or request elevation.
+
+</section>
+
+<section id="deploy-nix">
+
+## Linux and macOS: run the reproducible Nix build
+
+Use a repository checkout when Nix is available on a computer that your phone or tablet can reach.
+
+```shell
+git clone https://github.com/Avimitin/spicefe.git
+cd spicefe
+nix flake check
+SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
+```
+
+1. For a stable deployment, check out a release tag before running the checks.
+2. Nix builds the same pinned static site used by CI and supplies the Python server; no global npm install is needed.
+3. Leave the terminal open. `Ctrl+C` stops the server.
+
+> `0.0.0.0` makes the page reachable from the LAN. Keep the machine firewall limited to trusted or private networks.
+
+</section>
+
+<section id="deploy-client">
+
+## Open the local page on a phone or tablet
+
+### Use the LAN address
+
+On the phone or tablet, manually enter a cyan address printed by the Windows helper, such as `http://192.168.1.50:45000/`. Include `http://` and the port.
+
+### Do not use 127.0.0.1
+
+That address means “this device.” It works in the gaming PC's test browser but points back to the phone when entered on the phone.
+
+### Keep both devices on one trusted LAN
+
+Both devices must be on the same network. Disable Wi-Fi client isolation, guest isolation, or AP isolation if the page cannot be reached.
+
+> A local-IP page has its own browser storage. Add the spice2x connection again the first time you use it; later visits keep that saved profile on the same device and address.
+
+</section>
+
+<section id="deploy-operations">
+
+## Operate, troubleshoot, and update
+
+### The page does not open
+
+First test the `127.0.0.1` address on the server PC. Then recheck the cyan LAN address, Windows Private-network firewall access, the shared Wi-Fi, and client isolation.
+
+### The page opens, but streaming fails
+
+Local deployment is already working. Recheck spice2x **API Video Stream Server**, its API port and password, the minimum spice2x version, and the separate spice2x firewall ports.
+
+### Use another page port
+
+Run `serve.bat 8080` from Command Prompt, or change `SPICEFE_PORT` for Nix. Use that same page port in the browser address; it does not change the spice2x API port.
+
+### Update safely
+
+Stop the old server, download and verify the new release, extract it to a new folder, and start its helper. Browser profiles remain saved because the address and port are unchanged.
+
+### Use another static server
+
+Advanced users may serve the Nix result or committed `public` directory over HTTP. Bind only to the trusted LAN, preserve normal JavaScript and WOFF2 MIME types, and open `index.html` through HTTP—not `file://`.
+
+</section>
+
+> **Keep the server private.** The helper is designed for a trusted home LAN, not the public Internet. Allow only Private networks, do not port-forward it through your router, and stop it when it is no longer needed.
+
+<DocumentBack id="self-host-done" label="Back to spicefe" />
+
+</section>

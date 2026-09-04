@@ -1,0 +1,161 @@
+# 三步配置 spice2x
+
+在游戏 PC 上启用 API 视频流，允许局域网访问，然后从本设备连接。
+
+> **需要最新版 spice2x。**
+>
+> 请安装 **spice2x-26-09-01** 或更新版本，以完整支持当前 H.264 串流及卡片 API。[下载最新版 spice2x](https://github.com/spice2x/spice2x.github.io/releases)。
+
+## 1. 配置 spice2x
+
+任选 spicecfg 图形界面或命令行参数；两者会启用相同的 API 视频流，只需配置其中一种。
+
+### 方案 A：使用 spicecfg
+
+在 **Options** 界面选择 **API**。设置 **API TCP Port**，启用 **API Video Stream Server**，并按需设置 **API Password**；在 spicefe 中填写相同端口和密码。
+
+[![spicecfg 的 Options API 设置，其中高亮了 API TCP Port 和 API Video Stream Server Enable](./assets/spicecfg-api-stream.png)](./assets/spicecfg-api-stream.png)
+
+### 方案 B：使用命令行
+
+启动游戏时加入以下参数：
+
+```text
+spice64.exe -api 1337 -apistream
+```
+
+如需用密码保护 API 控制命令，请追加 `-apipass your-password`，并在 spicefe 中填写相同密码。
+
+## 2. 准备局域网
+
+让本设备和游戏 PC 连接同一局域网，并在 Windows 防火墙的**专用网络**中允许 `spice64.exe` 通信。
+
+> **查找游戏 PC 地址。** 在命令提示符中运行 `ipconfig`，记下当前网络适配器的 IPv4 地址。
+
+## 3. 使用 spicefe 连接
+
+在“主机”中填写该 IPv4 地址，使用与 spice2x 相同的 API 端口和密码；首次连接时将“格式”和“画面”保持为“自动”。
+
+## 推荐的初始设置
+
+- 自动格式会优先使用 H.264，其耗电量和带宽占用远低于 MJPEG。
+- 自动画面会在游戏提供副屏时选择副屏。
+- 建议从 30 FPS、画质 70 开始；Wi-Fi 较慢或影响游戏性能时请降低数值。
+
+## 快速排查
+
+- API 和视频都失败时，请检查 PC 地址、API 端口、spice2x 版本和 Windows 防火墙。
+- API 已连接但视频失败时，请断开其他观看客户端；每个画面仅允许一个观看者。
+- 在 iPhone 或 iPad 上，可使用“分享”→“添加到主屏幕”获得全屏应用体验。
+
+[继续阅读自行托管](#self-host-guide)
+
+---
+
+<section id="self-host-guide">
+
+# 在局域网中提供 spicefe
+
+当公共域名被强制升级为 HTTPS，或你希望所有内容都留在本地时，可在自己控制的电脑上运行这个静态页面。
+
+> **Windows Release 是最简单的方案。** 它无需安装，也不要求管理员权限；附带的工具只提供解压后的 spicefe 文件，运行时不会下载任何内容。
+
+- [Windows 工具](#deploy-windows)
+- [Nix](#deploy-nix)
+- [从设备打开](#deploy-client)
+- [使用与更新](#deploy-operations)
+
+<section id="deploy-windows">
+
+## Windows 10 与 11：使用 Release ZIP
+
+可在游戏 PC 上运行，也可使用同一家庭网络中保持开机的其他 Windows PC。
+
+1. 从 [GitHub Releases](https://github.com/Avimitin/spicefe/releases) 下载最新的 spicefe ZIP 及与之匹配的 `.sha256` 文件。
+2. 把整个 ZIP 解压到普通文件夹中，不要直接从 ZIP 预览窗口运行文件。
+3. 双击 `serve.bat`；终端会打开并监听 45000 端口，同时打开本机测试页。
+4. Windows 防火墙询问时，只允许**专用网络**，不要允许公用网络。
+5. 使用 spicefe 期间保持终端开启；按 `Ctrl+C` 或关闭窗口即可停止。
+
+可选：在 PowerShell 中校验下载的 ZIP，并与 `.sha256` 文件中的结果比较：
+
+```powershell
+Get-FileHash .\spicefe-vX.Y.Z.zip -Algorithm SHA256
+```
+
+> `serve.bat` 使用 Windows 自带的 Windows PowerShell 5.1 与 .NET；它不会安装服务、修改防火墙规则或请求提权。
+
+</section>
+
+<section id="deploy-nix">
+
+## Linux 与 macOS：运行可复现的 Nix 构建
+
+如果手机或平板能够访问的电脑装有 Nix，可从仓库检出版本运行。
+
+```shell
+git clone https://github.com/Avimitin/spicefe.git
+cd spicefe
+nix flake check
+SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
+```
+
+1. 用于稳定部署时，请先检出一个 Release 标签，再运行检查。
+2. Nix 会构建与 CI 相同、依赖已固定的静态站点，并提供 Python 服务器；无需全局安装 npm。
+3. 保持终端开启；按 `Ctrl+C` 即可停止服务器。
+
+> `0.0.0.0` 使页面可从局域网访问。请将电脑防火墙限制在可信或专用网络。
+
+</section>
+
+<section id="deploy-client">
+
+## 从手机或平板打开本地页面
+
+### 使用局域网地址
+
+在手机或平板上手动输入 Windows 工具显示的蓝绿色地址，例如 `http://192.168.1.50:45000/`；必须包含 `http://` 和端口。
+
+### 不要使用 127.0.0.1
+
+该地址表示“本设备”。它能在游戏 PC 的测试浏览器中打开，但在手机上输入时只会指向手机自身。
+
+### 使用同一个可信局域网
+
+两台设备必须位于同一网络。页面无法访问时，请关闭 Wi-Fi 客户端隔离、访客隔离或 AP 隔离。
+
+> 本地 IP 页面拥有独立的浏览器存储。首次使用时请再次添加 spice2x 连接；之后只要设备、地址与端口不变，保存的配置就会保留。
+
+</section>
+
+<section id="deploy-operations">
+
+## 日常使用、故障排查与更新
+
+### 页面无法打开
+
+先在服务器 PC 上测试 `127.0.0.1` 地址，再检查蓝绿色局域网地址、Windows 专用网络防火墙权限、是否连接同一 Wi-Fi，以及客户端隔离。
+
+### 页面能打开，但串流失败
+
+这说明本地部署已经正常。请检查 spice2x 的 **API Video Stream Server**、API 端口与密码、最低版本要求，以及 spice2x 自己使用的防火墙端口。
+
+### 更换页面端口
+
+在命令提示符运行 `serve.bat 8080`，或修改 Nix 的 `SPICEFE_PORT`。浏览器地址必须使用同一页面端口；它不会改变 spice2x API 端口。
+
+### 安全更新
+
+停止旧服务器，下载并校验新 Release，解压到新文件夹，再运行其中的工具。只要地址与端口不变，浏览器中保存的配置就会保留。
+
+### 使用其他静态服务器
+
+高级用户可以通过 HTTP 提供 Nix result 或仓库中的 `public` 目录。只绑定可信局域网，保留正常的 JavaScript 与 WOFF2 MIME 类型，并通过 HTTP 打开 `index.html`，不要使用 `file://`。
+
+</section>
+
+> **保持服务器私有。** 该工具面向可信家庭局域网，而非公共互联网。只允许专用网络，不要在路由器中设置端口转发，不再需要时请停止服务器。
+
+<DocumentBack id="self-host-done" label="返回 spicefe" />
+
+</section>
