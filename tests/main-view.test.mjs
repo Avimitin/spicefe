@@ -83,6 +83,20 @@ test('ticker profiles remain in the library until their first display value arri
   }, 'servers'), 'stream');
 });
 
+test('keypad profiles enter the stream view when the API-only controls are ready', () => {
+  const keypad = { ...saved, keypadEnabled: true };
+  assert.equal(mainView([keypad], {
+    wanted: true,
+    profile: keypad,
+    videoState: 'connecting',
+  }, 'servers'), 'servers');
+  assert.equal(mainView([keypad], {
+    wanted: true,
+    profile: keypad,
+    videoState: 'live',
+  }, 'servers'), 'stream');
+});
+
 test('the connection editor leaves server selection to the library', () => {
   const markup = readFileSync(
     new URL('../public/index.html', import.meta.url),

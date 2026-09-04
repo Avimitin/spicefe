@@ -60,6 +60,7 @@ export function newProfile(overrides = {}) {
     quality: 70,
     viewMode: 'contain',
     tickerEnabled: false,
+    keypadEnabled: false,
     ...overrides,
   });
 }
@@ -70,6 +71,7 @@ export function sanitizeProfile(input = {}) {
   const id = String(input.id ?? '').trim().slice(0, 96) || createId();
   const format = FORMATS.has(String(input.format)) ? String(input.format) : 'auto';
   const screen = SCREENS.has(String(input.screen ?? '')) ? String(input.screen ?? '') : '';
+  const keypadEnabled = input.keypadEnabled === true;
   return {
     id,
     name,
@@ -84,7 +86,8 @@ export function sanitizeProfile(input = {}) {
     // Retain the v1 field for saved-profile and QR compatibility. Alternate
     // layouts were removed; every profile now uses aspect-preserving Fit.
     viewMode: 'contain',
-    tickerEnabled: input.tickerEnabled === true,
+    tickerEnabled: !keypadEnabled && input.tickerEnabled === true,
+    keypadEnabled,
   };
 }
 

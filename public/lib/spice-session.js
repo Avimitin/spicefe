@@ -1,8 +1,13 @@
 import { streamUrl } from './endpoints.js';
 import { H264Player } from './h264-player.js';
 import { BLANK_IIDX_TICKER } from './iidx-ticker.js';
+import {
+  resolveKeypadButtons,
+  resolvedKeypadButtonNames,
+} from './keypad-input.js';
 import { MseH264Player } from './mse-h264-player.js';
 import { SpiceApi } from './spice-api.js';
+import { spice2xCompatibility } from './spice-version.js';
 
 const BLANK_IMAGE = 'data:image/gif;base64,'
   + 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
@@ -12,6 +17,17 @@ const MODEL_CANVAS = Object.freeze({
   KFC: { width: 1920, height: 1080 },
   M39: { width: 1280, height: 800 },
 });
+
+function displayModeForProfile(profile) {
+  if (profile?.keypadEnabled) {
+    return 'keypad';
+  }
+  return profile?.tickerEnabled ? 'ticker' : 'video';
+}
+
+function usesApiOnlyDisplay(profile) {
+  return displayModeForProfile(profile) !== 'video';
+}
 
 function touchCanvasForGame(info) {
   if (info?.model === 'M32' && (info.spec === 'C' || info.spec === 'D')) {
@@ -45,6 +61,8 @@ export class SpiceSession {
     this.videoError = null;
     this.apiError = null;
     this.gameInfo = null;
+    this.launcherInfo = null;
+    this.versionCompatibility = null;
     this.touchCanvas = null;
     this.streamRetryDelay = 1000;
     this.apiRetryDelay = 1000;
@@ -55,6 +73,7 @@ export class SpiceSession {
     this.memoryTimer = null;
     this.tickerTimer = null;
     this.tickerText = BLANK_IIDX_TICKER;
+    this.keypadButtons = null;
     this.mjpegActive = false;
     this.fellBackToMjpeg = false;
     this.failedH264Backends = new Set();
@@ -88,9 +107,14 @@ export class SpiceSession {
       videoError: this.videoError,
       apiError: this.apiError,
       gameInfo: this.gameInfo,
+      launcherInfo: this.launcherInfo ? { ...this.launcherInfo } : null,
+      versionCompatibility: this.versionCompatibility
+        ? { ...this.versionCompatibility }
+        : null,
       touchCanvas: this.touchCanvas ? { ...this.touchCanvas } : null,
-      displayMode: this.profile?.tickerEnabled ? 'ticker' : 'video',
+      displayMode: displayModeForProfile(this.profile),
       tickerText: this.tickerText,
+      keypadButtons: this.keypadButtons ? { ...this.keypadButtons } : null,
       connected: this.videoState === 'live' && this.apiState === 'live',
     };
   }
@@ -108,15 +132,17 @@ export class SpiceSession {
     this.videoResponded = false;
     this.videoError = null;
     this.apiError = null;
+    this.launcherInfo = null;
+    this.versionCompatibility = null;
     this.streamRetryDelay = 1000;
     this.apiRetryDelay = 1000;
     this.fellBackToMjpeg = false;
     this.failedH264Backends.clear();
-    if (this.profile.tickerEnabled) {
-      this.videoFormat = 'ticker';
+    if (usesApiOnlyDisplay(this.profile)) {
+      this.videoFormat = displayModeForProfile(this.profile);
     }
     this.emitState();
-    if (!this.profile.tickerEnabled) {
+    if (!usesApiOnlyDisplay(this.profile)) {
       this.startVideo();
     }
     this.startApi();
@@ -136,9 +162,19 @@ export class SpiceSession {
 
     this.stopH264();
     this.stopMjpeg();
-    this.api?.close();
+    const api = this.api;
+    const keypadButtonNames = this.profile?.keypadEnabled
+      ? resolvedKeypadButtonNames(this.keypadButtons)
+      : [];
     this.api = null;
     this.onapi(null);
+    if (api && keypadButtonNames.length > 0 && typeof api.releaseButtons === 'function') {
+      void api.releaseButtons(keypadButtonNames)
+        .catch(() => {})
+        .finally(() => api.close());
+    } else {
+      api?.close();
+    }
     this.onmemory(null);
     this.clearStreamViews();
 
@@ -150,8 +186,11 @@ export class SpiceSession {
     this.videoError = null;
     this.apiError = null;
     this.gameInfo = null;
+    this.launcherInfo = null;
+    this.versionCompatibility = null;
     this.touchCanvas = null;
     this.tickerText = BLANK_IIDX_TICKER;
+    this.keypadButtons = null;
     this.onticker(this.tickerText);
     this.emitState();
   }
@@ -166,7 +205,7 @@ export class SpiceSession {
   }
 
   startVideo() {
-    if (!this.wanted || this.profile?.tickerEnabled) {
+    if (!this.wanted || usesApiOnlyDisplay(this.profile)) {
       return;
     }
     clearTimeout(this.streamRetryTimer);
@@ -396,6 +435,12 @@ export class SpiceSession {
       }
       return;
     }
+    if (this.profile?.keypadEnabled) {
+      if (!this.api?.connected && !this.apiRetryTimer) {
+        this.startApi();
+      }
+      return;
+    }
     this.stopH264();
     this.stopMjpeg();
     this.stopStallWatchdog();
@@ -418,7 +463,7 @@ export class SpiceSession {
     this.onmemory(null);
     this.api?.close();
 
-    if (this.profile?.tickerEnabled) {
+    if (usesApiOnlyDisplay(this.profile)) {
       this.videoState = 'connecting';
       this.videoResponded = false;
       this.videoError = null;
@@ -476,17 +521,50 @@ export class SpiceSession {
 
   async verifyApi(api) {
     try {
+      try {
+        const launcherInfo = await api.getLauncherInfo();
+        if (this.api !== api || !this.wanted) {
+          return;
+        }
+        this.launcherInfo = launcherInfo;
+        this.versionCompatibility = spice2xCompatibility(launcherInfo.version);
+      } catch (error) {
+        if (this.api !== api || !this.wanted) {
+          return;
+        }
+        // Launcher metadata is a compatibility preflight. Older APIs may not expose it,
+        // so failure here must not hide an otherwise usable stream or keypad.
+        this.launcherInfo = null;
+        this.versionCompatibility = ['remote', 'protocol'].includes(error?.code)
+          ? spice2xCompatibility('')
+          : null;
+      }
       const data = await api.request('info', 'avs');
       if (this.api !== api || !this.wanted) {
         return;
       }
       this.gameInfo = data[0] || {};
       this.touchCanvas = touchCanvasForGame(this.gameInfo);
+      if (this.profile.keypadEnabled) {
+        const names = await api.getButtonNames();
+        if (this.api !== api || !this.wanted || !this.profile?.keypadEnabled) {
+          return;
+        }
+        this.keypadButtons = resolveKeypadButtons(names);
+        await api.releaseButtons(resolvedKeypadButtonNames(this.keypadButtons));
+        if (this.api !== api || !this.wanted || !this.profile?.keypadEnabled) {
+          return;
+        }
+      }
       this.apiState = 'live';
       this.apiError = null;
       this.apiRetryDelay = 1000;
       if (this.profile.tickerEnabled) {
         this.startTicker(api);
+      } else if (this.profile.keypadEnabled) {
+        this.videoState = 'live';
+        this.videoResponded = true;
+        this.videoError = null;
       } else {
         this.startMemoryPolling(api);
       }
@@ -521,12 +599,12 @@ export class SpiceSession {
   startMemoryPolling(api) {
     clearInterval(this.memoryTimer);
     const updateMemory = async () => {
-      if (this.api !== api || !api.connected || this.profile?.tickerEnabled) {
+      if (this.api !== api || !api.connected || usesApiOnlyDisplay(this.profile)) {
         return;
       }
       try {
         const memory = await api.getMemoryInfo();
-        if (this.api === api && api.connected && !this.profile?.tickerEnabled) {
+        if (this.api === api && api.connected && !usesApiOnlyDisplay(this.profile)) {
           this.onmemory(memory);
         }
       } catch {
@@ -541,13 +619,15 @@ export class SpiceSession {
   }
 
   failTickerWithApi(error = this.apiError) {
-    if (!this.profile?.tickerEnabled) {
+    if (!usesApiOnlyDisplay(this.profile)) {
       return;
     }
     clearTimeout(this.tickerTimer);
     this.tickerTimer = null;
     this.videoState = 'error';
-    this.videoError = error || new Error('The control API disconnected from the 16-segment display');
+    this.videoError = error || new Error(this.profile?.keypadEnabled
+      ? 'The control API disconnected from the keypad'
+      : 'The control API disconnected from the 16-segment display');
   }
 
   startTicker(api) {

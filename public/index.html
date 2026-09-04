@@ -11,7 +11,7 @@
   <title>spicefe</title>
   <link rel="manifest" href="./site.webmanifest">
   <link rel="icon" href="./assets/spice2x.ico" type="image/x-icon" sizes="any">
-  <link rel="stylesheet" href="./assets/styles.css?v=f5811145c1fa">
+  <link rel="stylesheet" href="./assets/styles.css?v=6110e26bf2ff">
 </head>
 <body>
   <div id="app">
@@ -144,6 +144,7 @@
           </div>
         </div>
       </div>
+      <div id="keypad-view" class="keypad-view" hidden></div>
 
       <section id="empty-state" class="empty-state">
         <div class="welcome-hero">
@@ -533,6 +534,10 @@
     </main>
   </div>
 
+  <dialog id="server-setup-dialog" class="server-setup-dialog" aria-labelledby="server-setup-title">
+    <div id="server-setup-root"></div>
+  </dialog>
+
   <dialog id="settings-dialog" class="settings-dialog">
     <form id="profile-form" method="dialog">
       <header class="dialog-header">
@@ -598,6 +603,7 @@
             </button>
           </div>
           <div id="ticker-toggle-root"></div>
+          <div id="keypad-toggle-root"></div>
         </div>
       </div>
 
@@ -640,6 +646,26 @@
         <button id="save-connect" class="primary-button" type="submit" data-i18n="button.saveConnect">Save &amp; connect</button>
       </footer>
     </form>
+  </dialog>
+
+  <dialog id="version-warning-dialog" class="version-warning-dialog" aria-labelledby="version-warning-title">
+    <header class="dialog-header version-warning-header">
+      <div>
+        <span class="eyebrow" data-i18n="versionWarning.eyebrow">COMPATIBILITY WARNING</span>
+        <h2 id="version-warning-title" data-i18n="versionWarning.title">Update spice2x before continuing</h2>
+      </div>
+      <button id="version-warning-close" class="icon-button" type="button" aria-label="Close compatibility warning" data-i18n-aria-label="versionWarning.close">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></svg>
+      </button>
+    </header>
+    <div class="version-warning-body">
+      <svg class="version-warning-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 9v5M12 17.5h.01"/></svg>
+      <p id="version-warning-copy"></p>
+    </div>
+    <footer class="dialog-footer">
+      <button id="version-warning-dismiss" class="secondary-button" type="button" data-i18n="versionWarning.dismiss">Continue anyway</button>
+      <a id="version-warning-download" class="primary-button" href="https://github.com/spice2x/spice2x.github.io/releases/latest" target="_blank" rel="noopener noreferrer" data-i18n="versionWarning.download">Download latest spice2x</a>
+    </footer>
   </dialog>
 
   <dialog id="ticker-preview-dialog" class="ticker-preview-dialog" aria-labelledby="ticker-preview-title">
@@ -889,6 +915,6 @@
   <div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
 
   <script src="./vendor/jmuxer.min.js?v=70b1c4d0204f"></script>
-  <script type="module" src="./app.js?v=07ddb75be9b4"></script>
+  <script type="module" src="./app.js?v=5f941aadd330"></script>
 </body>
 </html>

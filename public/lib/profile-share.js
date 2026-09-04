@@ -110,7 +110,8 @@ function validatePayload(payload) {
     || !expectInteger(payload.r, 1, 60)
     || !expectInteger(payload.q, 1, 100)
     || !VIEW_MODES.has(payload.m)
-    || (payload.t !== 0 && payload.t !== 1)) {
+    || (payload.t !== 0 && payload.t !== 1)
+    || (payload.k !== undefined && payload.k !== 0 && payload.k !== 1)) {
     throw new ProfileShareError('Invalid shared profile fields', 'invalid');
   }
 }
@@ -139,6 +140,7 @@ export function encodeSharedProfile(candidate) {
     q: profile.quality,
     m: profile.viewMode,
     t: profile.tickerEnabled ? 1 : 0,
+    k: profile.keypadEnabled ? 1 : 0,
   };
   const encoded = bytesToBase64Url(new TextEncoder().encode(JSON.stringify(payload)));
   if (encoded.length > PROFILE_SHARE_MAX_LENGTH) {
@@ -166,6 +168,7 @@ export function decodeSharedProfile(encoded) {
       quality: payload.q,
       viewMode: payload.m,
       tickerEnabled: payload.t === 1,
+      keypadEnabled: payload.k === 1,
     });
   } catch {
     throw new ProfileShareError('Invalid shared profile address', 'invalid');

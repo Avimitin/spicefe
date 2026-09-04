@@ -4,7 +4,7 @@
 
 > **需要最新版 spice2x。**
 >
-> 请安装 **spice2x-26-09-01** 或更新版本，以完整支持当前 H.264 串流及卡片 API。[下载最新版 spice2x](https://github.com/spice2x/spice2x.github.io/releases)。
+> 请安装 **spice2x-26-09-01** 或更新版本，以完整支持全屏数字键盘、当前 H.264 串流及卡片 API。spicefe 会在连接时调用 `info.launcher()` 检查版本；若报告的构建较旧，则会显示警告。[下载最新版 spice2x](https://github.com/spice2x/spice2x.github.io/releases/latest)。
 
 ## 1. 配置 spice2x
 
@@ -12,7 +12,7 @@
 
 ### 方案 A：使用 spicecfg
 
-在 **Options** 界面选择 **API**。设置 **API TCP Port**，启用 **API Video Stream Server**，并按需设置 **API Password**；在 spicefe 中填写相同端口和密码。
+在 **Options** 界面选择 **API**。设置 **API TCP Port**；需要视频时启用 **API Video Stream Server**，并按需设置 **API Password**；在 spicefe 中填写相同端口和密码。数字键盘与米字屏模式只使用 API，因此对应配置无需开启视频流服务器。
 
 [![spicecfg 的 Options API 设置，其中高亮了 API TCP Port 和 API Video Stream Server Enable](./assets/spicecfg-api-stream.png)](./assets/spicecfg-api-stream.png)
 
@@ -24,7 +24,7 @@
 spice64.exe -api 1337 -apistream
 ```
 
-如需用密码保护 API 控制命令，请追加 `-apipass your-password`，并在 spicefe 中填写相同密码。
+若只使用 API 数字键盘，运行 `spice64.exe -api 1337` 即可。如需用密码保护 API 控制命令，请追加 `-apipass your-password`，并在 spicefe 中填写相同密码。
 
 ## 2. 准备局域网
 
@@ -34,7 +34,13 @@ spice64.exe -api 1337 -apistream
 
 ## 3. 使用 spicefe 连接
 
-在“主机”中填写该 IPv4 地址，使用与 spice2x 相同的 API 端口和密码；首次连接时将“格式”和“画面”保持为“自动”。
+点击**添加服务器**并按照向导操作。首先输入游戏 PC 地址、API 端口及可选的 API 密码；spicefe 会先测试控制 API。测试失败时，可以修改连接信息后重试、取消设置，或点击**强制保存**跳过验证并继续。
+
+接下来选择游戏图标和一种连接方式：**副屏串流**、**米字屏**或**全屏数字键盘**。副屏串流会多显示一个画质设置页面，另外两种仅使用 API 的方式会跳过该页面。最后为游戏服务器命名并保存。每个页面都可以返回，返回上一页时已做的选择会保留。
+
+## 不串流副屏，直接使用全屏数字键盘
+
+在已保存服务器的显示选项中启用“全屏数字键盘”。此模式只连接 spice2x 控制 API，并在可用画面中显示十个数字键以及“开始”“帮助”“测试”和“服务”键。数字键会通过原生的玩家 1 `keypads.write()` 输入发送；机台控制键先根据 `buttons.read()` 返回的名称进行匹配，再发送原生的按下与松开覆盖。米字屏与数字键盘模式互斥；由于两者都不会打开视频连接，串流画质设置也会自动隐藏。
 
 ## 推荐的初始设置
 
@@ -46,6 +52,7 @@ spice64.exe -api 1337 -apistream
 
 - API 和视频都失败时，请检查 PC 地址、API 端口、spice2x 版本和 Windows 防火墙。
 - API 已连接但视频失败时，请断开其他观看客户端；每个画面仅允许一个观看者。
+- 如果某个数字键盘机台控制键不可用，请确认当前游戏通过 spice2x 提供了名称匹配的“开始”“帮助”“测试”或“服务”按钮。
 - 在 iPhone 或 iPad 上，可使用“分享”→“添加到主屏幕”获得全屏应用体验。
 
 [继续阅读自行托管](#self-host-guide)

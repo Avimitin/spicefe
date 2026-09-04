@@ -12,6 +12,11 @@ import {
   StreamCardList,
 } from './components';
 import { Documentation } from './documentation';
+import { ArcadeKeypad } from './keypad';
+import {
+  ServerSetupWizard,
+  type ServerSetupDraft,
+} from './server-setup';
 import { Toggle, type CarouselApi } from './ui';
 import {
   cardBackupAction,
@@ -73,6 +78,11 @@ import {
   REACHABILITY_INTERVAL_MS,
 } from '../public/lib/reachability.js';
 import { SpiceSession } from '../public/lib/spice-session.js';
+import {
+  LATEST_SPICE2X_RELEASE_URL,
+  MINIMUM_SPICE2X_BUILD,
+} from '../public/lib/spice-version.js';
+import { serverSetupModeFields } from '../public/lib/server-setup.js';
 import { TouchController } from '../public/lib/touch-controller.js';
 
 type Profile = ReturnType<typeof newProfile>;
@@ -119,7 +129,15 @@ interface SessionSnapshot {
   videoError?: any;
   apiError?: any;
   touchCanvas?: { width: number; height: number } | null;
+  displayMode?: 'video' | 'ticker' | 'keypad';
   tickerText?: string;
+  keypadButtons?: Record<'start' | 'help' | 'test' | 'service', string | null> | null;
+  versionCompatibility?: {
+    version: string;
+    buildDate: string | null;
+    minimumBuild: string;
+    supported: boolean;
+  } | null;
 }
 
 const element = (id: string): any => document.getElementById(id);
@@ -143,10 +161,14 @@ const video = element('mse-view');
 const image = element('mjpeg-view');
 const tickerView = element('ticker-view');
 const tickerText = element('ticker-text');
+const keypadView = element('keypad-view');
 const tickerPreviewDialog = element('ticker-preview-dialog');
 const tickerPreviewInput = element('ticker-preview-input');
 const tickerPreviewText = element('ticker-preview-text');
+const serverSetupDialog = element('server-setup-dialog');
+const serverSetupRootElement = element('server-setup-root');
 const settingsDialog = element('settings-dialog');
+const versionWarningDialog = element('version-warning-dialog');
 const profileShareDialog = element('profile-share-dialog');
 const profileShareExport = element('profile-share-export');
 const profileShareImport = element('profile-share-import');
@@ -157,6 +179,7 @@ const deleteDialog = element('delete-dialog');
 const form = element('profile-form');
 const streamSettings = element('stream-settings');
 const tickerToggleRoot = element('ticker-toggle-root');
+const keypadToggleRoot = element('keypad-toggle-root');
 const iconGroups = element('game-icon-groups');
 const customIconInput = element('custom-icon-upload');
 const customIconStatus = element('custom-icon-status');
@@ -218,10 +241,13 @@ const reactRoots = {
   cardMenuList: createRoot(cardMenuList),
   cardPreview: createRoot(cardPreview),
   iconGroups: createRoot(iconGroups),
+  keypadView: createRoot(keypadView),
+  serverSetup: createRoot(serverSetupRootElement),
   serverList: createRoot(serverList),
   showcaseCards: createRoot(showcaseCardsCarousel),
   showcaseStream: createRoot(showcaseStreamCarousel),
   tickerToggle: createRoot(tickerToggleRoot),
+  keypadToggle: createRoot(keypadToggleRoot),
 };
 
 let showcaseCardsApi: CarouselApi = undefined;
@@ -307,6 +333,19 @@ let tickerPreviewTimer: ReturnType<typeof setTimeout> | null = null;
 let editingProfile: Profile | null = null;
 let editingProfileIsNew = false;
 let tickerEnabledDraft = false;
+let keypadEnabledDraft = false;
+let versionWarningShownFor = '';
+
+function profileDisplayMode(profile: Profile | null | undefined): 'video' | 'ticker' | 'keypad' {
+  if (profile?.keypadEnabled) {
+    return 'keypad';
+  }
+  return profile?.tickerEnabled ? 'ticker' : 'video';
+}
+
+function profileUsesApiOnlyDisplay(profile: Profile | null | undefined) {
+  return profileDisplayMode(profile) !== 'video';
+}
 
 function translationParameters(node: HTMLElement) {
   const screen = node.getAttribute('data-i18n-screen');
@@ -393,15 +432,18 @@ function setFormGameIcon(iconId: string) {
   element('game-icon-label').textContent = icon.label;
 }
 
-function renderIconGroups() {
-  const selectedId = element('game-icon-id').value;
+function availableGameIconGroups() {
   const customIcons = customIconStore.list();
-  const groups = customIcons.length > 0
+  return customIcons.length > 0
     ? [{ id: 'custom', icons: customIcons }, ...GAME_ICON_GROUPS]
     : GAME_ICON_GROUPS;
+}
+
+function renderIconGroups() {
+  const selectedId = element('game-icon-id').value;
   renderReact(reactRoots.iconGroups, (
     <GameIconGroups
-      groups={groups}
+      groups={availableGameIconGroups()}
       selectedId={selectedId}
       t={t}
       onSelect={(iconId) => {
@@ -925,16 +967,47 @@ function renderTickerModeToggle() {
       hint={t('settings.tickerHelp')}
       onChange={(isSelected) => {
         tickerEnabledDraft = isSelected;
-        renderTickerModeToggle();
-        syncTickerModeControls();
+        if (isSelected) {
+          keypadEnabledDraft = false;
+        }
+        renderDisplayModeToggles();
+        syncDisplayModeControls();
       }}
     />
   ));
 }
 
-function setTickerModeEnabled(enabled: boolean) {
-  tickerEnabledDraft = enabled;
+function renderKeypadModeToggle() {
+  renderReact(reactRoots.keypadToggle, (
+    <Toggle
+      id="keypad-enabled"
+      name="keypad-enabled"
+      size="sm"
+      className="w-full"
+      isSelected={keypadEnabledDraft}
+      label={t('settings.keypadEnabled')}
+      hint={t('settings.keypadHelp')}
+      onChange={(isSelected) => {
+        keypadEnabledDraft = isSelected;
+        if (isSelected) {
+          tickerEnabledDraft = false;
+        }
+        renderDisplayModeToggles();
+        syncDisplayModeControls();
+      }}
+    />
+  ));
+}
+
+function renderDisplayModeToggles() {
   renderTickerModeToggle();
+  renderKeypadModeToggle();
+}
+
+function setDisplayModeEnabled(tickerEnabled: boolean, keypadEnabled: boolean) {
+  keypadEnabledDraft = keypadEnabled;
+  tickerEnabledDraft = !keypadEnabled && tickerEnabled;
+  renderDisplayModeToggles();
 }
 
 function fillForm(profile: Profile) {
@@ -947,8 +1020,8 @@ function fillForm(profile: Profile) {
   element('screen').value = profile.screen;
   element('fps').value = String(profile.fps);
   element('quality').value = String(profile.quality);
-  setTickerModeEnabled(profile.tickerEnabled);
-  syncTickerModeControls();
+  setDisplayModeEnabled(profile.tickerEnabled, profile.keypadEnabled);
+  syncDisplayModeControls();
 }
 
 function profileFromForm() {
@@ -965,11 +1038,12 @@ function profileFromForm() {
     fps: element('fps').value,
     quality: element('quality').value,
     tickerEnabled: tickerEnabledDraft,
+    keypadEnabled: keypadEnabledDraft,
   });
 }
 
-function syncTickerModeControls() {
-  const enabled = tickerEnabledDraft;
+function syncDisplayModeControls() {
+  const enabled = tickerEnabledDraft || keypadEnabledDraft;
   streamSettings.hidden = enabled;
   if (enabled) {
     streamSettings.open = false;
@@ -1067,6 +1141,37 @@ function selectProfile(id: string) {
   renderCompatibility();
 }
 
+function handleKeypadError(error: unknown) {
+  showToast(t('keypad.inputFailed', {
+    error: (localizeError as any)(i18n.locale, error, 'status.apiDefaultError'),
+  }), 7000);
+}
+
+function renderKeypad(snapshot: SessionSnapshot) {
+  const keypadMode = snapshot.profile?.keypadEnabled === true;
+  renderReact(reactRoots.keypadView, (
+    <ArcadeKeypad
+      api={session.api}
+      buttonNames={snapshot.keypadButtons ?? null}
+      enabled={keypadMode
+        && snapshot.apiState === 'live'
+        && snapshot.videoState === 'live'
+        && Boolean(session.api?.connected)}
+      labels={{
+        aria: t('keypad.aria'),
+        numberPad: t('keypad.numberPad'),
+        cabinetControls: t('keypad.cabinetControls'),
+        start: t('keypad.start'),
+        help: t('keypad.help'),
+        test: t('keypad.test'),
+        service: t('keypad.service'),
+        unavailable: t('keypad.unavailable'),
+      }}
+      onError={handleKeypadError}
+    />
+  ));
+}
+
 const session: any = new (SpiceSession as any)(canvas, video, image);
 const touch: any = new (TouchController as any)(stage, {
   activeView: () => {
@@ -1088,7 +1193,10 @@ const touch: any = new (TouchController as any)(stage, {
   },
 });
 
-session.onapi = (api: any) => touch.setApi(api);
+session.onapi = (api: any) => {
+  touch.setApi(api);
+  renderKeypad(session.snapshot);
+};
 session.onnotice = (key: string, parameters?: Record<string, unknown>) => showToast(t(key, parameters));
 session.onticker = (text: string) => {
   tickerText.textContent = iidxTickerDisplayGlyphs(text);
@@ -1225,6 +1333,7 @@ function probeChannelPresentation(channel: ProbeChannel, kind: string) {
 function reachabilityPresentation(profile: Profile) {
   const saved = probeStatus(profile);
   const availability = deriveReachability(saved);
+  const outputMode = profileDisplayMode(profile);
   if (availability.state === 'unknown') {
     return {
       state: 'unknown',
@@ -1236,9 +1345,11 @@ function reachabilityPresentation(profile: Profile) {
     return {
       state: 'checking',
       label: t('reachability.checking'),
-      detail: t(profile.tickerEnabled
+      detail: t(outputMode === 'ticker'
         ? 'reachability.checkingTickerDetail'
-        : 'reachability.checkingDetail'),
+        : outputMode === 'keypad'
+          ? 'reachability.checkingKeypadDetail'
+          : 'reachability.checkingDetail'),
     };
   }
 
@@ -1254,9 +1365,11 @@ function reachabilityPresentation(profile: Profile) {
   return {
     state: 'unreachable',
     label: t('reachability.noResponse'),
-    detail: t(profile.tickerEnabled
+    detail: t(outputMode === 'ticker'
       ? 'reachability.noResponseTickerDetail'
-      : 'reachability.noResponseDetail', { time }),
+      : outputMode === 'keypad'
+        ? 'reachability.noResponseKeypadDetail'
+        : 'reachability.noResponseDetail', { time }),
   };
 }
 
@@ -1299,6 +1412,9 @@ function profileShareFormat(profile: Profile) {
 }
 
 function profileShareOutput(profile: Profile) {
+  if (profile.keypadEnabled) {
+    return t('profileShare.outputKeypad');
+  }
   if (profile.tickerEnabled) {
     return t('profileShare.outputTicker');
   }
@@ -1628,6 +1744,39 @@ function afterInitialLayout(callback: () => void) {
   }
 }
 
+function closeVersionWarning() {
+  if (versionWarningDialog.open) {
+    versionWarningDialog.close();
+  }
+}
+
+function resetVersionWarning() {
+  versionWarningShownFor = '';
+  closeVersionWarning();
+}
+
+function renderVersionWarning(snapshot: SessionSnapshot) {
+  const compatibility = snapshot.versionCompatibility;
+  if (!snapshot.wanted || !compatibility || compatibility.supported) {
+    if (!snapshot.wanted) {
+      closeVersionWarning();
+    }
+    return;
+  }
+
+  const reportedVersion = compatibility.version || t('versionWarning.unknownVersion');
+  element('version-warning-copy').textContent = t('versionWarning.copy', {
+    version: reportedVersion,
+    minimum: compatibility.minimumBuild || MINIMUM_SPICE2X_BUILD,
+  });
+  const signature = `${snapshot.profile?.id ?? ''}\u0000${reportedVersion}`;
+  if (versionWarningShownFor === signature || versionWarningDialog.open) {
+    return;
+  }
+  versionWarningShownFor = signature;
+  versionWarningDialog.showModal();
+}
+
 function useLibraryPageForConnection() {
   browsePage = 'servers';
   updateBrowsePageHistory(browsePage, 'replace');
@@ -1656,9 +1805,12 @@ function renderMainView(snapshot: SessionSnapshot): MainView {
   }
 
   const streaming = view === 'stream';
-  const tickerStreaming = streaming && snapshot.profile?.tickerEnabled;
+  const outputMode = profileDisplayMode(snapshot.profile);
+  const tickerStreaming = streaming && outputMode === 'ticker';
+  const keypadStreaming = streaming && outputMode === 'keypad';
+  const apiOnlyStreaming = tickerStreaming || keypadStreaming;
   activeServer.hidden = !streaming;
-  streamMetric.hidden = !streaming || tickerStreaming;
+  streamMetric.hidden = !streaming || apiOnlyStreaming;
   languagePicker.hidden = streaming;
   settingsButton.hidden = streaming;
   connectButton.hidden = !streaming;
@@ -1666,10 +1818,12 @@ function renderMainView(snapshot: SessionSnapshot): MainView {
   pageMenuButton.hidden = streaming;
   brandIcon.hidden = !streaming;
   tickerView.hidden = !tickerStreaming;
-  stage.dataset.outputMode = tickerStreaming ? 'ticker' : 'video';
+  keypadView.hidden = !keypadStreaming;
+  stage.dataset.outputMode = outputMode;
   if (snapshot.profile?.tickerEnabled) {
     session.onticker(snapshot.tickerText);
   }
+  renderKeypad(snapshot);
   setPageMenuOpen(false);
   if (!streaming) {
     setCardMenuOpen(false);
@@ -1710,12 +1864,13 @@ function renderConnectionButton() {
 
 function renderSnapshot(snapshot: SessionSnapshot, announce = true) {
   recordSessionReachability(snapshot);
+  renderVersionWarning(snapshot);
   renderConnectionButton();
   const view = renderMainView(snapshot);
   renderServerList(snapshot);
-  const tickerMode = snapshot.profile?.tickerEnabled === true;
+  const apiOnlyMode = profileUsesApiOnlyDisplay(snapshot.profile);
   touch.setEnabled(
-    snapshot.videoState === 'live' && snapshot.apiState === 'live' && !tickerMode,
+    snapshot.videoState === 'live' && snapshot.apiState === 'live' && !apiOnlyMode,
   );
   touch.setCanvasSize(snapshot.touchCanvas);
 
@@ -1726,7 +1881,7 @@ function renderSnapshot(snapshot: SessionSnapshot, announce = true) {
     lastMetricPaint = 0;
     renderVideoMetric();
     touchMarker.hidden = true;
-  } else if (tickerMode) {
+  } else if (snapshot.profile?.tickerEnabled) {
     videoMetricFallback = 'ticker';
     renderVideoMetric();
   } else if (snapshot.videoState === 'connecting' && currentMetric === null) {
@@ -1755,7 +1910,7 @@ function renderSnapshot(snapshot: SessionSnapshot, announce = true) {
   }
   if (location.protocol === 'https:'
     && (snapshot.apiError?.code === 'transport'
-      || (!snapshot.profile?.tickerEnabled && snapshot.videoError))) {
+      || (!profileUsesApiOnlyDisplay(snapshot.profile) && snapshot.videoError))) {
     bannerDismissed = false;
     renderCompatibility(true);
   }
@@ -1766,8 +1921,7 @@ session.onstate = renderSnapshot;
 function connectSelected() {
   const profile = store.selected();
   if (!profile.host) {
-    openSettings();
-    element('host').focus();
+    createProfileAndEdit();
     return;
   }
 
@@ -1780,10 +1934,13 @@ function connectSelected() {
 
   currentMetric = null;
   currentHostMemory = null;
-  videoMetricFallback = profile.tickerEnabled ? 'ticker' : 'waiting';
+  videoMetricFallback = profile.tickerEnabled
+    ? 'ticker'
+    : profile.keypadEnabled ? 'idle' : 'waiting';
   lastMetricPaint = 0;
   renderVideoMetric();
   useLibraryPageForConnection();
+  resetVersionWarning();
   session.connect(profile);
 }
 
@@ -1821,7 +1978,7 @@ function renderCompatibility(force = false, view: MainView | null = renderedMain
 
 function reachabilitySignature(profile: Profile) {
   return `${profile.host}\u0000${profile.apiPort}\u0000${profile.password}\u0000${profile.format}`
-    + `\u0000${profile.tickerEnabled}`;
+    + `\u0000${profile.tickerEnabled}\u0000${profile.keypadEnabled}`;
 }
 
 function sessionProbeChannel(
@@ -1880,7 +2037,7 @@ function recordSessionReachability(snapshot: SessionSnapshot) {
     video: sessionProbeChannel(
       snapshot.videoState,
       snapshot.videoError,
-      profile.tickerEnabled ? 'ticker' : 'video',
+      profileDisplayMode(profile),
       snapshot.videoResponded,
     ),
   });
@@ -1932,14 +2089,14 @@ async function probeProfileReachability(profile: Profile, force = false) {
   const apiPromise = probeSpiceApi(profile).then(
     (probe) => updateChannel('api', probe),
   );
-  const videoPromise = profile.tickerEnabled
+  const videoPromise = profileUsesApiOnlyDisplay(profile)
     ? apiPromise.then((apiProbe) => {
       if (apiProbe.state !== 'ready') {
         return updateChannel('video', { ...apiProbe });
       }
-      return probeSpiceTicker(profile).then(
-        (probe) => updateChannel('video', probe),
-      );
+      return profile.tickerEnabled
+        ? probeSpiceTicker(profile).then((probe) => updateChannel('video', probe))
+        : updateChannel('video', { ...apiProbe });
     })
     : probeSpiceVideo(profile).then(
       (probe) => updateChannel('video', probe),
@@ -1974,6 +2131,69 @@ function refreshReachability(force = false) {
   }
 }
 
+async function checkServerSetupAddress(
+  base: Profile,
+  address: { host: string; apiPort: number; password: string },
+) {
+  let candidate: Profile;
+  try {
+    candidate = sanitizeProfile({ ...base, ...address });
+    if (!candidate.host) {
+      return { ok: false, message: t('validation.hostRequired') };
+    }
+  } catch (error) {
+    return { ok: false, message: localizeError(i18n.locale, error) };
+  }
+
+  const probe = await probeSpiceApi(candidate);
+  return probe.state === 'ready'
+    ? { ok: true }
+    : { ok: false, message: t('setup.connectionFailedCopy') };
+}
+
+function closeServerSetup() {
+  if (serverSetupDialog.open) {
+    serverSetupDialog.close();
+  }
+}
+
+function completeServerSetup(base: Profile, draft: ServerSetupDraft) {
+  const profile = store.upsert(sanitizeProfile({
+    ...base,
+    ...draft,
+    ...serverSetupModeFields(draft.style),
+  }));
+  closeServerSetup();
+  browsePage = 'servers';
+  updateBrowsePageHistory('servers', 'replace');
+  fillForm(profile);
+  renderProfileLists();
+  if (draft.apiVerified) {
+    void probeProfileReachability(profile, true);
+  }
+  showToast(t('setup.saved'));
+}
+
+let serverSetupSequenceNumber = 0;
+
+function openServerSetup(profile: Profile) {
+  serverSetupSequenceNumber += 1;
+  renderReact(reactRoots.serverSetup, (
+    <ServerSetupWizard
+      key={`${profile.id}-${serverSetupSequenceNumber}`}
+      initialProfile={profile}
+      iconGroups={availableGameIconGroups()}
+      t={t}
+      onCheckAddress={(address) => checkServerSetupAddress(profile, address)}
+      onComplete={(draft) => completeServerSetup(profile, draft)}
+      onCancel={closeServerSetup}
+    />
+  ));
+  if (!serverSetupDialog.open) {
+    serverSetupDialog.showModal();
+  }
+}
+
 function createProfileAndEdit() {
   const profiles = store.list();
   const configuredCount = configuredProfiles(profiles).length;
@@ -1984,8 +2204,7 @@ function createProfileAndEdit() {
   if (configuredCount > 0) {
     profile.name = t('profile.newName', { number: configuredCount + 1 });
   }
-  openSettings(profile, { isNew: true });
-  element('profile-name').select();
+  openServerSetup(profile);
 }
 
 pageMenuButton.addEventListener('click', () => {
@@ -2067,7 +2286,14 @@ element('card-menu-manage').addEventListener('click', () => {
   navigateToBrowsePage('cards');
 });
 
-settingsButton.addEventListener('click', () => openSettings());
+settingsButton.addEventListener('click', () => {
+  const profile = store.selected();
+  if (profile.host) {
+    openSettings(profile);
+  } else {
+    createProfileAndEdit();
+  }
+});
 element('settings-guide-link').addEventListener('click', (event: Event) => {
   event.preventDefault();
   closeSettings();
@@ -2115,6 +2341,13 @@ profileShareDialog.addEventListener('close', () => {
   element('profile-share-status').textContent = '';
 });
 element('close-settings').addEventListener('click', closeSettings);
+serverSetupDialog.addEventListener('cancel', (event: Event) => {
+  event.preventDefault();
+  closeServerSetup();
+});
+element('version-warning-download').href = LATEST_SPICE2X_RELEASE_URL;
+element('version-warning-close').addEventListener('click', closeVersionWarning);
+element('version-warning-dismiss').addEventListener('click', closeVersionWarning);
 connectButton.addEventListener('click', connectSelected);
 
 element('delete-profile').addEventListener('click', () => {
@@ -2324,10 +2557,13 @@ form.addEventListener('submit', (event: Event) => {
   closeSettings();
   currentMetric = null;
   currentHostMemory = null;
-  videoMetricFallback = profile.tickerEnabled ? 'ticker' : 'waiting';
+  videoMetricFallback = profile.tickerEnabled
+    ? 'ticker'
+    : profile.keypadEnabled ? 'idle' : 'waiting';
   lastMetricPaint = 0;
   renderVideoMetric();
   useLibraryPageForConnection();
+  resetVersionWarning();
   session.connect(profile);
 });
 
@@ -2459,7 +2695,7 @@ element('compat-dismiss').addEventListener('click', () => {
 function renderLocalizedUi() {
   applyDocumentTranslations();
   renderShowcaseCarousels();
-  renderTickerModeToggle();
+  renderDisplayModeToggles();
   renderTickerPreviewText();
   renderConnectionButton();
   renderCompatibility();

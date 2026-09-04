@@ -10,6 +10,1037 @@
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2013-2014, U+2018-201A, U+201C-201E, U+2020-2022, U+2026, U+2030, U+2039-203A, U+2044, U+20AC, U+2122, U+2212, U+FB01-FB02;
 }
 
+/* Guided new-server setup. Editing an existing profile keeps the compact
+ * settings dialog; creation uses this dedicated, reversible sequence. */
+
+.server-setup-dialog {
+  width: min(820px, calc(100vw - 28px));
+  height: min(720px, calc(100dvh - 28px));
+  max-width: none;
+  max-height: none;
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: var(--shadow-xl);
+  color: var(--text);
+}
+
+.server-setup-dialog::backdrop {
+  background: rgba(10, 10, 10, 0.72);
+}
+
+#server-setup-root,
+.server-setup-wizard {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.server-setup-wizard {
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(circle at 50% -30%, rgba(127, 86, 217, 0.08), transparent 52%),
+    #ffffff;
+}
+
+.server-setup-header {
+  display: grid;
+  min-height: 76px;
+  flex: 0 0 auto;
+  grid-template-columns: minmax(94px, 1fr) minmax(0, 2fr) minmax(94px, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.server-setup-header > .icon-button {
+  justify-self: end;
+}
+
+.server-setup-back {
+  display: inline-flex;
+  width: max-content;
+  min-height: 36px;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.server-setup-back:hover {
+  background: var(--accent-soft);
+  color: var(--accent-bright);
+}
+
+.server-setup-back:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.server-setup-back svg,
+.server-setup-footer .secondary-button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.server-setup-heading {
+  min-width: 0;
+  text-align: center;
+}
+
+.server-setup-heading > span {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.server-setup-heading h2 {
+  margin: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.server-setup-form {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.server-setup-body {
+  min-height: 0;
+  flex: 1;
+  padding: clamp(24px, 4vw, 42px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.server-setup-intro {
+  max-width: 620px;
+  margin: 0 auto 28px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+  text-align: center;
+}
+
+.server-setup-footer {
+  display: flex;
+  min-height: 68px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.server-setup-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.server-setup-address-body {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.server-setup-address-body .server-setup-intro {
+  flex: 0 0 auto;
+}
+
+.server-setup-address-grid {
+  display: grid;
+  width: min(100%, 620px);
+  grid-template-columns: minmax(0, 1fr) 150px;
+  align-items: start;
+  gap: 18px;
+}
+
+.server-setup-address-grid .field {
+  gap: 7px;
+}
+
+.server-setup-address-grid .field > span,
+.server-setup-stream-grid .field > span,
+.server-setup-name-field > span {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.server-setup-address-grid .field input,
+.server-setup-stream-grid .field input,
+.server-setup-stream-grid .field select,
+.server-setup-name-field input {
+  min-height: 44px;
+  border-color: var(--line-strong);
+  background: #ffffff;
+  font-size: 15px;
+}
+
+.server-setup-address-grid .field small {
+  max-width: 480px;
+  color: var(--faint);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.server-setup-password-field {
+  grid-column: 1 / -1;
+}
+
+.server-setup-error {
+  display: grid;
+  width: min(100%, 620px);
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  margin-top: 22px;
+  padding: 14px 16px;
+  border: 1px solid #fecdca;
+  border-radius: 10px;
+  background: #fef3f2;
+  color: #7a271a;
+}
+
+.server-setup-error-icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fee4e2;
+  color: var(--bad);
+  font-weight: 700;
+}
+
+.server-setup-error strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 13px;
+}
+
+.server-setup-error p {
+  margin: 0;
+  color: #912018;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.button-spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: server-setup-spin 650ms linear infinite;
+}
+
+@keyframes server-setup-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.server-setup-icon-body {
+  padding-top: 28px;
+}
+
+.server-setup-icon-groups {
+  display: flex;
+  width: min(100%, 720px);
+  margin: 0 auto;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.server-setup-icon-category h3 {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.server-setup-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(98px, 1fr));
+  gap: 10px;
+}
+
+.server-setup-icon-option {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 118px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #ffffff;
+  color: var(--muted);
+  box-shadow: var(--shadow-xs);
+  transition: border-color 100ms linear, box-shadow 100ms linear, transform 100ms linear;
+}
+
+.server-setup-icon-option:hover {
+  border-color: #b692f6;
+  transform: translateY(-1px);
+}
+
+.server-setup-icon-option:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.server-setup-icon-option[aria-selected="true"] {
+  border-color: #9e77ed;
+  background: var(--accent-soft);
+  color: #42307d;
+  box-shadow: 0 0 0 3px #f4ebff, var(--shadow-xs);
+}
+
+.server-setup-icon-option img {
+  width: 64px;
+  height: 64px;
+  border-radius: 9px;
+  background: #f5f5f5;
+  object-fit: cover;
+}
+
+.server-setup-icon-option > span:not(.server-setup-icon-check) {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.server-setup-icon-check {
+  position: absolute;
+  display: none;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #ffffff;
+  top: 6px;
+  right: 6px;
+}
+
+.server-setup-icon-option[aria-selected="true"] .server-setup-icon-check {
+  display: grid;
+}
+
+.server-setup-icon-check svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+}
+
+.server-setup-style-body {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.server-setup-style-grid {
+  display: grid;
+  width: min(100%, 720px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.server-setup-style-option {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 250px;
+  align-items: flex-start;
+  padding: 24px 20px 20px;
+  flex-direction: column;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+  transition: border-color 120ms linear, box-shadow 120ms linear, transform 120ms ease;
+}
+
+.server-setup-style-option:hover,
+.server-setup-style-option:focus-visible {
+  border-color: #9e77ed;
+  box-shadow: 0 0 0 3px #f4ebff, var(--shadow-lg);
+  outline: 0;
+  transform: translateY(-2px);
+}
+
+.server-setup-style-icon {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 22px;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent-bright);
+}
+
+.server-setup-style-option[data-style="ticker"] .server-setup-style-icon {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.server-setup-style-option[data-style="keypad"] .server-setup-style-icon {
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.server-setup-style-icon svg {
+  width: 32px;
+  height: 32px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.65;
+}
+
+.server-setup-style-option strong {
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.server-setup-style-option > span:nth-of-type(2) {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.server-setup-style-arrow {
+  margin-top: auto;
+  padding-top: 18px;
+  color: var(--accent);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.server-setup-selection-hint {
+  margin-left: auto;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.server-setup-stream-grid {
+  display: grid;
+  width: min(100%, 620px);
+  margin: 0 auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.server-setup-name-body {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.server-setup-summary {
+  display: grid;
+  width: min(100%, 520px);
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 26px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #fafafa;
+}
+
+.server-setup-summary img {
+  width: 52px;
+  height: 52px;
+  border-radius: 9px;
+  background: #ffffff;
+  object-fit: cover;
+}
+
+.server-setup-summary div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.server-setup-summary strong {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.server-setup-summary span {
+  margin-top: 3px;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.server-setup-name-field {
+  width: min(100%, 520px);
+  gap: 7px;
+}
+
+@media (max-width: 680px) {
+  .server-setup-dialog {
+    width: calc(100vw - 16px);
+    height: calc(100dvh - 16px);
+    border-radius: 13px;
+  }
+
+  .server-setup-header {
+    min-height: 68px;
+    grid-template-columns: 40px minmax(0, 1fr) 40px;
+    padding: 10px 12px;
+  }
+
+  .server-setup-back {
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .server-setup-back span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .server-setup-heading h2 {
+    font-size: 16px;
+  }
+
+  .server-setup-body {
+    padding: 24px 18px;
+  }
+
+  .server-setup-address-grid,
+  .server-setup-stream-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 17px;
+  }
+
+  .server-setup-address-body {
+    justify-content: flex-start;
+  }
+
+  .server-setup-intro {
+    margin-bottom: 22px;
+    text-align: left;
+  }
+
+  .server-setup-style-body {
+    display: block;
+  }
+
+  .server-setup-style-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .server-setup-style-option {
+    display: grid;
+    min-height: 0;
+    grid-template-columns: 48px minmax(0, 1fr) 20px;
+    gap: 2px 13px;
+    padding: 15px;
+  }
+
+  .server-setup-style-icon {
+    width: 48px;
+    height: 48px;
+    grid-row: 1 / span 2;
+    margin: 0;
+  }
+
+  .server-setup-style-icon svg {
+    width: 27px;
+    height: 27px;
+  }
+
+  .server-setup-style-option strong {
+    align-self: end;
+    margin: 0;
+    font-size: 14px;
+  }
+
+  .server-setup-style-option > span:nth-of-type(2) {
+    align-self: start;
+    font-size: 11px;
+  }
+
+  .server-setup-style-arrow {
+    align-self: center;
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    margin: 0;
+    padding: 0;
+  }
+
+  .server-setup-icon-grid {
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  }
+
+  .server-setup-icon-option {
+    min-height: 108px;
+  }
+
+  .server-setup-icon-option img {
+    width: 58px;
+    height: 58px;
+  }
+
+  .server-setup-footer {
+    min-height: 64px;
+    padding: 12px;
+  }
+
+  .server-setup-selection-hint {
+    display: none;
+  }
+}
+
+@media (max-width: 430px) {
+  .server-setup-footer-actions {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .server-setup-footer-actions .primary-button,
+  .server-setup-footer-actions .secondary-button {
+    min-width: 0;
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .server-setup-icon-option,
+  .server-setup-style-option {
+    transition: none;
+  }
+
+  .button-spinner {
+    animation-duration: 1.4s;
+  }
+}
+
+/* API-only arcade keypad. The button face and its lower edge move together so
+ * a press reads as physical travel rather than a color-only active state. */
+
+#ticker-toggle-root,
+#keypad-toggle-root {
+  min-width: 0;
+}
+
+#keypad-toggle-root {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.stage[data-main-view="stream"][data-output-mode="keypad"] {
+  background: #101317;
+}
+
+.keypad-view {
+  position: absolute;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  inset: 0;
+}
+
+.arcade-keypad {
+  width: 100%;
+  height: 100%;
+  padding: clamp(7px, 1.8vmin, 20px);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.08), transparent 31%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.012) 0 1px, transparent 1px 5px),
+    linear-gradient(145deg, #252a30 0%, #111419 48%, #20252a 100%);
+  color: #ffffff;
+  touch-action: none;
+}
+
+.arcade-keypad-deck {
+  position: relative;
+  display: grid;
+  width: min(100%, 1120px);
+  height: 100%;
+  min-height: 0;
+  margin: 0 auto;
+  padding: clamp(12px, 2.4vmin, 28px);
+  border: 1px solid #050607;
+  border-radius: clamp(16px, 2.6vmin, 28px);
+  background:
+    radial-gradient(circle at 14px 14px, #0b0d0f 0 2px, #7d858d 2.5px 4px, transparent 4.5px),
+    radial-gradient(circle at calc(100% - 14px) 14px, #0b0d0f 0 2px, #7d858d 2.5px 4px, transparent 4.5px),
+    radial-gradient(circle at 14px calc(100% - 14px), #0b0d0f 0 2px, #7d858d 2.5px 4px, transparent 4.5px),
+    radial-gradient(circle at calc(100% - 14px) calc(100% - 14px), #0b0d0f 0 2px, #7d858d 2.5px 4px, transparent 4.5px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 4px),
+    linear-gradient(152deg, #41474d 0%, #252a2f 42%, #181c20 100%);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.28),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.72),
+    0 18px 46px rgba(0, 0, 0, 0.48);
+  gap: clamp(12px, 2.4vmin, 28px);
+  grid-template-columns: minmax(0, 3fr) minmax(190px, 1.55fr);
+}
+
+.arcade-keypad-number-section,
+.arcade-keypad-control-section {
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(10px, 1.7vmin, 20px);
+  border: 1px solid rgba(0, 0, 0, 0.88);
+  border-radius: clamp(12px, 1.8vmin, 20px);
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.035), transparent 36%),
+    #15191d;
+  box-shadow:
+    inset 0 2px 8px rgba(0, 0, 0, 0.9),
+    0 1px rgba(255, 255, 255, 0.13);
+}
+
+.arcade-keypad-number-grid,
+.arcade-keypad-control-section {
+  display: grid;
+  gap: clamp(7px, 1.5vmin, 16px);
+}
+
+.arcade-keypad-number-grid {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+}
+
+.arcade-keypad-number-grid .arcade-keypad-key[data-key="0"] {
+  grid-column: 2;
+}
+
+.arcade-keypad-control-section {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+
+.arcade-keypad-control-section .arcade-keypad-key[data-kind="start"],
+.arcade-keypad-control-section .arcade-keypad-key[data-kind="help"] {
+  grid-column: 1 / -1;
+}
+
+.arcade-keypad-key {
+  --key-top: #505860;
+  --key-bottom: #2b3137;
+  --key-edge: #121519;
+  --key-glow: rgba(220, 235, 246, 0.2);
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  place-items: center;
+  padding: clamp(5px, 1.2vmin, 14px);
+  border: 1px solid rgba(0, 0, 0, 0.92);
+  border-radius: clamp(9px, 1.5vmin, 16px);
+  outline: 0;
+  overflow: hidden;
+  background: linear-gradient(158deg, var(--key-top) 0%, var(--key-bottom) 74%);
+  box-shadow:
+    inset 0 2px 1px rgba(255, 255, 255, 0.28),
+    inset 0 -4px 5px rgba(0, 0, 0, 0.34),
+    0 clamp(4px, 0.85vmin, 8px) 0 var(--key-edge),
+    0 clamp(8px, 1.5vmin, 15px) clamp(9px, 2vmin, 20px) rgba(0, 0, 0, 0.58),
+    0 0 clamp(10px, 2vmin, 22px) var(--key-glow);
+  color: #f8fbff;
+  cursor: pointer;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.88), 0 0 9px rgba(255, 255, 255, 0.24);
+  touch-action: none;
+  transform: translateY(calc(clamp(4px, 0.85vmin, 8px) * -0.45));
+  transition:
+    transform 65ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 65ms linear,
+    filter 65ms linear;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.arcade-keypad-key-highlight {
+  position: absolute;
+  z-index: -1;
+  height: 44%;
+  inset: 1px 3px auto;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent);
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.arcade-keypad-key-label {
+  position: relative;
+  letter-spacing: 0.055em;
+  line-height: 1;
+}
+
+.arcade-keypad-key[data-kind="digit"] .arcade-keypad-key-label {
+  font-family: "Inter", "IBM Plex Sans", sans-serif;
+  font-size: clamp(24px, 6vmin, 54px);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.arcade-keypad-key:not([data-kind="digit"]) .arcade-keypad-key-label {
+  font-size: clamp(11px, 2.6vmin, 23px);
+  font-weight: 700;
+}
+
+.arcade-keypad-key[data-kind="start"] {
+  --key-top: #4fbf73;
+  --key-bottom: #176a39;
+  --key-edge: #093c1e;
+  --key-glow: rgba(69, 230, 124, 0.34);
+}
+
+.arcade-keypad-key[data-kind="help"] {
+  --key-top: #5aa7dd;
+  --key-bottom: #225b8c;
+  --key-edge: #123756;
+  --key-glow: rgba(80, 174, 246, 0.32);
+}
+
+.arcade-keypad-key[data-kind="test"] {
+  --key-top: #d2a84e;
+  --key-bottom: #7b5316;
+  --key-edge: #49300c;
+  --key-glow: rgba(239, 181, 66, 0.28);
+}
+
+.arcade-keypad-key[data-kind="service"] {
+  --key-top: #c45d62;
+  --key-bottom: #74282f;
+  --key-edge: #43141a;
+  --key-glow: rgba(242, 80, 91, 0.27);
+}
+
+.arcade-keypad-key[data-pressed="true"],
+.arcade-keypad-key:active:not(:disabled) {
+  filter: brightness(1.13) saturate(1.08);
+  box-shadow:
+    inset 0 3px 7px rgba(0, 0, 0, 0.45),
+    inset 0 1px rgba(255, 255, 255, 0.16),
+    0 1px 0 var(--key-edge),
+    0 3px 7px rgba(0, 0, 0, 0.54),
+    0 0 clamp(12px, 2.5vmin, 28px) var(--key-glow);
+  transform: translateY(clamp(3px, 0.7vmin, 7px)) scale(0.992);
+}
+
+.arcade-keypad-key:focus-visible {
+  outline: 3px solid rgba(218, 234, 255, 0.95);
+  outline-offset: 3px;
+}
+
+.arcade-keypad-key:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.78) brightness(0.7);
+  opacity: 0.48;
+}
+
+.version-warning-dialog {
+  width: min(520px, calc(100vw - 24px));
+  max-width: none;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: var(--shadow-xl);
+  color: var(--text);
+}
+
+.version-warning-dialog::backdrop {
+  background: rgba(10, 10, 10, 0.72);
+}
+
+.version-warning-header {
+  padding: 18px 20px;
+}
+
+.version-warning-header .eyebrow {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--warning);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.version-warning-header h2 {
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.version-warning-body {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: start;
+  gap: 13px;
+  padding: 20px;
+}
+
+.version-warning-body p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.version-warning-icon {
+  width: 38px;
+  height: 38px;
+  padding: 8px;
+  border-radius: 9px;
+  background: #fff7ed;
+  fill: none;
+  stroke: var(--warning);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.version-warning-dialog .dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+}
+
+.version-warning-dialog .primary-button {
+  text-decoration: none;
+}
+
+@media (max-width: 680px), (orientation: portrait) {
+  .arcade-keypad-deck {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(104px, 0.34fr);
+  }
+
+  .arcade-keypad-control-section {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .arcade-keypad-control-section .arcade-keypad-key[data-kind="start"],
+  .arcade-keypad-control-section .arcade-keypad-key[data-kind="help"] {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .arcade-keypad {
+    padding: 5px;
+  }
+
+  .arcade-keypad-deck {
+    padding: 10px;
+    border-radius: 15px;
+    gap: 10px;
+    grid-template-rows: minmax(0, 1fr) minmax(92px, 0.3fr);
+  }
+
+  .arcade-keypad-number-section,
+  .arcade-keypad-control-section {
+    padding: 8px;
+    gap: 7px;
+  }
+
+  .version-warning-dialog .dialog-footer {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .version-warning-dialog .dialog-footer > * {
+    width: 100%;
+  }
+}
+
+@media (max-height: 430px) and (orientation: landscape) {
+  .arcade-keypad {
+    padding: 4px;
+  }
+
+  .arcade-keypad-deck {
+    padding: 8px 12px;
+    gap: 10px;
+  }
+
+  .arcade-keypad-number-section,
+  .arcade-keypad-control-section {
+    padding: 7px;
+    gap: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arcade-keypad-key {
+    transition: none;
+  }
+}
+
 @font-face {
   font-family: "IBM Plex Sans";
   font-style: normal;

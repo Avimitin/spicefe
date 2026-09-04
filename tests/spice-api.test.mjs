@@ -220,6 +220,87 @@ test('reads and normalizes the native nine-character IIDX ticker', async () => {
   api.close();
 });
 
+test('reads launcher version metadata for the compatibility preflight', async () => {
+  const api = new SpiceApi(profile(), { WebSocketImpl: FakeWebSocket, requestTimeout: 1000 });
+  api.connect();
+  const socket = FakeWebSocket.instances.at(-1);
+  socket.open();
+
+  const pending = api.getLauncherInfo();
+  const request = JSON.parse(new TextDecoder().decode(socket.sent[0]));
+  assert.deepEqual(request, {
+    id: 1,
+    module: 'info',
+    function: 'launcher',
+    params: [],
+  });
+  socket.receive(new TextEncoder().encode(JSON.stringify({
+    id: 1,
+    errors: [],
+    data: [{ version: '1.0-V-2026-09-01T00:00:00', args: [] }],
+  }) + '\0'));
+
+  assert.equal((await pending).version, '1.0-V-2026-09-01T00:00:00');
+  api.close();
+});
+
+test('uses native keypad writes and named button press and release requests', async () => {
+  const api = new SpiceApi(profile(), { WebSocketImpl: FakeWebSocket, requestTimeout: 1000 });
+  api.connect();
+  const socket = FakeWebSocket.instances.at(-1);
+  socket.open();
+
+  const keypad = api.writeKeypad(0, '7');
+  assert.deepEqual(JSON.parse(new TextDecoder().decode(socket.sent.at(-1))), {
+    id: 1,
+    module: 'keypads',
+    function: 'write',
+    params: [0, '7'],
+  });
+  socket.receive(new TextEncoder().encode('{"id":1,"errors":[],"data":[]}\0'));
+  await keypad;
+
+  const press = api.setButton('Guitar P1 Start', true);
+  assert.deepEqual(JSON.parse(new TextDecoder().decode(socket.sent.at(-1))), {
+    id: 2,
+    module: 'buttons',
+    function: 'write',
+    params: [['Guitar P1 Start', 1]],
+  });
+  socket.receive(new TextEncoder().encode('{"id":2,"errors":[],"data":[]}\0'));
+  await press;
+
+  const release = api.setButton('Guitar P1 Start', false);
+  assert.deepEqual(JSON.parse(new TextDecoder().decode(socket.sent.at(-1))), {
+    id: 3,
+    module: 'buttons',
+    function: 'write_reset',
+    params: [['Guitar P1 Start']],
+  });
+  socket.receive(new TextEncoder().encode('{"id":3,"errors":[],"data":[]}\0'));
+  await release;
+  api.close();
+});
+
+test('discovers game button names and validates keypad input locally', async () => {
+  const api = new SpiceApi(profile(), { WebSocketImpl: FakeWebSocket, requestTimeout: 1000 });
+  api.connect();
+  const socket = FakeWebSocket.instances.at(-1);
+  socket.open();
+
+  const pending = api.getButtonNames();
+  socket.receive(new TextEncoder().encode(JSON.stringify({
+    id: 1,
+    errors: [],
+    data: [['Service', 0, false], ['Test', 1, true]],
+  }) + '\0'));
+  assert.deepEqual(await pending, ['Service', 'Test']);
+
+  await assert.rejects(api.writeKeypad(2, '1'), /Player 1 or Player 2/);
+  await assert.rejects(api.writeKeypad(0, 'A'), /one digit/);
+  api.close();
+});
+
 test('reads and validates native host memory telemetry', async () => {
   const api = new SpiceApi(profile(), { WebSocketImpl: FakeWebSocket, requestTimeout: 1000 });
   api.connect();

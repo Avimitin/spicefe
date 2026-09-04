@@ -56,6 +56,7 @@ interface Profile {
   host: string;
   apiPort: number;
   tickerEnabled: boolean;
+  keypadEnabled: boolean;
 }
 
 interface SessionSnapshot {
@@ -558,7 +559,9 @@ function ServerCard({
   const nameRef = useRef<HTMLElement>(null);
   const active = snapshot.wanted && snapshot.profile?.id === profile.id;
   const icon = gameIconById(profile.iconId);
-  const outputChannel = profile.tickerEnabled ? 'ticker' : 'video';
+  const outputChannel = profile.keypadEnabled
+    ? 'keypad'
+    : profile.tickerEnabled ? 'ticker' : 'video';
   const availabilityTone: StatusTone = availability.state === 'reachable'
     ? 'success'
     : availability.state === 'checking'
@@ -652,7 +655,7 @@ function ServerCard({
             </StatusBadge>
             <ChannelStatus channel="API" presentation={presentation.api} />
             <ChannelStatus
-              channel={outputChannel === 'ticker' ? t('nav.ticker') : t('nav.video')}
+              channel={t(`nav.${outputChannel}`)}
               presentation={presentation.video}
             />
           </div>

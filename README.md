@@ -38,9 +38,10 @@
 <video src="https://raw.githubusercontent.com/Avimitin/spicefe/main/public/assets/showcase/iidx-16-segment-display.mp4" controls title="Old beatmania IIDX 16-segment display in spicefe"></video>
 
 `spicefe` is a globally hostable, static LAN client for the spice2x subscreen
-stream and old beatmania IIDX cabinet ticker. Open the page on a phone, tablet,
-or another modern browser, select a saved gaming PC, and the browser connects
-directly to spice2x for video and touch input or a nine-character ticker.
+stream, cabinet controls, and old beatmania IIDX cabinet ticker. Open the page
+on a phone, tablet, or another modern browser, select a saved gaming PC, and
+the browser connects directly to spice2x for video and touch input, a
+full-screen keypad, or a nine-character ticker.
 
 There is no relay and no companion web server to run on the gaming PC. The
 static host only delivers this application; stream and input traffic stay on
@@ -53,6 +54,10 @@ the LAN.
 - an optional, responsive red-on-black nine-character display for older
   beatmania IIDX releases, read through spice2x `iidx.ticker_get()` without
   opening the video endpoint
+- an API-only, full-screen arcade keypad with 0–9, Start, Help, Test, and
+  Service controls, with no subscreen stream required
+- a guided new-server setup that verifies the API address before leading
+  through game artwork, output style, optional stream quality, and naming
 - separate Welcome and Saved Servers pages with top-bar navigation; first-time
   users start on Welcome, while returning users with saved servers start in the library
 - per-server Host, control-API, and video-server indicators with independent
@@ -87,7 +92,7 @@ The API port entered in the UI is the spice2x base port:
 
 | Purpose | Browser endpoint for API port 1337 | Protection |
 | --- | --- | --- |
-| Touch, game info, card import/insertion, and IIDX ticker | `ws://PC:1338` | Card import requires a spice2x password; legacy RC4 |
+| Touch, game info, keypad controls, card import/insertion, and IIDX ticker | `ws://PC:1338` | Card import requires a spice2x password; legacy RC4 |
 | H.264 or MJPEG video | `http://PC:1339` | None |
 
 The CDN never proxies either connection. H.264 is decoded directly with
@@ -100,10 +105,10 @@ The saved-server page briefly opens the configured API WebSocket and sends the
 same read-only `info/avs` query used when establishing a full session. Normal
 video profiles also send a `HEAD` request to the configured video endpoint;
 spice2x answers before allocating a capture screen, so the check does not start
-an encoder or claim a capture screen. Ticker profiles never contact the video
-endpoint and instead follow the API check with a read-only `iidx/ticker_get`
-request. Checks run when the list opens, every minute while it remains visible,
-and after the browser regains network access.
+an encoder or claim a capture screen. Ticker and keypad profiles never contact
+the video endpoint. Ticker checks follow the API check with a read-only
+`iidx/ticker_get` request. Checks run when the list opens, every minute while it
+remains visible, and after the browser regains network access.
 
 Any response from either service confirms that the host is reachable over the
 LAN. API authentication can therefore be red while Host remains green. When
@@ -125,7 +130,8 @@ referenced it display the default spice2x icon instead.
 
 Select the QR button on a saved-server card to create a scannable code and a
 direct link. The portable profile includes its name, host, API port, API
-password, built-in game icon, video settings, view mode, and IIDX ticker mode.
+password, built-in game icon, video settings, view mode, IIDX ticker mode, and
+full-screen keypad mode.
 Browser-local uploaded icon artwork is deliberately excluded; the receiving
 device uses the default spice2x icon instead.
 
@@ -169,6 +175,18 @@ the red segment window remains unobstructed.
 Recent IIDX releases may offer only a subscreen; use normal video mode for
 those releases.
 
+## Full-screen keypad
+
+Enable **Full-screen keypad** in a connection profile to use cabinet controls
+without a subscreen stream. Keypad and ticker modes are mutually exclusive;
+both hide stream-quality settings and connect only to the spice2x control API.
+
+The main keys send Player 1 digits 0–9 through `keypads.write()`. Start, Help,
+Test, and Service use the matching names reported by `buttons.read()` and stay
+disabled when the running game does not expose them. Each cabinet button is
+explicitly released after a pointer or keyboard press and when the page loses
+focus or disconnects.
+
 ## Virtual cards
 
 Open **Card library** from the top-left page menu to create and edit virtual
@@ -206,25 +224,26 @@ spice2x's card manager. Existing `.txt` suffixes are preserved; unsafe or
 overlong Windows filenames and duplicate names are adjusted during export so no
 card is lost when the archive is extracted.
 
-While a video or ticker session is live, select the card icon in the top bar,
+While a video, ticker, or keypad session is live, select the card icon in the top bar,
 choose Player 1 or Player 2, then select a card. spicefe sends the native
 `card.insert(reader, card_id)` request over the active control-API connection
 and closes the menu automatically.
 
 ## Gaming PC setup
 
-Install the [latest spice2x release](https://github.com/spice2x/spice2x.github.io/releases).
+Install the [latest spice2x release](https://github.com/spice2x/spice2x.github.io/releases/latest).
 The minimum supported build is
 [`spice2x-26-09-01`](https://github.com/spice2x/spice2x.github.io/releases/tag/26-09-01),
-the latest published build. It includes the current sliced H.264 stream encoder,
-card lookup API, and required CORS support. For subscreen video, launch the game
-with options equivalent to:
+which includes the required control APIs and browser support. During connection,
+spicefe reads `info.launcher`; an older or unrecognized build produces a warning
+with a link to the latest release without blocking the connection. For subscreen
+video, launch the game with options equivalent to:
 
 ```text
 spice64.exe ... -api 1337 -apipass choose-a-lan-password -apistream
 ```
 
-The old IIDX ticker needs the API but not the video server:
+The old IIDX ticker and full-screen keypad need the API but not the video server:
 
 ```text
 spice64.exe ... -api 1337 -apipass choose-a-lan-password
