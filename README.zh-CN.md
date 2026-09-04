@@ -31,6 +31,10 @@
 | :---: | :---: |
 | [![通过 spicefe 串流的 beatmania IIDX 33 副屏](./public/assets/showcase/iidx-stream.png)](./public/assets/showcase/iidx-stream.png) | [![通过 spicefe 串流的 GITADORA GALAXY WAVE DELTA 副屏](./public/assets/showcase/gitadora-stream.png)](./public/assets/showcase/gitadora-stream.png) |
 
+**仅连接 API 的全屏数字键盘**
+
+[![spicefe 全屏 spice2x 数字键盘，包含数字与机台控制按键](./public/assets/showcase/keypad.png)](./public/assets/showcase/keypad.png)
+
 **旧版 beatmania IIDX 米字屏——最新录制**
 
 <video src="https://raw.githubusercontent.com/Avimitin/spicefe/main/public/assets/showcase/iidx-16-segment-display.mp4" controls title="spicefe 中的旧版 beatmania IIDX 米字屏"></video>

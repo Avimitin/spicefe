@@ -157,7 +157,7 @@ test('the welcome page leads into README showcases while setup has its own page'
   assert.match(markup, /id="showcase-cards-carousel"/);
   assert.match(
     script,
-    /showcaseStream[\s\S]*?iidx-stream\.png[\s\S]*?gitadora-stream\.png/,
+    /showcaseStream[\s\S]*?iidx-stream\.png[\s\S]*?gitadora-stream\.png[\s\S]*?keypad\.png/,
   );
   assert.match(
     script,
