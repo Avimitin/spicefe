@@ -73,27 +73,18 @@ Safari 不提供允许当前 HTTPS 页面加载 spice2x HTTP 视频流的单站�
 
 <section id="setup-android">
 
-## Android：明确打开 HTTP 页面
+## Android：使用 Google Chrome
 
-Android 版 Chrome 和 Edge 不提供桌面版的单站点“不安全内容”例外。
+请使用最新版本的 Google Chrome。向 spicefe 授予局域网设备访问权限后，Chrome 支持这种局域网混合内容连接。
 
-### Google Chrome
+1. 使用 Chrome 打开 spicefe，并用游戏 PC 的私有 IP 地址配置连接，例如 `192.168.1.50`。
+2. 选择“连接”。
+3. Chrome 请求“本地网络访问”权限时，选择“允许”。此权限可让 HTTPS spicefe 页面加载局域网中 spice2x 的 HTTP 视频流。
+4. 如果之前拒绝过，请打开“网站信息”→“权限”→“本地网络访问”，改为“允许”，重新加载 spicefe 后再次连接。
 
-1. 打开“更多”→“设置”→“隐私和安全”。如果已开启“始终使用安全连接”，请暂时关闭。
-2. 输入并打开上方显示的完整 HTTP 地址。
-3. 浏览器询问时允许“本地网络访问”。如果之前拒绝过，请打开“网站信息”→“权限”→“本地网络访问”。
+> 如果 Chrome 没有显示权限请求或仍然阻止连接，请更新 Chrome，或使用页面顶部显示的完整 HTTP 页面地址。
 
-[Google Chrome 官方说明](https://support.google.com/chrome/answer/114662?co=GENIE.Platform%3DAndroid&hl=en)
-
-### Microsoft Edge
-
-1. 打开菜单→“设置”→“隐私和安全”→“安全性”。如果已开启“始终使用安全连接”，请暂时关闭。
-2. 输入并打开上方显示的完整 HTTP 地址。
-3. Edge 询问时允许“本地网络访问”，然后配置游戏 PC。
-
-[Microsoft Edge 官方说明](https://support.microsoft.com/en-us/edge/secure-your-web-browsing-with-https-first-mode-in-microsoft-edge)
-
-> 游戏结束后，可以重新开启“始终使用安全连接”。
+[Chrome 本地网络访问权限说明](https://developer.chrome.com/blog/local-network-access)
 
 </section>
 

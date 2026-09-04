@@ -55,6 +55,10 @@ test('keeps complete locale pages in prose-first MDX', () => {
   assert.match(documentation, /const chinese = locale === 'zh-CN'/);
   assert.match(browserSetupEnglish, /^# Browser connection setup$/m);
   assert.match(browserSetupChinese, /^# 浏览器连接设置$/m);
+  assert.match(browserSetupEnglish, /^## Android: use Google Chrome$/m);
+  assert.match(browserSetupEnglish, /Local network access[\s\S]*select \*\*Allow\*\*/);
+  assert.match(browserSetupChinese, /^## Android：使用 Google Chrome$/m);
+  assert.match(browserSetupChinese, /“本地网络访问”权限[\s\S]*选择“允许”/);
   assert.match(usageGuideEnglish, /^## 1\. Configure spice2x$/m);
   assert.match(usageGuideChinese, /^## 1\. 配置 spice2x$/m);
   assert.match(usageGuideEnglish, /```text[\s\S]*spice64\.exe -api 1337 -apistream[\s\S]*```/);

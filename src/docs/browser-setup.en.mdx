@@ -73,27 +73,18 @@ Desktop browsers can grant an exception only to spicefe, so you do not need to w
 
 <section id="setup-android">
 
-## Android: open the HTTP page explicitly
+## Android: use Google Chrome
 
-Chrome and Edge on Android do not provide the desktop per-site insecure-content exception.
+Use an up-to-date version of Google Chrome. Chrome supports this local-network mixed-content case once you grant spicefe permission to access devices on your LAN.
 
-### Google Chrome
+1. Open spicefe in Chrome and configure your gaming PC using its private IP address, such as `192.168.1.50`.
+2. Select **Connect**.
+3. When Chrome asks for **Local network access**, select **Allow**. This permission lets the HTTPS spicefe page load spice2x's HTTP stream from your LAN.
+4. If you denied the request earlier, open **Site information → Permissions → Local network access**, change it to **Allow**, reload spicefe, and connect again.
 
-1. Open **More → Settings → Privacy and security**. If **Always use secure connections** is enabled, turn it off temporarily.
-2. Type the complete HTTP address shown above and open it.
-3. Allow **Local network access** when asked. If it was denied earlier, open **Site information → Permissions → Local network access**.
+> If Chrome does not show the permission or still blocks the connection, update Chrome or use the complete HTTP page address shown at the top.
 
-[Official Google Chrome instructions](https://support.google.com/chrome/answer/114662?co=GENIE.Platform%3DAndroid&hl=en)
-
-### Microsoft Edge
-
-1. Open **Menu → Settings → Privacy and security → Security**. If **Always use secure connections** is enabled, turn it off temporarily.
-2. Type the complete HTTP address shown above and open it.
-3. Allow **Local network access** when Edge asks, then configure your gaming PC.
-
-[Official Microsoft Edge instructions](https://support.microsoft.com/en-us/edge/secure-your-web-browsing-with-https-first-mode-in-microsoft-edge)
-
-> After playing, you can turn **Always use secure connections** back on.
+[How Chrome's Local Network Access permission works](https://developer.chrome.com/blog/local-network-access)
 
 </section>
 
