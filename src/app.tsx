@@ -11,6 +11,7 @@ import {
   ShowcaseCarousel,
   StreamCardList,
 } from './components';
+import { Documentation } from './documentation';
 import { Toggle, type CarouselApi } from './ui';
 import {
   cardBackupAction,
@@ -126,6 +127,8 @@ const i18n: any = (createI18n as any)();
 const t = (key: string, parameters?: Record<string, unknown>): string => (
   i18n.t(key, parameters)
 );
+const documentationRoot = createRoot(element('documentation-root'));
+flushSync(() => documentationRoot.render(<Documentation />));
 const customIconStore = new CustomIconStore();
 setCustomGameIcons(customIconStore.list());
 const store: any = new (ProfileStore as any)(undefined, {
@@ -204,10 +207,6 @@ const streamMetric = element('stream-metric');
 const showcaseStreamCarousel = element('showcase-stream-carousel');
 const showcaseCardsCarousel = element('showcase-cards-carousel');
 
-// Keep the long deployment guide next to the browser guide in source while
-// presenting connection setup and self-hosting as one continuous usage page.
-element('self-host-guide-slot').replaceWith(selfHostGuide);
-selfHostGuide.hidden = false;
 const activeServer = element('active-server');
 const apiWarning = element('api-warning');
 const touchMarker = element('touch-marker');

@@ -133,7 +133,7 @@
             pname = "spicefe";
             version = "0.1.2";
             src = self;
-            npmDepsHash = "sha256-yQMqeuZPbTUJ+KeLqav/YcggZkI4PQbqanyXgeamSss=";
+            npmDepsHash = "sha256-isQ0rG6jc9IRQF/1Bxk1PRmDTmONjOfcUBc/A/OKjCE=";
             npmFlags = [ "--ignore-scripts" ];
             nativeBuildInputs = [
               pkgs.esbuild
@@ -142,6 +142,8 @@
             ];
             installPhase = ''
               runHook preInstall
+              grep -Eq '"version": *"3\.1\.1"' node_modules/@mdx-js/mdx/package.json
+              grep -Eq '"license": *"MIT"' node_modules/@mdx-js/mdx/package.json
               cmp public/vendor/jmuxer.min.js node_modules/jmuxer/dist/jmuxer.min.js
               cmp public/vendor/jmuxer.LICENSE.txt node_modules/jmuxer/LICENSE
               cmp public/vendor/qrcode-generator/qrcode.js node_modules/qrcode-generator/dist/qrcode.mjs

@@ -30,9 +30,17 @@ test('English and Simplified Chinese catalogs have the same complete key set', (
     Object.keys(TRANSLATIONS.en).sort(),
   );
 
-  const html = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
-  const keyPattern = /data-i18n(?:-(?:aria-label|title|placeholder|alt))?="([^"]+)"/g;
-  const referencedKeys = [...html.matchAll(keyPattern)].map((match) => match[1]);
+  const localizedSources = [
+    '../public/index.html',
+    '../src/docs/browser-setup.mdx',
+    '../src/docs/usage-guide.mdx',
+  ].map((path) => readFileSync(new URL(path, import.meta.url), 'utf8'));
+  const attributePattern = /data-i18n(?:-(?:aria-label|title|placeholder|alt))?="([^"]+)"/g;
+  const componentPattern = /\bmessage="([^"]+)"/g;
+  const referencedKeys = localizedSources.flatMap((source) => [
+    ...source.matchAll(attributePattern),
+    ...source.matchAll(componentPattern),
+  ].map((match) => match[1]));
   assert.ok(referencedKeys.length > 0);
   for (const key of referencedKeys) {
     assert.ok(Object.hasOwn(TRANSLATIONS.en, key), `missing English key ${key}`);

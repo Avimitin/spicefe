@@ -12,6 +12,7 @@ test('pins React source packages while Nix supplies compiler binaries', () => {
   assert.equal(manifest.dependencies['react-dom'], '19.2.8');
   assert.equal(manifest.devDependencies['@types/react'], '19.2.18');
   assert.equal(manifest.devDependencies['@types/react-dom'], '19.2.5');
+  assert.equal(manifest.devDependencies['@mdx-js/mdx'], '3.1.1');
   assert.equal(manifest.dependencies.esbuild, undefined);
   assert.equal(manifest.devDependencies.esbuild, undefined);
   assert.equal(manifest.dependencies.typescript, undefined);
@@ -20,9 +21,29 @@ test('pins React source packages while Nix supplies compiler binaries', () => {
   assert.equal(manifest.dependencies['embla-carousel-react'], '8.6.0');
   assert.equal(manifest.dependencies['tailwind-merge'], '3.6.0');
   assert.match(manifest.scripts.build, /npm run typecheck && npm run styles && esbuild src\/app\.tsx/);
+  assert.match(manifest.scripts.build, /^node tools\/compile-mdx\.mjs &&/);
   assert.match(manifest.scripts.styles, /tailwindcss -i src\/styles\.css -o public\/assets\/styles\.css --minify/);
   assert.match(flake, /nativeBuildInputs = \[[\s\S]*pkgs\.esbuild[\s\S]*pkgs\.tailwindcss_4[\s\S]*pkgs\.typescript/);
+  assert.match(flake, /node_modules\/@mdx-js\/mdx\/package\.json/);
   assert.match(flake, /untitleduico\/react\/d29a2adf6909e5aaeb234bccf82dcffeb67fdb2e/);
+});
+
+test('keeps content-heavy guides in MDX and mounts them before DOM wiring', () => {
+  const html = read('../public/index.html');
+  const app = read('../src/app.tsx');
+  const documentation = read('../src/documentation.tsx');
+  const browserSetup = read('../src/docs/browser-setup.mdx');
+  const usageGuide = read('../src/docs/usage-guide.mdx');
+  const compiler = read('../tools/compile-mdx.mjs');
+
+  assert.match(html, /id="documentation-root"/);
+  assert.doesNotMatch(html, /id="usage-guide-page"|id="browser-setup"/);
+  assert.match(documentation, /import BrowserSetup from '\.\/docs\/browser-setup\.mdx\.js'/);
+  assert.match(documentation, /import UsageGuide from '\.\/docs\/usage-guide\.mdx\.js'/);
+  assert.match(browserSetup, /id="browser-setup"/);
+  assert.match(usageGuide, /id="usage-guide-page"[\s\S]*id="self-host-guide"/);
+  assert.match(app, /createRoot\(element\('documentation-root'\)\)[\s\S]*documentationRoot\.render\(<Documentation \/>\)/);
+  assert.match(compiler, /compile\(source/);
 });
 
 test('uses the pinned Untitled UI React foundation for shared controls', () => {

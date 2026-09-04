@@ -175,9 +175,9 @@ spicefe 会通过当前控制 API 连接发送原生的
 
 请安装[最新版 spice2x](https://github.com/spice2x/spice2x.github.io/releases)。
 最低支持版本为
-[`spice2x-26-08-20`](https://github.com/spice2x/spice2x.github.io/releases/tag/26-08-20)；
-该版本加入了所需的副屏视频流及 CORS 支持。使用副屏视频时，以类似下方的参数
-启动游戏：
+[`spice2x-26-09-01`](https://github.com/spice2x/spice2x.github.io/releases/tag/26-09-01)，
+即当前最新发布版本；其中包含目前使用的多切片 H.264 串流编码器、卡片查询 API
+以及所需的 CORS 支持。使用副屏视频时，以类似下方的参数启动游戏：
 
 ```text
 spice64.exe ... -api 1337 -apipass choose-a-lan-password -apistream
@@ -376,6 +376,10 @@ npm。`0.0.0.0` 会让页面可从局域网访问，因此应将电脑防火墙�
 flake 固定了 Nixpkgs，并提供 Node.js、TypeScript、esbuild 与 Python；无需在系统中
 全局安装 npm 包，也不会使用 npm 提供的构建二进制文件。
 
+内容较多的浏览器、使用及自托管指南位于 `src/docs/*.mdx`。构建会先把它们编译为
+已忽略的 `*.mdx.js` 模块，再由 esbuild 打包进 React 应用。请编辑 MDX 源文件，
+不要编辑生成的模块或 `public/app.js`。
+
 ```sh
 nix develop
 npm ci --ignore-scripts
@@ -402,6 +406,7 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
 `react-aria-components@1.20.0`、`embla-carousel-react@8.6.0`、
 `tailwind-merge@3.6.0`、`jmuxer@2.1.1` 与 `qrcode-generator@2.0.4`。npm
 完整性元数据将直接和间接依赖锁定在精确版本，并禁用安装生命周期脚本。
+`@mdx-js/mdx@3.1.1` 是用于编译指南源文件的纯 JavaScript 构建时依赖。
 TypeScript、esbuild 与 Tailwind CSS 4.3.3 均由固定的 Nixpkgs 提供，而非 npm。
 完整许可证和来源记录位于 `public/vendor/`；构建不会下载或运行任何来自 npm
 包的可执行二进制文件。

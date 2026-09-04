@@ -107,13 +107,24 @@ test('the welcome page leads into README showcases while setup has its own page'
     new URL('../public/index.html', import.meta.url),
     'utf8',
   );
+  const browserSetup = readFileSync(
+    new URL('../src/docs/browser-setup.mdx', import.meta.url),
+    'utf8',
+  );
+  const usageGuide = readFileSync(
+    new URL('../src/docs/usage-guide.mdx', import.meta.url),
+    'utf8',
+  );
   const script = readFileSync(
     new URL('../src/app.tsx', import.meta.url),
     'utf8',
   );
 
   assert.match(markup, /id="empty-state"[\s\S]*href="#showcase"[\s\S]*id="showcase"/);
-  assert.match(markup, /id="usage-guide-page"[^>]*hidden/);
+  assert.match(markup, /id="documentation-root"/);
+  assert.doesNotMatch(markup, /id="usage-guide-page"|id="browser-setup"/);
+  assert.match(usageGuide, /id="usage-guide-page"[\s\S]*hidden/);
+  assert.match(browserSetup, /id="browser-setup"[\s\S]*hidden/);
   assert.match(markup, /id="usage-guide-page-link"[^>]*href="\?page=guide"/);
   assert.match(markup, /\.\/assets\/showcase\/server-library\.png/);
   assert.match(markup, /\.\/assets\/showcase\/card-insert\.png/);
@@ -141,12 +152,13 @@ test('the welcome page leads into README showcases while setup has its own page'
     /showcase\.localTitle[\s\S]*showcase\.openTitle[\s\S]*showcase\.creditsTitle[\s\S]*public\/THIRD_PARTY_NOTICES\.md/,
   );
   assert.doesNotMatch(
-    markup.slice(markup.indexOf('id="usage-guide-page"'), markup.indexOf('id="server-library"')),
+    usageGuide,
     /setup\.directTitle|setup\.directCopy|setup\.sourceLink/,
   );
   assert.doesNotMatch(markup, /docs\/screenshots\/welcome\.png/);
-  assert.match(markup, /id="self-host-guide"/);
-  assert.match(script, /self-host-guide-slot'\)\.replaceWith\(selfHostGuide\)/);
+  assert.match(usageGuide, /id="self-host-guide"/);
+  assert.match(script, /documentationRoot\.render\(<Documentation \/>\)/);
+  assert.doesNotMatch(script, /self-host-guide-slot/);
 });
 
 test('connection entry points expose the usage guide and a clear primary icon', () => {

@@ -215,9 +215,10 @@ and closes the menu automatically.
 
 Install the [latest spice2x release](https://github.com/spice2x/spice2x.github.io/releases).
 The minimum supported build is
-[`spice2x-26-08-20`](https://github.com/spice2x/spice2x.github.io/releases/tag/26-08-20),
-which introduced the required subscreen stream and CORS support. For subscreen
-video, launch the game with options equivalent to:
+[`spice2x-26-09-01`](https://github.com/spice2x/spice2x.github.io/releases/tag/26-09-01),
+the latest published build. It includes the current sliced H.264 stream encoder,
+card lookup API, and required CORS support. For subscreen video, launch the game
+with options equivalent to:
 
 ```text
 spice64.exe ... -api 1337 -apipass choose-a-lan-password -apistream
@@ -442,6 +443,11 @@ while playing and press **Ctrl+C** to stop it.
 The flake pins Nixpkgs and supplies Node.js, TypeScript, esbuild, and Python.
 No global npm package or npm-delivered build binary is needed.
 
+The content-heavy browser, usage, and self-hosting guides live in
+`src/docs/*.mdx`. The build compiles them to ignored `*.mdx.js` modules before
+esbuild bundles the React application; edit the MDX sources, not those generated
+modules or `public/app.js`.
+
 ```sh
 nix develop
 npm ci --ignore-scripts
@@ -469,6 +475,8 @@ The direct browser dependencies are pure-JavaScript packages: `react@19.2.8`,
 `embla-carousel-react@8.6.0`, `tailwind-merge@3.6.0`, `jmuxer@2.1.1`, and
 `qrcode-generator@2.0.4`. Direct and transitive packages are exact-version
 locked with npm integrity metadata, and install lifecycle scripts are disabled.
+`@mdx-js/mdx@3.1.1` is a pure-JavaScript build-time dependency used to compile
+the maintained guide sources.
 TypeScript, esbuild, and Tailwind CSS 4.3.3 come from pinned Nixpkgs instead of
 npm. Complete license and source records ship in `public/vendor/`; no executable
 npm binary is downloaded or run.

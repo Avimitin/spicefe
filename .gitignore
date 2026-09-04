@@ -2,3 +2,4 @@ result
 result-*
 .direnv/
 node_modules/
+src/docs/*.mdx.js

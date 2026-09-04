@@ -12,6 +12,7 @@
     "strict": true,
     "strictNullChecks": true,
     "target": "ES2022",
+    "types": ["react", "react-dom"],
     "useUnknownInCatchVariables": false
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"]
