@@ -12,8 +12,25 @@ function tickerErrorText(error, locale) {
   return localizeError(locale, error, 'status.tickerDefaultError');
 }
 
-function tickerMode(snapshot) {
-  return snapshot.profile?.tickerEnabled === true || snapshot.displayMode === 'ticker';
+function keypadErrorText(error, locale) {
+  return localizeError(locale, error, 'status.keypadDefaultError');
+}
+
+function outputMode(snapshot) {
+  if (snapshot.profile?.keypadEnabled === true || snapshot.displayMode === 'keypad') {
+    return 'keypad';
+  }
+  if (snapshot.profile?.tickerEnabled === true || snapshot.displayMode === 'ticker') {
+    return 'ticker';
+  }
+  return 'video';
+}
+
+function modeValue(mode, videoValue, tickerValue, keypadValue) {
+  if (mode === 'ticker') {
+    return tickerValue;
+  }
+  return mode === 'keypad' ? keypadValue : videoValue;
 }
 
 function apiPresentation(snapshot, locale) {
@@ -55,8 +72,8 @@ function apiPresentation(snapshot, locale) {
 }
 
 function videoPresentation(snapshot, locale) {
-  const ticker = tickerMode(snapshot);
-  const prefix = ticker ? 'ticker' : 'video';
+  const mode = outputMode(snapshot);
+  const prefix = mode;
   if (!snapshot.wanted || snapshot.videoState === 'idle') {
     return {
       state: 'idle',
@@ -78,9 +95,12 @@ function videoPresentation(snapshot, locale) {
       state: 'error',
       label: translate(locale, 'status.failed'),
       detail: translate(locale, `status.${prefix}FailedDetail`, {
-        error: ticker
-          ? tickerErrorText(snapshot.videoError, locale)
-          : videoErrorText(snapshot.videoError, locale),
+        error: modeValue(
+          mode,
+          videoErrorText(snapshot.videoError, locale),
+          tickerErrorText(snapshot.videoError, locale),
+          keypadErrorText(snapshot.videoError, locale),
+        ),
       }),
     };
   }
@@ -97,19 +117,30 @@ function streamMessage(snapshot, locale) {
     return null;
   }
 
-  const ticker = tickerMode(snapshot);
+  const mode = outputMode(snapshot);
 
   if (snapshot.videoState === 'error') {
-    const outputError = ticker
-      ? tickerErrorText(snapshot.videoError, locale)
-      : videoErrorText(snapshot.videoError, locale);
+    const outputError = modeValue(
+      mode,
+      videoErrorText(snapshot.videoError, locale),
+      tickerErrorText(snapshot.videoError, locale),
+      keypadErrorText(snapshot.videoError, locale),
+    );
     if (snapshot.apiState === 'live') {
       return {
         state: 'error',
-        title: translate(locale, ticker ? 'status.tickerFailedTitle' : 'status.videoFailedTitle'),
-        copy: translate(locale, ticker
-          ? 'status.tickerFailedApiLive'
-          : 'status.videoFailedApiLive', {
+        title: translate(locale, modeValue(
+          mode,
+          'status.videoFailedTitle',
+          'status.tickerFailedTitle',
+          'status.keypadFailedTitle',
+        )),
+        copy: translate(locale, modeValue(
+          mode,
+          'status.videoFailedApiLive',
+          'status.tickerFailedApiLive',
+          'status.keypadFailedApiLive',
+        ), {
           error: outputError,
         }),
       };
@@ -117,23 +148,38 @@ function streamMessage(snapshot, locale) {
     if (snapshot.apiState === 'error') {
       return {
         state: 'error',
-        title: translate(locale, ticker
-          ? 'status.apiAndTickerFailedTitle'
-          : 'status.bothFailedTitle'),
-        copy: translate(locale, ticker
-          ? 'status.apiAndTickerFailedCopy'
-          : 'status.bothFailedCopy', {
+        title: translate(locale, modeValue(
+          mode,
+          'status.bothFailedTitle',
+          'status.apiAndTickerFailedTitle',
+          'status.apiAndKeypadFailedTitle',
+        )),
+        copy: translate(locale, modeValue(
+          mode,
+          'status.bothFailedCopy',
+          'status.apiAndTickerFailedCopy',
+          'status.apiAndKeypadFailedCopy',
+        ), {
           apiError: apiErrorText(snapshot.apiError, locale),
+          outputError,
           videoError: outputError,
         }),
       };
     }
     return {
       state: 'error',
-      title: translate(locale, ticker ? 'status.tickerFailedTitle' : 'status.videoFailedTitle'),
-      copy: translate(locale, ticker
-        ? 'status.tickerFailedApiOpening'
-        : 'status.videoFailedApiOpening', {
+      title: translate(locale, modeValue(
+        mode,
+        'status.videoFailedTitle',
+        'status.tickerFailedTitle',
+        'status.keypadFailedTitle',
+      )),
+      copy: translate(locale, modeValue(
+        mode,
+        'status.videoFailedApiOpening',
+        'status.tickerFailedApiOpening',
+        'status.keypadFailedApiOpening',
+      ), {
         error: outputError,
       }),
     };
@@ -143,16 +189,24 @@ function streamMessage(snapshot, locale) {
     return {
       state: 'connecting',
       title: translate(locale, 'status.apiConnectedTitle'),
-      copy: translate(locale, ticker
-        ? 'status.apiConnectedTickerCopy'
-        : 'status.apiConnectedCopy'),
+      copy: translate(locale, modeValue(
+        mode,
+        'status.apiConnectedCopy',
+        'status.apiConnectedTickerCopy',
+        'status.apiConnectedKeypadCopy',
+      )),
     };
   }
   if (snapshot.apiState === 'error') {
     return {
       state: 'error',
       title: translate(locale, 'status.apiFailedTitle'),
-      copy: translate(locale, ticker ? 'status.apiFailedTickerCopy' : 'status.apiFailedCopy', {
+      copy: translate(locale, modeValue(
+        mode,
+        'status.apiFailedCopy',
+        'status.apiFailedTickerCopy',
+        'status.apiFailedKeypadCopy',
+      ), {
         error: apiErrorText(snapshot.apiError, locale),
       }),
     };
@@ -161,22 +215,28 @@ function streamMessage(snapshot, locale) {
     return {
       state: 'connecting',
       title: translate(locale, 'status.apiCheckingTitle'),
-      copy: translate(locale, ticker
-        ? 'status.apiCheckingTickerCopy'
-        : 'status.apiCheckingCopy'),
+      copy: translate(locale, modeValue(
+        mode,
+        'status.apiCheckingCopy',
+        'status.apiCheckingTickerCopy',
+        'status.apiCheckingKeypadCopy',
+      )),
     };
   }
   return {
     state: 'connecting',
     title: translate(locale, 'status.connectingTitle'),
-    copy: translate(locale, ticker
-      ? 'status.connectingTickerCopy'
-      : 'status.connectingCopy'),
+    copy: translate(locale, modeValue(
+      mode,
+      'status.connectingCopy',
+      'status.connectingTickerCopy',
+      'status.connectingKeypadCopy',
+    )),
   };
 }
 
 function apiWarning(snapshot, locale) {
-  if (tickerMode(snapshot)
+  if (outputMode(snapshot) !== 'video'
     || !snapshot.wanted
     || snapshot.videoState !== 'live'
     || snapshot.apiState !== 'error') {

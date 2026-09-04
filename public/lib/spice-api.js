@@ -182,6 +182,64 @@ export class SpiceApi {
     return normalizeIidxTickerText(data[0]);
   }
 
+  async getLauncherInfo() {
+    const data = await this.request('info', 'launcher', []);
+    const info = data[0];
+    if (!info || typeof info !== 'object' || typeof info.version !== 'string') {
+      throw new SpiceApiError('Malformed launcher data from the input API', 'protocol');
+    }
+    return { ...info };
+  }
+
+  writeKeypad(index, key) {
+    const keypad = Number(index);
+    const input = String(key ?? '');
+    if (!Number.isInteger(keypad) || keypad < 0 || keypad > 1) {
+      return Promise.reject(new SpiceApiError(
+        'Keypad must be Player 1 or Player 2',
+        'validation',
+      ));
+    }
+    if (!/^[0-9]$/u.test(input)) {
+      return Promise.reject(new SpiceApiError(
+        'Keypad input must be one digit',
+        'validation',
+      ));
+    }
+    return this.request('keypads', 'write', [keypad, input]);
+  }
+
+  async getButtonNames() {
+    const data = await this.request('buttons', 'read', []);
+    if (!Array.isArray(data)
+      || data.some((entry) => !Array.isArray(entry)
+        || entry.length < 3
+        || typeof entry[0] !== 'string')) {
+      throw new SpiceApiError('Malformed button data from the input API', 'protocol');
+    }
+    return data.map((entry) => entry[0]);
+  }
+
+  setButton(name, pressed) {
+    const button = String(name ?? '').trim();
+    if (!button || button.length > 128) {
+      return Promise.reject(new SpiceApiError('Invalid game button name', 'validation'));
+    }
+    return pressed
+      ? this.request('buttons', 'write', [[button, 1]])
+      : this.request('buttons', 'write_reset', [[button]]);
+  }
+
+  releaseButtons(names) {
+    const buttons = [...new Set((Array.isArray(names) ? names : [])
+      .map((name) => String(name ?? '').trim())
+      .filter((name) => name && name.length <= 128))];
+    if (buttons.length === 0) {
+      return Promise.resolve([]);
+    }
+    return this.request('buttons', 'write_reset', buttons.map((name) => [name]));
+  }
+
   async getMemoryInfo() {
     const data = await this.request('info', 'memory', []);
     const info = data[0];

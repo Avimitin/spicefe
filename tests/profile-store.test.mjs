@@ -50,6 +50,7 @@ test('sanitizes profile ranges and drops connection state', () => {
   assert.equal(profile.iconId, 'spice2x');
   assert.equal(profile.viewMode, 'contain');
   assert.equal(profile.tickerEnabled, false);
+  assert.equal(profile.keypadEnabled, false);
   assert.equal('connected' in profile, false);
 });
 
@@ -93,6 +94,18 @@ test('adds the spice2x icon when loading a profile saved before icon support', (
   const store = new ProfileStore(storage);
   assert.equal(store.selected().iconId, 'spice2x');
   assert.equal(store.selected().tickerEnabled, false);
+  assert.equal(store.selected().keypadEnabled, false);
+});
+
+test('keeps keypad and ticker display modes mutually exclusive', () => {
+  const profile = sanitizeProfile({
+    host: 'pc.local',
+    tickerEnabled: true,
+    keypadEnabled: true,
+  });
+
+  assert.equal(profile.keypadEnabled, true);
+  assert.equal(profile.tickerEnabled, false);
 });
 
 test('supports a localized name for newly generated default profiles', () => {

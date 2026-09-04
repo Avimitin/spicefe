@@ -25,6 +25,7 @@ const profile = (overrides = {}) => ({
   quality: 82,
   viewMode: 'cover',
   tickerEnabled: true,
+  keypadEnabled: false,
   connected: true,
   ...overrides,
 });
@@ -44,9 +45,20 @@ test('round-trips portable fields and normalizes the retired view mode', () => {
     quality: 82,
     viewMode: 'contain',
     tickerEnabled: true,
+    keypadEnabled: false,
   });
   assert.equal('id' in restored, false);
   assert.equal('connected' in restored, false);
+});
+
+test('round-trips keypad mode and keeps it exclusive with the ticker', () => {
+  const restored = decodeSharedProfile(encodeSharedProfile(profile({
+    tickerEnabled: true,
+    keypadEnabled: true,
+  })));
+
+  assert.equal(restored.keypadEnabled, true);
+  assert.equal(restored.tickerEnabled, false);
 });
 
 test('omits browser-local custom artwork from a portable connection', () => {

@@ -165,6 +165,84 @@ test('ticker mode opens only the API and never starts a video stream', () => {
   session.disconnect();
 });
 
+test('keypad mode opens only the API and never starts a video stream', () => {
+  const session = new SpiceSession(new FakeCanvas(), new FakeVideo(), new FakeImage());
+  let videoStarts = 0;
+  let apiStarts = 0;
+  session.startVideo = () => { videoStarts += 1; };
+  session.startApi = () => { apiStarts += 1; };
+
+  session.connect({ tickerEnabled: false, keypadEnabled: true });
+
+  assert.equal(videoStarts, 0);
+  assert.equal(apiStarts, 1);
+  assert.equal(session.snapshot.displayMode, 'keypad');
+  assert.equal(session.snapshot.videoFormat, 'keypad');
+  session.disconnect();
+});
+
+test('preflights the launcher version and prepares keypad button mappings', async () => {
+  const session = new SpiceSession(new FakeCanvas(), new FakeVideo(), new FakeImage());
+  let released = [];
+  const api = {
+    connected: true,
+    getLauncherInfo: async () => ({ version: '1.0-V-2026-09-01T00:00:00' }),
+    request: async (module, func) => {
+      assert.deepEqual([module, func], ['info', 'avs']);
+      return [{ model: 'LDJ' }];
+    },
+    getButtonNames: async () => [
+      'Service',
+      'Test',
+      'Guitar P1 Start',
+      'Guitar P1 Help',
+    ],
+    releaseButtons: async (names) => { released = names; },
+  };
+  session.profile = { tickerEnabled: false, keypadEnabled: true };
+  session.wanted = true;
+  session.api = api;
+
+  await session.verifyApi(api);
+
+  assert.equal(session.snapshot.apiState, 'live');
+  assert.equal(session.snapshot.videoState, 'live');
+  assert.equal(session.snapshot.videoResponded, true);
+  assert.equal(session.snapshot.versionCompatibility.supported, true);
+  assert.equal(session.snapshot.versionCompatibility.minimumBuild, '2026-09-01');
+  assert.deepEqual(session.snapshot.keypadButtons, {
+    start: 'Guitar P1 Start',
+    help: 'Guitar P1 Help',
+    test: 'Test',
+    service: 'Service',
+  });
+  assert.deepEqual(released, [
+    'Guitar P1 Start',
+    'Guitar P1 Help',
+    'Test',
+    'Service',
+  ]);
+});
+
+test('marks an older launcher build for a non-blocking compatibility warning', async () => {
+  const session = new SpiceSession(new FakeCanvas(), new FakeVideo(), new FakeImage());
+  const api = {
+    connected: true,
+    getLauncherInfo: async () => ({ version: '1.0-V-2026-08-28T12:00:00' }),
+    request: async () => [{ model: 'LDJ' }],
+  };
+  session.profile = { tickerEnabled: false, keypadEnabled: false };
+  session.wanted = true;
+  session.api = api;
+  session.startMemoryPolling = () => {};
+
+  await session.verifyApi(api);
+
+  assert.equal(session.snapshot.apiState, 'live');
+  assert.equal(session.snapshot.versionCompatibility.supported, false);
+  assert.equal(session.snapshot.versionCompatibility.buildDate, '2026-08-28');
+});
+
 test('ticker mode continuously polls the native API and clears the display on disconnect', async () => {
   const session = new SpiceSession(new FakeCanvas(), new FakeVideo(), new FakeImage());
   const values = [];
