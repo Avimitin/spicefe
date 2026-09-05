@@ -678,8 +678,8 @@
   }
 }
 
-/* API-only arcade keypad. The button face and its lower edge move together so
- * a press reads as physical travel rather than a color-only active state. */
+/* Top-bar arcade controls. Numeric input and the more sensitive Test/Service
+ * controls live in separate popups; physical key travel remains visible. */
 
 #ticker-toggle-root,
 #keypad-toggle-root {
@@ -695,18 +695,29 @@
   background: #101317;
 }
 
-.keypad-view {
-  position: absolute;
-  z-index: 2;
-  width: 100%;
-  height: 100%;
-  inset: 0;
+.topbar-popup-control {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.card-menu.control-popup {
+  width: min(520px, calc(100vw - 16px));
+  max-height: calc(100dvh - 72px - env(safe-area-inset-top));
+}
+
+.card-menu.service-menu {
+  width: min(420px, calc(100vw - 16px));
+}
+
+.control-popup-root {
+  min-width: 0;
+  background: #111419;
 }
 
 .arcade-keypad {
   width: 100%;
-  height: 100%;
-  padding: clamp(7px, 1.8vmin, 20px);
+  padding: 12px;
   overflow: hidden;
   background:
     radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.08), transparent 31%),
@@ -719,11 +730,11 @@
 .arcade-keypad-deck {
   position: relative;
   display: grid;
-  width: min(100%, 1120px);
-  height: 100%;
-  min-height: 0;
+  width: 100%;
+  height: min(560px, calc(100dvh - 150px - env(safe-area-inset-top)));
+  min-height: 430px;
   margin: 0 auto;
-  padding: clamp(12px, 2.4vmin, 28px);
+  padding: 12px;
   border: 1px solid #050607;
   border-radius: clamp(16px, 2.6vmin, 28px);
   background:
@@ -737,15 +748,15 @@
     inset 0 1px rgba(255, 255, 255, 0.28),
     inset 0 -2px 5px rgba(0, 0, 0, 0.72),
     0 18px 46px rgba(0, 0, 0, 0.48);
-  gap: clamp(12px, 2.4vmin, 28px);
-  grid-template-columns: minmax(0, 3fr) minmax(190px, 1.55fr);
+  gap: 12px;
+  grid-template-rows: minmax(0, 1fr) minmax(84px, 0.22fr);
 }
 
 .arcade-keypad-number-section,
 .arcade-keypad-control-section {
   min-width: 0;
   min-height: 0;
-  padding: clamp(10px, 1.7vmin, 20px);
+  padding: 10px;
   border: 1px solid rgba(0, 0, 0, 0.88);
   border-radius: clamp(12px, 1.8vmin, 20px);
   background:
@@ -759,7 +770,7 @@
 .arcade-keypad-number-grid,
 .arcade-keypad-control-section {
   display: grid;
-  gap: clamp(7px, 1.5vmin, 16px);
+  gap: 10px;
 }
 
 .arcade-keypad-number-grid {
@@ -771,17 +782,39 @@
 }
 
 .arcade-keypad-number-grid .arcade-keypad-key[data-key="0"] {
-  grid-column: 2;
+  grid-column: 1 / 3;
+}
+
+.arcade-keypad-number-grid .arcade-keypad-key[data-key="A"] {
+  grid-column: 3;
 }
 
 .arcade-keypad-control-section {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(3, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr);
 }
 
-.arcade-keypad-control-section .arcade-keypad-key[data-kind="start"],
-.arcade-keypad-control-section .arcade-keypad-key[data-kind="help"] {
-  grid-column: 1 / -1;
+.service-keypad {
+  padding: 16px;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.07), transparent 34%),
+    linear-gradient(145deg, #252a30 0%, #111419 54%, #20252a 100%);
+  color: #ffffff;
+  touch-action: none;
+}
+
+.service-keypad-deck {
+  display: grid;
+  min-height: 190px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid #050607;
+  border-radius: 16px;
+  background: #15191d;
+  box-shadow:
+    inset 0 2px 8px rgba(0, 0, 0, 0.9),
+    0 1px rgba(255, 255, 255, 0.13);
 }
 
 .arcade-keypad-key {
@@ -973,39 +1006,49 @@
   text-decoration: none;
 }
 
-@media (max-width: 680px), (orientation: portrait) {
+@media (max-width: 620px) {
+  .card-menu.control-popup {
+    position: fixed;
+    width: auto;
+    max-height: calc(100dvh - 64px - env(safe-area-inset-top));
+    top: calc(56px + env(safe-area-inset-top));
+    right: 8px;
+    left: 8px;
+  }
+
   .arcade-keypad-deck {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) minmax(104px, 0.34fr);
-  }
-
-  .arcade-keypad-control-section {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    grid-template-rows: minmax(0, 1fr);
-  }
-
-  .arcade-keypad-control-section .arcade-keypad-key[data-kind="start"],
-  .arcade-keypad-control-section .arcade-keypad-key[data-kind="help"] {
-    grid-column: auto;
+    height: calc(100dvh - 150px - env(safe-area-inset-top));
+    min-height: 360px;
   }
 }
 
 @media (max-width: 480px) {
   .arcade-keypad {
-    padding: 5px;
+    padding: 8px;
   }
 
   .arcade-keypad-deck {
-    padding: 10px;
-    border-radius: 15px;
-    gap: 10px;
-    grid-template-rows: minmax(0, 1fr) minmax(92px, 0.3fr);
+    min-height: 340px;
+    padding: 8px;
+    border-radius: 14px;
+    gap: 8px;
+    grid-template-rows: minmax(0, 1fr) minmax(72px, 0.2fr);
   }
 
   .arcade-keypad-number-section,
   .arcade-keypad-control-section {
-    padding: 8px;
+    padding: 7px;
     gap: 7px;
+  }
+
+  .service-keypad {
+    padding: 10px;
+  }
+
+  .service-keypad-deck {
+    min-height: 170px;
+    gap: 12px;
+    padding: 12px;
   }
 
   .version-warning-dialog .dialog-footer {
@@ -1018,20 +1061,51 @@
   }
 }
 
-@media (max-height: 430px) and (orientation: landscape) {
+@media (max-height: 520px) and (orientation: landscape) {
+  .card-menu.keypad-menu {
+    width: min(620px, calc(100vw - 16px));
+  }
+
   .arcade-keypad {
-    padding: 4px;
+    padding: 7px;
   }
 
   .arcade-keypad-deck {
-    padding: 8px 12px;
-    gap: 10px;
+    height: calc(100dvh - 122px - env(safe-area-inset-top));
+    min-height: 245px;
+    padding: 8px;
+    gap: 8px;
+    grid-template-columns: minmax(0, 3fr) minmax(120px, 1fr);
+    grid-template-rows: minmax(0, 1fr);
   }
 
   .arcade-keypad-number-section,
   .arcade-keypad-control-section {
-    padding: 7px;
+    padding: 6px;
     gap: 6px;
+  }
+
+  .arcade-keypad-control-section {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+  }
+
+  .arcade-keypad-key[data-kind="digit"] .arcade-keypad-key-label {
+    font-size: clamp(20px, 7vmin, 34px);
+  }
+
+  .arcade-keypad-key:not([data-kind="digit"]) .arcade-keypad-key-label {
+    font-size: clamp(10px, 3vmin, 15px);
+  }
+
+  .service-keypad {
+    padding: 8px;
+  }
+
+  .service-keypad-deck {
+    min-height: 118px;
+    gap: 12px;
+    padding: 10px;
   }
 }
 

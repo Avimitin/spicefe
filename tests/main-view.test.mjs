@@ -83,7 +83,7 @@ test('ticker profiles remain in the library until their first display value arri
   }, 'servers'), 'stream');
 });
 
-test('keypad profiles enter the stream view when the API-only controls are ready', () => {
+test('API-only control profiles enter the live view when controls are ready', () => {
   const keypad = { ...saved, keypadEnabled: true };
   assert.equal(mainView([keypad], {
     wanted: true,

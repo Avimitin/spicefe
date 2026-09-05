@@ -146,7 +146,7 @@ test('localizes live ticker status in Simplified Chinese', () => {
   assert.equal(result.streamMessage, null);
 });
 
-test('presents the API-only keypad as its own output channel', () => {
+test('presents API-only controls as their own output channel', () => {
   const result = connectionPresentation(snapshot({
     profile: { apiPort: 1337, keypadEnabled: true },
     displayMode: 'keypad',
@@ -156,7 +156,7 @@ test('presents the API-only keypad as its own output channel', () => {
 
   assert.equal(result.api.detail, 'Control API connected');
   assert.equal(result.video.label, 'Live');
-  assert.equal(result.video.detail, 'Keypad controls are ready');
+  assert.equal(result.video.detail, 'API-only controls are ready');
   assert.equal(result.streamMessage, null);
   assert.equal(result.apiWarning, null);
 });

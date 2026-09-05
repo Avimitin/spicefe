@@ -4,7 +4,7 @@ Enable the API stream on your gaming PC, allow access from your local network, a
 
 > **Latest spice2x required.**
 >
-> Install **spice2x-26-09-01** or newer for full compatibility, including the full-screen keypad, current H.264 streaming, and card APIs. spicefe checks `info.launcher()` during connection and warns when the reported build is older. [Download the latest spice2x release](https://github.com/spice2x/spice2x.github.io/releases/latest).
+> Install **spice2x-26-09-01** or newer for full compatibility, including the top-bar arcade controls, current H.264 streaming, and card APIs. spicefe checks `info.launcher()` during connection and warns when the reported build is older. [Download the latest spice2x release](https://github.com/spice2x/spice2x.github.io/releases/latest).
 
 ## 1. Configure spice2x
 
@@ -12,7 +12,7 @@ Choose either spicecfg or the command line. Both methods enable the same API str
 
 ### Option A: use spicecfg
 
-In **Options**, select **API**. Choose an **API TCP Port**, enable **API Video Stream Server** when you want video, and optionally set an **API Password**. Enter the same port and password in spicefe. The keypad and 16-segment modes use only the API, so their profiles do not require the video stream server.
+In **Options**, select **API**. Choose an **API TCP Port**, enable **API Video Stream Server** when you want video, and optionally set an **API Password**. Enter the same port and password in spicefe. API-only controls and the 16-segment display use only the API, so their profiles do not require the video stream server.
 
 [![spicecfg Options API settings with API TCP Port and API Video Stream Server Enable highlighted](./assets/spicecfg-api-stream.png)](./assets/spicecfg-api-stream.png)
 
@@ -24,7 +24,7 @@ Add these options when launching the game:
 spice64.exe -api 1337 -apistream
 ```
 
-For the API-only keypad, `spice64.exe -api 1337` is enough. To protect API commands with a password, append `-apipass your-password` and enter the same password in spicefe.
+For API-only controls, `spice64.exe -api 1337` is enough. To protect API commands with a password, append `-apipass your-password` and enter the same password in spicefe.
 
 ## 2. Prepare the local network
 
@@ -36,11 +36,15 @@ Connect this device and the gaming PC to the same LAN. In Windows Firewall, allo
 
 Select **Add server** and follow the guided setup. First enter the gaming PC address, API port, and optional API password. spicefe tests the control API before continuing. If the test fails, correct the connection fields and try again, cancel setup, or choose **Force save** to continue without verification.
 
-Next choose a game icon and one connection style: **Subscreen stream**, **Segment display**, or **Full-screen keypad**. Stream profiles get an additional quality page; the two API-only styles skip it. Name the game server on the final page and save it. Every page has a back button, and your earlier choices remain available when you return to a previous page.
+Next choose a game icon and one connection style: **Subscreen stream**, **Segment display**, or **API-only controls**. Stream profiles get an additional quality page; the two API-only styles skip it. Name the game server on the final page and save it. Every page has a back button, and your earlier choices remain available when you return to a previous page.
 
-## Use the full-screen keypad without a subscreen stream
+## Use the top-bar arcade controls
 
-Enable **Full-screen keypad** in the saved server's display options. This mode opens only the spice2x control API and draws ten numeric keys plus Start, Help, Test, and Service across the available screen. Numeric taps use the native Player 1 `keypads.write()` input; cabinet controls are matched against the names returned by `buttons.read()` and use native press and release overrides. The 16-segment and keypad modes are mutually exclusive, and stream-quality settings are hidden because neither mode opens a video connection.
+Choose **API-only controls** in the saved server's display options when no subscreen video is needed. This style and the 16-segment display are mutually exclusive, and stream-quality settings are hidden because neither opens a video connection.
+
+During an API-only control or segment-display session, select the keypad icon in the top bar to open Player 1 digits 0–9, the dedicated `00` key, Start, and Help. The `00` button maps to spice2x's native `A` keypad code; numeric input uses `keypads.write()`, while Start and Help use press and release overrides for the names reported by `buttons.read()`.
+
+Test and Service are isolated from the numeric keypad to prevent accidental activation. Open them from their own system-controls button in the top bar. This separate popup is available during subscreen video, segment-display, and API-only control sessions.
 
 ## Recommended starting settings
 
@@ -52,7 +56,7 @@ Enable **Full-screen keypad** in the saved server's display options. This mode o
 
 - If both API and video fail, recheck the PC address, API port, spice2x version, and Windows Firewall.
 - If API connects but video fails, disconnect other viewers; spice2x allows one viewer per screen.
-- If a keypad cabinet button is unavailable, confirm that the running game exposes a matching Start, Help, Test, or Service button through spice2x.
+- If a cabinet control is unavailable, confirm that the running game exposes the matching Start, Help, Test, or Service button through spice2x.
 - On iPhone or iPad, use **Share → Add to Home Screen** for a fullscreen app experience.
 
 [Continue to self-hosting](#self-host-guide)

@@ -18,7 +18,7 @@ interface KeypadLabels {
   unavailable: string;
 }
 
-interface ArcadeKeypadProps {
+interface ArcadePadProps {
   api: KeypadApi | null;
   buttonNames: Record<ControlKey, string | null> | null;
   enabled: boolean;
@@ -37,8 +37,27 @@ interface KeyProps {
   onEnd: (code: string, source: string) => void;
 }
 
-const DIGITS = Object.freeze(['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']);
-const CONTROLS: readonly ControlKey[] = Object.freeze(['start', 'help', 'test', 'service']);
+const KEYPAD_KEYS = Object.freeze([
+  { code: '1', label: '1' },
+  { code: '2', label: '2' },
+  { code: '3', label: '3' },
+  { code: '4', label: '4' },
+  { code: '5', label: '5' },
+  { code: '6', label: '6' },
+  { code: '7', label: '7' },
+  { code: '8', label: '8' },
+  { code: '9', label: '9' },
+  { code: '0', label: '0' },
+  // spice2x uses A for the physical double-zero key.
+  { code: 'A', label: '00' },
+]);
+const KEYPAD_CONTROLS: readonly ControlKey[] = Object.freeze(['start', 'help']);
+const SERVICE_CONTROLS: readonly ControlKey[] = Object.freeze(['test', 'service']);
+const ALL_CONTROLS: readonly ControlKey[] = Object.freeze([
+  ...KEYPAD_CONTROLS,
+  ...SERVICE_CONTROLS,
+]);
+const KEYPAD_INPUT_CODES = new Set(KEYPAD_KEYS.map(({ code }) => code));
 
 function ArcadeKey({
   code,
@@ -103,13 +122,14 @@ function ArcadeKey({
   );
 }
 
-export function ArcadeKeypad({
+function ArcadePad({
   api,
   buttonNames,
   enabled,
   labels,
   onError,
-}: ArcadeKeypadProps) {
+  service = false,
+}: ArcadePadProps & { service?: boolean }) {
   const [pressed, setPressed] = useState<Set<string>>(() => new Set());
   const activeSources = useRef(new Map<string, string>());
   const pressedRef = useRef(pressed);
@@ -129,7 +149,7 @@ export function ArcadeKeypad({
       next.delete(code);
       return next;
     });
-    if (!CONTROLS.includes(code as ControlKey) || !api) {
+    if (!ALL_CONTROLS.includes(code as ControlKey) || !api) {
       return;
     }
     const name = buttonNames?.[code as ControlKey];
@@ -157,7 +177,7 @@ export function ArcadeKeypad({
     activeSources.current.set(code, source);
     setPressed((current) => new Set(current).add(code));
 
-    if (/^\d$/u.test(code)) {
+    if (KEYPAD_INPUT_CODES.has(code)) {
       report(api.writeKeypad(0, code));
       return;
     }
@@ -201,19 +221,44 @@ export function ArcadeKeypad({
     };
   }, [end, releaseAll]);
 
+  if (service) {
+    return (
+      <section className="service-keypad" aria-label={labels.aria}>
+        <div className="service-keypad-deck" role="group" aria-label={labels.cabinetControls}>
+          {SERVICE_CONTROLS.map((control) => {
+            const available = Boolean(buttonNames?.[control]);
+            return (
+              <ArcadeKey
+                key={control}
+                code={control}
+                label={labels[control]}
+                kind={control}
+                disabled={!enabled || !available}
+                unavailableLabel={!available ? labels.unavailable : undefined}
+                pressed={pressed.has(control)}
+                onBegin={begin}
+                onEnd={end}
+              />
+            );
+          })}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="arcade-keypad" aria-label={labels.aria}>
       <div className="arcade-keypad-deck">
         <div className="arcade-keypad-number-section" role="group" aria-label={labels.numberPad}>
           <div className="arcade-keypad-number-grid">
-            {DIGITS.map((digit) => (
+            {KEYPAD_KEYS.map(({ code, label }) => (
               <ArcadeKey
-                key={digit}
-                code={digit}
-                label={digit}
+                key={code}
+                code={code}
+                label={label}
                 kind="digit"
                 disabled={!enabled}
-                pressed={pressed.has(digit)}
+                pressed={pressed.has(code)}
                 onBegin={begin}
                 onEnd={end}
               />
@@ -222,7 +267,7 @@ export function ArcadeKeypad({
         </div>
 
         <div className="arcade-keypad-control-section" role="group" aria-label={labels.cabinetControls}>
-          {CONTROLS.map((control) => {
+          {KEYPAD_CONTROLS.map((control) => {
             const available = Boolean(buttonNames?.[control]);
             return (
               <ArcadeKey
@@ -242,4 +287,12 @@ export function ArcadeKeypad({
       </div>
     </section>
   );
+}
+
+export function ArcadeKeypad(props: ArcadePadProps) {
+  return <ArcadePad {...props} />;
+}
+
+export function ServiceKeypad(props: ArcadePadProps) {
+  return <ArcadePad {...props} service />;
 }

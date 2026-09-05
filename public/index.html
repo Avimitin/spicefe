@@ -11,7 +11,7 @@
   <title>spicefe</title>
   <link rel="manifest" href="./site.webmanifest">
   <link rel="icon" href="./assets/spice2x.ico" type="image/x-icon" sizes="any">
-  <link rel="stylesheet" href="./assets/styles.css?v=6110e26bf2ff">
+  <link rel="stylesheet" href="./assets/styles.css?v=c39630c56e06">
 </head>
 <body>
   <div id="app">
@@ -63,6 +63,25 @@
 
       <span class="topbar-spacer"></span>
 
+      <div id="keypad-controls" class="topbar-popup-control keypad-controls" hidden>
+        <button id="keypad-menu-button" class="icon-button" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="keypad-menu" aria-label="Open keypad" title="Keypad" data-i18n-aria-label="keypad.open" data-i18n-title="keypad.open">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="2.75" width="16" height="18.5" rx="2.5"/><path d="M8 7h.01M12 7h.01M16 7h.01M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M10 19h4"/></svg>
+        </button>
+        <section id="keypad-menu" class="card-menu control-popup keypad-menu" role="dialog" aria-labelledby="keypad-menu-title" hidden>
+          <header class="card-menu-header">
+            <div>
+              <strong id="keypad-menu-title" data-i18n="keypad.title">Arcade keypad</strong>
+              <span data-i18n="keypad.copy">Player 1 keypad, Start, and Help controls.</span>
+            </div>
+            <button id="keypad-menu-close" class="card-menu-close" type="button" aria-label="Close keypad" data-i18n-aria-label="keypad.close">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>
+            </button>
+          </header>
+          <p id="keypad-menu-api-note" class="card-menu-api-note" hidden data-i18n="keypad.apiUnavailable">The control API is not ready yet.</p>
+          <div id="keypad-menu-root" class="control-popup-root"></div>
+        </section>
+      </div>
+
       <div id="card-controls" class="card-controls" hidden>
         <button id="card-menu-button" class="icon-button" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="card-menu" aria-label="Insert card" title="Insert card" data-i18n-aria-label="cardMenu.open" data-i18n-title="cardMenu.open">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3.5 6.5h17v11h-17zM3.5 10h17M7 14h4"/></svg>
@@ -90,6 +109,25 @@
           <footer class="card-menu-footer">
             <button id="card-menu-manage" class="secondary-button" type="button" data-i18n="cardMenu.manage">Manage cards</button>
           </footer>
+        </section>
+      </div>
+
+      <div id="service-controls" class="topbar-popup-control service-controls" hidden>
+        <button id="service-menu-button" class="icon-button" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="service-menu" aria-label="Open Test and Service controls" title="Test and Service controls" data-i18n-aria-label="service.open" data-i18n-title="service.open">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14.7 6.1a4.2 4.2 0 0 0-5.5 5.5L3.8 17a2.2 2.2 0 0 0 3.2 3.2l5.4-5.4a4.2 4.2 0 0 0 5.5-5.5l-2.7 2.1-2.6-2.6z"/></svg>
+        </button>
+        <section id="service-menu" class="card-menu control-popup service-menu" role="dialog" aria-labelledby="service-menu-title" hidden>
+          <header class="card-menu-header">
+            <div>
+              <strong id="service-menu-title" data-i18n="service.title">System controls</strong>
+              <span data-i18n="service.copy">Test and Service are isolated here to prevent accidental presses.</span>
+            </div>
+            <button id="service-menu-close" class="card-menu-close" type="button" aria-label="Close system controls" data-i18n-aria-label="service.close">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>
+            </button>
+          </header>
+          <p id="service-menu-api-note" class="card-menu-api-note" hidden data-i18n="service.apiUnavailable">The control API is not ready yet.</p>
+          <div id="service-menu-root" class="control-popup-root"></div>
         </section>
       </div>
 
@@ -144,8 +182,6 @@
           </div>
         </div>
       </div>
-      <div id="keypad-view" class="keypad-view" hidden></div>
-
       <section id="empty-state" class="empty-state">
         <div class="welcome-hero">
           <img class="empty-symbol" src="./assets/spice2x.ico" alt="" aria-hidden="true">
@@ -189,7 +225,7 @@
                 <div class="showcase-feature-copy">
                   <p class="showcase-feature-label" data-i18n="showcase.streamLabel">ARCADE INTERFACES</p>
                   <h3 data-i18n="showcase.streamTitle">Your phone becomes the missing arcade interface.</h3>
-                  <p data-i18n="showcase.streamCopy">Stream a live H.264 touch subscreen over your LAN, or use the API-only full-screen keypad without starting a video stream. Both layouts adapt to phones, tablets, and desktops.</p>
+                  <p data-i18n="showcase.streamCopy">Stream a live H.264 touch subscreen over your LAN, or use API-only displays and open the arcade keypad from the top bar. Test and Service stay safely separated in their own popup.</p>
                 </div>
                 <figure class="showcase-feature-media showcase-feature-media-carousel">
                   <div id="showcase-stream-carousel"></div>
@@ -915,6 +951,6 @@
   <div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
 
   <script src="./vendor/jmuxer.min.js?v=70b1c4d0204f"></script>
-  <script type="module" src="./app.js?v=8bfc13c7e8ca"></script>
+  <script type="module" src="./app.js?v=241bc87f70ab"></script>
 </body>
 </html>

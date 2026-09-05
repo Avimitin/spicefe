@@ -51,7 +51,7 @@ test('round-trips portable fields and normalizes the retired view mode', () => {
   assert.equal('connected' in restored, false);
 });
 
-test('round-trips keypad mode and keeps it exclusive with the ticker', () => {
+test('round-trips API-only control mode and keeps it exclusive with the ticker', () => {
   const restored = decodeSharedProfile(encodeSharedProfile(profile({
     tickerEnabled: true,
     keypadEnabled: true,

@@ -33,9 +33,9 @@
 | :---: | :---: |
 | [![beatmania IIDX 33 subscreen streaming through spicefe](./public/assets/showcase/iidx-stream.png)](./public/assets/showcase/iidx-stream.png) | [![GITADORA GALAXY WAVE DELTA subscreen streaming through spicefe](./public/assets/showcase/gitadora-stream.png)](./public/assets/showcase/gitadora-stream.png) |
 
-**API-only full-screen keypad**
+**Top-bar arcade keypad**
 
-[![spicefe full-screen spice2x keypad with number and cabinet control buttons](./public/assets/showcase/keypad.png)](./public/assets/showcase/keypad.png)
+[![spicefe arcade keypad popup with 0 through 9, double zero, Start, and Help controls](./public/assets/showcase/keypad.png)](./public/assets/showcase/keypad.png)
 
 **Old beatmania IIDX 16-segment display — updated recording**
 
@@ -44,8 +44,8 @@
 `spicefe` is a globally hostable, static LAN client for the spice2x subscreen
 stream, cabinet controls, and old beatmania IIDX cabinet ticker. Open the page
 on a phone, tablet, or another modern browser, select a saved gaming PC, and
-the browser connects directly to spice2x for video and touch input, a
-full-screen keypad, or a nine-character ticker.
+the browser connects directly to spice2x for video and touch input, top-bar
+arcade controls, or a nine-character ticker.
 
 There is no relay and no companion web server to run on the gaming PC. The
 static host only delivers this application; stream and input traffic stay on
@@ -58,8 +58,8 @@ the LAN.
 - an optional, responsive red-on-black nine-character display for older
   beatmania IIDX releases, read through spice2x `iidx.ticker_get()` without
   opening the video endpoint
-- an API-only, full-screen arcade keypad with 0–9, Start, Help, Test, and
-  Service controls, with no subscreen stream required
+- an API-only arcade keypad popup with 0–9, the dedicated `00` key, Start, and
+  Help; Test and Service live in a separate guarded popup available in every mode
 - a guided new-server setup that verifies the API address before leading
   through game artwork, output style, optional stream quality, and naming
 - separate Welcome and Saved Servers pages with top-bar navigation; first-time
@@ -109,7 +109,7 @@ The saved-server page briefly opens the configured API WebSocket and sends the
 same read-only `info/avs` query used when establishing a full session. Normal
 video profiles also send a `HEAD` request to the configured video endpoint;
 spice2x answers before allocating a capture screen, so the check does not start
-an encoder or claim a capture screen. Ticker and keypad profiles never contact
+an encoder or claim a capture screen. Ticker and API-only control profiles never contact
 the video endpoint. Ticker checks follow the API check with a read-only
 `iidx/ticker_get` request. Checks run when the list opens, every minute while it
 remains visible, and after the browser regains network access.
@@ -135,7 +135,7 @@ referenced it display the default spice2x icon instead.
 Select the QR button on a saved-server card to create a scannable code and a
 direct link. The portable profile includes its name, host, API port, API
 password, built-in game icon, video settings, view mode, IIDX ticker mode, and
-full-screen keypad mode.
+API-only control mode.
 Browser-local uploaded icon artwork is deliberately excluded; the receiving
 device uses the default spice2x icon instead.
 
@@ -179,17 +179,23 @@ the red segment window remains unobstructed.
 Recent IIDX releases may offer only a subscreen; use normal video mode for
 those releases.
 
-## Full-screen keypad
+## Top-bar arcade controls
 
-Enable **Full-screen keypad** in a connection profile to use cabinet controls
-without a subscreen stream. Keypad and ticker modes are mutually exclusive;
-both hide stream-quality settings and connect only to the spice2x control API.
+Choose **API-only controls** in a connection profile to connect without a
+subscreen stream. API-only controls and the ticker are mutually exclusive
+display styles; both hide stream-quality settings and connect only to the
+spice2x control API.
 
-The main keys send Player 1 digits 0–9 through `keypads.write()`. Start, Help,
-Test, and Service use the matching names reported by `buttons.read()` and stay
-disabled when the running game does not expose them. Each cabinet button is
-explicitly released after a pointer or keyboard press and when the page loses
-focus or disconnects.
+For API-only controls and the segment display, select the keypad icon in the
+top bar to open Player 1 digits 0–9, the dedicated `00` key, Start, and Help.
+The `00` key sends spice2x's native `A` key code through `keypads.write()`;
+Start and Help use the matching names reported by `buttons.read()`.
+
+Test and Service are deliberately absent from the numeric keypad. They live in
+a separate system-controls popup with its own top-bar activator, available for
+video streams, segment displays, and API-only control sessions. Unavailable
+game buttons stay disabled. Every held cabinet button is explicitly released
+after pointer or keyboard input, when the page loses focus, and on disconnect.
 
 ## Virtual cards
 
@@ -228,7 +234,7 @@ spice2x's card manager. Existing `.txt` suffixes are preserved; unsafe or
 overlong Windows filenames and duplicate names are adjusted during export so no
 card is lost when the archive is extracted.
 
-While a video, ticker, or keypad session is live, select the card icon in the top bar,
+While a video, ticker, or API-only control session is live, select the card icon in the top bar,
 choose Player 1 or Player 2, then select a card. spicefe sends the native
 `card.insert(reader, card_id)` request over the active control-API connection
 and closes the menu automatically.
@@ -247,7 +253,7 @@ video, launch the game with options equivalent to:
 spice64.exe ... -api 1337 -apipass choose-a-lan-password -apistream
 ```
 
-The old IIDX ticker and full-screen keypad need the API but not the video server:
+The old IIDX ticker and API-only controls need the API but not the video server:
 
 ```text
 spice64.exe ... -api 1337 -apipass choose-a-lan-password
