@@ -97,7 +97,7 @@ test('adds the spice2x icon when loading a profile saved before icon support', (
   assert.equal(store.selected().keypadEnabled, false);
 });
 
-test('keeps keypad and ticker display modes mutually exclusive', () => {
+test('keeps API-only control and ticker display modes mutually exclusive', () => {
   const profile = sanitizeProfile({
     host: 'pc.local',
     tickerEnabled: true,

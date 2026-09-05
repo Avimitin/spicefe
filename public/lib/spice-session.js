@@ -163,9 +163,7 @@ export class SpiceSession {
     this.stopH264();
     this.stopMjpeg();
     const api = this.api;
-    const keypadButtonNames = this.profile?.keypadEnabled
-      ? resolvedKeypadButtonNames(this.keypadButtons)
-      : [];
+    const keypadButtonNames = resolvedKeypadButtonNames(this.keypadButtons);
     this.api = null;
     this.onapi(null);
     if (api && keypadButtonNames.length > 0 && typeof api.releaseButtons === 'function') {
@@ -533,7 +531,7 @@ export class SpiceSession {
           return;
         }
         // Launcher metadata is a compatibility preflight. Older APIs may not expose it,
-        // so failure here must not hide an otherwise usable stream or keypad.
+        // so failure here must not hide an otherwise usable stream or control session.
         this.launcherInfo = null;
         this.versionCompatibility = ['remote', 'protocol'].includes(error?.code)
           ? spice2xCompatibility('')
@@ -545,16 +543,23 @@ export class SpiceSession {
       }
       this.gameInfo = data[0] || {};
       this.touchCanvas = touchCanvasForGame(this.gameInfo);
-      if (this.profile.keypadEnabled) {
+      try {
         const names = await api.getButtonNames();
-        if (this.api !== api || !this.wanted || !this.profile?.keypadEnabled) {
+        if (this.api !== api || !this.wanted) {
           return;
         }
         this.keypadButtons = resolveKeypadButtons(names);
         await api.releaseButtons(resolvedKeypadButtonNames(this.keypadButtons));
-        if (this.api !== api || !this.wanted || !this.profile?.keypadEnabled) {
+        if (this.api !== api || !this.wanted) {
           return;
         }
+      } catch {
+        if (this.api !== api || !this.wanted) {
+          return;
+        }
+        // Button discovery powers optional top-bar controls. It must never make
+        // video, touch, numeric keypad input, or the ticker connection fail.
+        this.keypadButtons = null;
       }
       this.apiState = 'live';
       this.apiError = null;
@@ -626,7 +631,7 @@ export class SpiceSession {
     this.tickerTimer = null;
     this.videoState = 'error';
     this.videoError = error || new Error(this.profile?.keypadEnabled
-      ? 'The control API disconnected from the keypad'
+      ? 'The API-only control connection was interrupted'
       : 'The control API disconnected from the 16-segment display');
   }
 

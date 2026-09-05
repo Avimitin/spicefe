@@ -12,7 +12,7 @@ import {
   StreamCardList,
 } from './components';
 import { Documentation } from './documentation';
-import { ArcadeKeypad } from './keypad';
+import { ArcadeKeypad, ServiceKeypad } from './keypad';
 import {
   ServerSetupWizard,
   type ServerSetupDraft,
@@ -161,7 +161,16 @@ const video = element('mse-view');
 const image = element('mjpeg-view');
 const tickerView = element('ticker-view');
 const tickerText = element('ticker-text');
-const keypadView = element('keypad-view');
+const keypadControls = element('keypad-controls');
+const keypadMenuButton = element('keypad-menu-button');
+const keypadMenu = element('keypad-menu');
+const keypadMenuRoot = element('keypad-menu-root');
+const keypadMenuApiNote = element('keypad-menu-api-note');
+const serviceControls = element('service-controls');
+const serviceMenuButton = element('service-menu-button');
+const serviceMenu = element('service-menu');
+const serviceMenuRoot = element('service-menu-root');
+const serviceMenuApiNote = element('service-menu-api-note');
 const tickerPreviewDialog = element('ticker-preview-dialog');
 const tickerPreviewInput = element('ticker-preview-input');
 const tickerPreviewText = element('ticker-preview-text');
@@ -241,7 +250,8 @@ const reactRoots = {
   cardMenuList: createRoot(cardMenuList),
   cardPreview: createRoot(cardPreview),
   iconGroups: createRoot(iconGroups),
-  keypadView: createRoot(keypadView),
+  keypadMenu: createRoot(keypadMenuRoot),
+  serviceMenu: createRoot(serviceMenuRoot),
   serverSetup: createRoot(serverSetupRootElement),
   serverList: createRoot(serverList),
   showcaseCards: createRoot(showcaseCardsCarousel),
@@ -901,10 +911,44 @@ function importSelectedRemoteCards() {
 
 function setCardMenuOpen(open: boolean) {
   const expanded = Boolean(open) && renderedMainView === 'stream';
+  if (expanded) {
+    setKeypadMenuOpen(false);
+    setServiceMenuOpen(false);
+  }
   cardMenu.hidden = !expanded;
   cardMenuButton.setAttribute('aria-expanded', String(expanded));
   if (expanded) {
     renderStreamCardMenu();
+  }
+}
+
+function setKeypadMenuOpen(open: boolean) {
+  const expanded = Boolean(open)
+    && renderedMainView === 'stream'
+    && !keypadControls.hidden;
+  if (expanded) {
+    setCardMenuOpen(false);
+    setServiceMenuOpen(false);
+  }
+  keypadMenu.hidden = !expanded;
+  keypadMenuButton.setAttribute('aria-expanded', String(expanded));
+  if (expanded) {
+    renderControlPopups(session.snapshot);
+  }
+}
+
+function setServiceMenuOpen(open: boolean) {
+  const expanded = Boolean(open)
+    && renderedMainView === 'stream'
+    && !serviceControls.hidden;
+  if (expanded) {
+    setCardMenuOpen(false);
+    setKeypadMenuOpen(false);
+  }
+  serviceMenu.hidden = !expanded;
+  serviceMenuButton.setAttribute('aria-expanded', String(expanded));
+  if (expanded) {
+    renderControlPopups(session.snapshot);
   }
 }
 
@@ -1151,26 +1195,38 @@ function handleKeypadError(error: unknown) {
   }), 7000);
 }
 
-function renderKeypad(snapshot: SessionSnapshot) {
-  const keypadMode = snapshot.profile?.keypadEnabled === true;
-  renderReact(reactRoots.keypadView, (
+function renderControlPopups(snapshot: SessionSnapshot) {
+  const apiReady = snapshot.wanted
+    && snapshot.apiState === 'live'
+    && Boolean(session.api?.connected);
+  const keypadReady = apiReady && profileUsesApiOnlyDisplay(snapshot.profile);
+  const labels = {
+    aria: t('keypad.aria'),
+    numberPad: t('keypad.numberPad'),
+    cabinetControls: t('keypad.cabinetControls'),
+    start: t('keypad.start'),
+    help: t('keypad.help'),
+    test: t('keypad.test'),
+    service: t('keypad.service'),
+    unavailable: t('keypad.unavailable'),
+  };
+  keypadMenuApiNote.hidden = apiReady;
+  serviceMenuApiNote.hidden = apiReady;
+  renderReact(reactRoots.keypadMenu, (
     <ArcadeKeypad
       api={session.api}
       buttonNames={snapshot.keypadButtons ?? null}
-      enabled={keypadMode
-        && snapshot.apiState === 'live'
-        && snapshot.videoState === 'live'
-        && Boolean(session.api?.connected)}
-      labels={{
-        aria: t('keypad.aria'),
-        numberPad: t('keypad.numberPad'),
-        cabinetControls: t('keypad.cabinetControls'),
-        start: t('keypad.start'),
-        help: t('keypad.help'),
-        test: t('keypad.test'),
-        service: t('keypad.service'),
-        unavailable: t('keypad.unavailable'),
-      }}
+      enabled={keypadReady}
+      labels={labels}
+      onError={handleKeypadError}
+    />
+  ));
+  renderReact(reactRoots.serviceMenu, (
+    <ServiceKeypad
+      api={session.api}
+      buttonNames={snapshot.keypadButtons ?? null}
+      enabled={apiReady}
+      labels={{ ...labels, aria: t('service.aria') }}
       onError={handleKeypadError}
     />
   ));
@@ -1199,7 +1255,7 @@ const touch: any = new (TouchController as any)(stage, {
 
 session.onapi = (api: any) => {
   touch.setApi(api);
-  renderKeypad(session.snapshot);
+  renderControlPopups(session.snapshot);
 };
 session.onnotice = (key: string, parameters?: Record<string, unknown>) => showToast(t(key, parameters));
 session.onticker = (text: string) => {
@@ -1819,18 +1875,23 @@ function renderMainView(snapshot: SessionSnapshot): MainView {
   settingsButton.hidden = streaming;
   connectButton.hidden = !streaming;
   cardControls.hidden = !streaming;
+  keypadControls.hidden = !apiOnlyStreaming;
+  serviceControls.hidden = !streaming;
   pageMenuButton.hidden = streaming;
   brandIcon.hidden = !streaming;
   tickerView.hidden = !tickerStreaming;
-  keypadView.hidden = !keypadStreaming;
   stage.dataset.outputMode = outputMode;
   if (snapshot.profile?.tickerEnabled) {
     session.onticker(snapshot.tickerText);
   }
-  renderKeypad(snapshot);
+  renderControlPopups(snapshot);
   setPageMenuOpen(false);
   if (!streaming) {
     setCardMenuOpen(false);
+    setKeypadMenuOpen(false);
+    setServiceMenuOpen(false);
+  } else if (!apiOnlyStreaming) {
+    setKeypadMenuOpen(false);
   }
   if (streaming && snapshot.profile) {
     setProfileIcon(brandIcon, snapshot.profile.iconId);
@@ -2254,13 +2315,25 @@ document.addEventListener('pointerdown', (event) => {
   if (!cardMenu.hidden && !cardControls.contains(event.target)) {
     setCardMenuOpen(false);
   }
+  if (!keypadMenu.hidden && !keypadControls.contains(event.target)) {
+    setKeypadMenuOpen(false);
+  }
+  if (!serviceMenu.hidden && !serviceControls.contains(event.target)) {
+    setServiceMenuOpen(false);
+  }
 });
 
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') {
     return;
   }
-  if (!cardMenu.hidden) {
+  if (!serviceMenu.hidden) {
+    setServiceMenuOpen(false);
+    serviceMenuButton.focus();
+  } else if (!keypadMenu.hidden) {
+    setKeypadMenuOpen(false);
+    keypadMenuButton.focus();
+  } else if (!cardMenu.hidden) {
     setCardMenuOpen(false);
     cardMenuButton.focus();
   } else if (!pageMenu.hidden) {
@@ -2273,9 +2346,27 @@ cardMenuButton.addEventListener('click', () => {
   setCardMenuOpen(cardMenu.hidden);
 });
 
+keypadMenuButton.addEventListener('click', () => {
+  setKeypadMenuOpen(keypadMenu.hidden);
+});
+
+serviceMenuButton.addEventListener('click', () => {
+  setServiceMenuOpen(serviceMenu.hidden);
+});
+
 element('card-menu-close').addEventListener('click', () => {
   setCardMenuOpen(false);
   cardMenuButton.focus();
+});
+
+element('keypad-menu-close').addEventListener('click', () => {
+  setKeypadMenuOpen(false);
+  keypadMenuButton.focus();
+});
+
+element('service-menu-close').addEventListener('click', () => {
+  setServiceMenuOpen(false);
+  serviceMenuButton.focus();
 });
 
 for (const button of cardMenu.querySelectorAll('.card-reader-option')) {

@@ -200,9 +200,9 @@ export class SpiceApi {
         'validation',
       ));
     }
-    if (!/^[0-9]$/u.test(input)) {
+    if (!/^[0-9A]$/iu.test(input)) {
       return Promise.reject(new SpiceApiError(
-        'Keypad input must be one digit',
+        'Keypad input must be one of 0-9 or A (00)',
         'validation',
       ));
     }

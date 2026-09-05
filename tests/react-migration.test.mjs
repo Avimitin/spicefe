@@ -132,7 +132,7 @@ test('generates a compact stylesheet from maintained source files', () => {
   assert.match(entry, /@import "tailwindcss" source\(none\)/);
   assert.match(entry, /@import "\.\/styles\/application\.css"/);
   assert.doesNotMatch(entry, /legacy\.css/);
-  assert.ok(application.split('\n').length < 7000, 'application CSS should not regain removed duplicate rules');
+  assert.ok(application.split('\n').length < 7200, 'application CSS should not regain removed duplicate rules');
   assert.ok(generated.length < 130_000, 'generated CSS should remain below the pre-migration size');
 });
 

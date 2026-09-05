@@ -260,24 +260,34 @@ test('uses native keypad writes and named button press and release requests', as
   socket.receive(new TextEncoder().encode('{"id":1,"errors":[],"data":[]}\0'));
   await keypad;
 
-  const press = api.setButton('Guitar P1 Start', true);
+  const doubleZero = api.writeKeypad(0, 'A');
   assert.deepEqual(JSON.parse(new TextDecoder().decode(socket.sent.at(-1))), {
     id: 2,
+    module: 'keypads',
+    function: 'write',
+    params: [0, 'A'],
+  });
+  socket.receive(new TextEncoder().encode('{"id":2,"errors":[],"data":[]}\0'));
+  await doubleZero;
+
+  const press = api.setButton('Guitar P1 Start', true);
+  assert.deepEqual(JSON.parse(new TextDecoder().decode(socket.sent.at(-1))), {
+    id: 3,
     module: 'buttons',
     function: 'write',
     params: [['Guitar P1 Start', 1]],
   });
-  socket.receive(new TextEncoder().encode('{"id":2,"errors":[],"data":[]}\0'));
+  socket.receive(new TextEncoder().encode('{"id":3,"errors":[],"data":[]}\0'));
   await press;
 
   const release = api.setButton('Guitar P1 Start', false);
   assert.deepEqual(JSON.parse(new TextDecoder().decode(socket.sent.at(-1))), {
-    id: 3,
+    id: 4,
     module: 'buttons',
     function: 'write_reset',
     params: [['Guitar P1 Start']],
   });
-  socket.receive(new TextEncoder().encode('{"id":3,"errors":[],"data":[]}\0'));
+  socket.receive(new TextEncoder().encode('{"id":4,"errors":[],"data":[]}\0'));
   await release;
   api.close();
 });
@@ -297,7 +307,9 @@ test('discovers game button names and validates keypad input locally', async () 
   assert.deepEqual(await pending, ['Service', 'Test']);
 
   await assert.rejects(api.writeKeypad(2, '1'), /Player 1 or Player 2/);
-  await assert.rejects(api.writeKeypad(0, 'A'), /one digit/);
+  await assert.rejects(api.writeKeypad(0, '*'), /0-9 or A \(00\)/);
+  await assert.rejects(api.writeKeypad(0, 'D'), /0-9 or A \(00\)/);
+  await assert.rejects(api.writeKeypad(0, '12'), /0-9 or A \(00\)/);
   api.close();
 });
 

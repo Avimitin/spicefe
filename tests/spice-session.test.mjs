@@ -165,7 +165,7 @@ test('ticker mode opens only the API and never starts a video stream', () => {
   session.disconnect();
 });
 
-test('keypad mode opens only the API and never starts a video stream', () => {
+test('API-only control mode never starts a video stream', () => {
   const session = new SpiceSession(new FakeCanvas(), new FakeVideo(), new FakeImage());
   let videoStarts = 0;
   let apiStarts = 0;
@@ -222,6 +222,35 @@ test('preflights the launcher version and prepares keypad button mappings', asyn
     'Test',
     'Service',
   ]);
+});
+
+test('prepares Test and Service controls for video and segment sessions', async () => {
+  for (const profile of [
+    { tickerEnabled: false, keypadEnabled: false },
+    { tickerEnabled: true, keypadEnabled: false },
+  ]) {
+    const session = new SpiceSession(new FakeCanvas(), new FakeVideo(), new FakeImage());
+    let released = [];
+    const api = {
+      connected: true,
+      getLauncherInfo: async () => ({ version: '1.0-V-2026-09-01T00:00:00' }),
+      request: async () => [{ model: 'LDJ' }],
+      getButtonNames: async () => ['Test', 'Service'],
+      releaseButtons: async (names) => { released = names; },
+    };
+    session.profile = profile;
+    session.wanted = true;
+    session.api = api;
+    session.startMemoryPolling = () => {};
+    session.startTicker = () => {};
+
+    await session.verifyApi(api);
+
+    assert.equal(session.snapshot.apiState, 'live');
+    assert.equal(session.snapshot.keypadButtons.test, 'Test');
+    assert.equal(session.snapshot.keypadButtons.service, 'Service');
+    assert.deepEqual(released, ['Test', 'Service']);
+  }
 });
 
 test('marks an older launcher build for a non-blocking compatibility warning', async () => {
