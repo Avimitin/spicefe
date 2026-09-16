@@ -91,6 +91,79 @@ test('video heartbeats extend one stall watchdog without replacing its timer', (
   session.disconnect();
 });
 
+test('suspending video stops playback and retry/watchdog work while keeping the API', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const session = new SpiceSession(new FakeCanvas(), new FakeVideo(), new FakeImage());
+  t.after(() => session.disconnect());
+  let starts = 0;
+  let stops = 0;
+  const api = { connected: true, close() {} };
+  session.api = api;
+  session.wanted = true;
+  session.profile = { format: 'h264', fps: 30, host: '192.168.1.2', apiPort: 1337 };
+  session.videoBackend = 'webcodecs';
+  session.videoFormat = 'h264';
+  session.videoState = 'live';
+  session.nextH264Backend = () => 'webcodecs';
+  session.webCodecsPlayer.start = () => { starts += 1; };
+  session.webCodecsPlayer.stop = () => { stops += 1; };
+  session.mjpegActive = true;
+  session.armStall();
+  session.streamRetryTimer = setTimeout(() => session.startVideo(), 10);
+  session.setVideoSuspended(true);
+  assert.equal(stops, 1);
+  assert.equal(session.stallTimer, null);
+  assert.equal(session.streamRetryTimer, null);
+  assert.equal(session.mjpegActive, false);
+  assert.match(session.image.src, /^data:/);
+  assert.equal(session.api, api);
+  assert.equal(session.wanted, true);
+  session.videoFrame({ decodedFrames: 1 }, 'webcodecs');
+  session.videoFailed(new Error('late failure'));
+  session.startVideo();
+  session.restartVideo();
+  t.mock.timers.tick(20000);
+  assert.equal(starts, 0);
+  assert.equal(session.stallTimer, null);
+  assert.equal(session.streamRetryTimer, null);
+  session.setVideoSuspended(false);
+  assert.equal(starts, 1);
+  assert.notEqual(session.stallTimer, null);
+  session.setVideoSuspended(false);
+  assert.equal(starts, 1, 'resume only once per visibility transition');
+});
+
+test('a connection started while hidden waits for visibility before opening video', () => {
+  const session = new SpiceSession(new FakeCanvas(), new FakeVideo(), new FakeImage());
+  session.startApi = () => {};
+  session.nextH264Backend = () => 'webcodecs';
+  let starts = 0;
+  session.webCodecsPlayer.start = () => { starts += 1; };
+  session.setVideoSuspended(true);
+  session.connect({ host: '192.168.1.2', apiPort: 1337, fps: 30 });
+  assert.equal(starts, 0);
+  session.setVideoSuspended(false);
+  assert.equal(starts, 1);
+  session.disconnect();
+  session.setVideoSuspended(true);
+  session.setVideoSuspended(false);
+  assert.equal(starts, 1, 'visibility does not reconnect a disconnected session');
+});
+
+test('suspending video leaves API-only display state intact', () => {
+  for (const profile of [{ tickerEnabled: true }, { keypadEnabled: true }]) {
+    const session = new SpiceSession(new FakeCanvas(), new FakeVideo(), new FakeImage());
+    session.wanted = true;
+    session.profile = profile;
+    session.videoState = 'live';
+    session.setVideoSuspended(true);
+    session.setVideoSuspended(false);
+    assert.equal(session.videoState, 'live');
+    assert.equal(session.stallTimer, null);
+    session.disconnect();
+  }
+});
+
 test('video response headers confirm server reachability before the first frame', () => {
   const session = new SpiceSession(new FakeCanvas(), new FakeVideo(), new FakeImage());
   session.wanted = true;

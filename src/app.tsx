@@ -1249,8 +1249,7 @@ const touch: any = new (TouchController as any)(stage, {
   onmarker: ({ visible, clientX, clientY }: MarkerPosition) => {
     touchMarker.hidden = !visible;
     if (visible) {
-      touchMarker.style.left = `${clientX}px`;
-      touchMarker.style.top = `${clientY}px`;
+      touchMarker.style.transform = `translate(${clientX}px, ${clientY}px) translate(-50%, -50%)`;
     }
   },
 });
@@ -1930,6 +1929,7 @@ function renderConnectionButton() {
 }
 
 function renderSnapshot(snapshot: SessionSnapshot, announce = true) {
+  touch.invalidateGeometry();
   screenWakeLock.update(snapshot);
   recordSessionReachability(snapshot);
   renderVersionWarning(snapshot);
@@ -2836,9 +2836,10 @@ for (const eventName of ['gesturestart', 'gesturechange', 'gestureend']) {
 }
 
 document.addEventListener('visibilitychange', () => {
+  session.setVideoSuspended(document.hidden);
   if (!document.hidden) {
     refreshReachability();
-    if (session.wanted) {
+    if (session.wanted && profileUsesApiOnlyDisplay(session.profile)) {
       session.restartVideo();
     }
   }

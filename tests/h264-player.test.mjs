@@ -163,3 +163,94 @@ test('stop cancels a pending canvas paint and releases its VideoFrame', () => {
   assert.equal(draws.length, 0);
   assert.equal(player.pendingFrame, null);
 });
+
+function decodingHarness(t) {
+  class Decoder {
+    constructor() {
+      this.state = 'unconfigured';
+      this.decodeQueueSize = 0;
+      this.chunks = [];
+      this.configurations = [];
+    }
+
+    configure(config) { this.configurations.push(config); this.state = 'configured'; }
+    reset() { this.state = 'unconfigured'; this.decodeQueueSize = 0; }
+    close() { this.state = 'closed'; }
+    decode(chunk) {
+      if (this.state !== 'configured') throw new DOMException('Unconfigured', 'InvalidStateError');
+      this.chunks.push(chunk);
+    }
+  }
+  class Chunk {
+    constructor(init) { Object.assign(this, init); }
+  }
+  const errors = [];
+  const player = new H264Player(fakeCanvas([]), {
+    VideoDecoderImpl: Decoder, EncodedVideoChunkImpl: Chunk,
+  });
+  player.controller = { abort() {} };
+  player.onerror = (error) => errors.push(error);
+  t.after(() => player.stop());
+  return { player, errors };
+}
+
+const sps = Uint8Array.of(0x67, 0x42, 0xc0, 0x20);
+const pps = Uint8Array.of(0x68, 0x01);
+
+test('overload reconfigures the decoder and restores parameters on the next IDR', (t) => {
+  const { player, errors } = decodingHarness(t);
+  [sps, pps, slice(5, 0), slice(1, 0)].forEach((nal) => player.pushNal(nal));
+  const decoder = player.decoder;
+  assert.equal(decoder.chunks.length, 1);
+  const stale = new FakeFrame('before reset');
+  player.draw(stale);
+  decoder.decodeQueueSize = 7;
+  player.pushNal(slice(1, 0));
+  assert.equal(player.resyncing, true);
+  assert.equal(stale.closed, true);
+  assert.equal(player.paintRequest, null);
+  player.pushNal(slice(5, 0));
+  assert.equal(decoder.chunks.length, 1);
+  player.pushNal(slice(1, 0));
+  assert.equal(decoder.chunks.length, 2);
+  assert.equal(decoder.chunks[1].type, 'key');
+  assert.deepEqual(decoder.chunks[1].data, joinAnnexB([sps, pps, slice(5, 0)]));
+  assert.deepEqual(decoder.configurations, [
+    { codec: 'avc1.42c020', optimizeForLatency: true },
+    { codec: 'avc1.42c020', optimizeForLatency: true },
+  ]);
+  assert.deepEqual(errors, []);
+});
+
+test('overload at an IDR resumes immediately without duplicate parameter sets', (t) => {
+  const { player, errors } = decodingHarness(t);
+  [sps, pps, slice(5, 0)].forEach((nal) => player.pushNal(nal));
+  const decoder = player.decoder;
+  decoder.decodeQueueSize = 7;
+  player.pushNal(slice(1, 0));
+  assert.deepEqual(errors, []);
+  assert.deepEqual(decoder.chunks[0].data, joinAnnexB([sps, pps, slice(5, 0)]));
+});
+
+test('a single-slice picture decodes as soon as the next slice header arrives', (t) => {
+  const { player } = decodingHarness(t);
+  player.parser.push(joinAnnexB([sps, pps, slice(5, 0)]));
+  assert.equal(player.decoder.chunks.length, 0);
+  const next = joinAnnexB([slice(1, 0)]);
+  player.parser.push(next.subarray(0, 5)); // Start code and NAL type, but no slice header.
+  assert.equal(player.decoder.chunks.length, 0);
+  player.parser.push(next.subarray(5));
+  assert.equal(player.decoder.chunks.length, 1);
+  assert.deepEqual(player.decoder.chunks[0].data, joinAnnexB([sps, pps, slice(5, 0)]));
+});
+
+test('early headers preserve sliced-thread pictures under byte-sized network chunks', (t) => {
+  const { player } = decodingHarness(t);
+  const keySlices = [0, 1000, 2000, 3000].map((offset) => slice(5, offset));
+  const deltaSlices = [0, 1000, 2000, 3000].map((offset) => slice(1, offset));
+  const stream = joinAnnexB([sps, pps, ...keySlices, ...deltaSlices, slice(1, 0)]);
+  for (const byte of stream) player.parser.push(Uint8Array.of(byte));
+  assert.equal(player.decoder.chunks.length, 2);
+  assert.deepEqual(player.decoder.chunks[0].data, joinAnnexB([sps, pps, ...keySlices]));
+  assert.deepEqual(player.decoder.chunks[1].data, joinAnnexB(deltaSlices));
+});

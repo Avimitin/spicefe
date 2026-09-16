@@ -53,6 +53,7 @@ export class SpiceSession {
     this.api = null;
     this.profile = null;
     this.wanted = false;
+    this.videoSuspended = Boolean(globalThis.document?.hidden);
     this.videoState = 'idle';
     this.apiState = 'idle';
     this.videoFormat = null;
@@ -203,7 +204,7 @@ export class SpiceSession {
   }
 
   startVideo() {
-    if (!this.wanted || usesApiOnlyDisplay(this.profile)) {
+    if (!this.wanted || this.videoSuspended || usesApiOnlyDisplay(this.profile)) {
       return;
     }
     clearTimeout(this.streamRetryTimer);
@@ -277,6 +278,7 @@ export class SpiceSession {
   }
 
   armStall() {
+    if (this.videoSuspended) return;
     this.stallDeadline = Date.now() + SpiceSession.STREAM_STALL_MS;
     if (this.stallTimer === null) {
       this.stallTimer = setTimeout(
@@ -288,7 +290,7 @@ export class SpiceSession {
 
   checkStall() {
     this.stallTimer = null;
-    if (!this.wanted || this.stallDeadline === 0) {
+    if (!this.wanted || this.videoSuspended || this.stallDeadline === 0) {
       return;
     }
     const remaining = this.stallDeadline - Date.now();
@@ -313,7 +315,7 @@ export class SpiceSession {
   }
 
   videoResponse(backend) {
-    if (!this.wanted || this.videoBackend !== backend) {
+    if (!this.wanted || this.videoSuspended || this.videoBackend !== backend) {
       return;
     }
     this.videoResponded = true;
@@ -322,7 +324,8 @@ export class SpiceSession {
   }
 
   videoFrame(metric, backend) {
-    if (!this.wanted || this.videoFormat !== 'h264' || this.videoBackend !== backend) {
+    if (!this.wanted || this.videoSuspended
+      || this.videoFormat !== 'h264' || this.videoBackend !== backend) {
       return;
     }
     this.armStall();
@@ -369,7 +372,7 @@ export class SpiceSession {
   }
 
   videoFailed(error) {
-    if (!this.wanted) {
+    if (!this.wanted || this.videoSuspended) {
       return;
     }
     this.stopStallWatchdog();
@@ -418,6 +421,24 @@ export class SpiceSession {
     );
   }
 
+  setVideoSuspended(suspended) {
+    if (this.videoSuspended === Boolean(suspended)) return;
+    this.videoSuspended = Boolean(suspended);
+    if (!this.wanted || usesApiOnlyDisplay(this.profile)) return;
+
+    if (this.videoSuspended) {
+      clearTimeout(this.streamRetryTimer);
+      this.streamRetryTimer = null;
+      this.stopStallWatchdog();
+      this.stopH264();
+      this.stopMjpeg();
+      this.videoState = 'connecting';
+      this.emitState();
+    } else {
+      this.startVideo();
+    }
+  }
+
   restartVideo() {
     if (!this.wanted) {
       return;
@@ -439,6 +460,7 @@ export class SpiceSession {
       }
       return;
     }
+    if (this.videoSuspended) return;
     this.stopH264();
     this.stopMjpeg();
     this.stopStallWatchdog();

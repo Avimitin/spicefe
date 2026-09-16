@@ -8,6 +8,10 @@ function mediaSourceAvailable() {
 }
 
 export class MseH264Player {
+  static LATENCY_CHECK_MS = 100;
+  static MAX_DELAY_SECONDS = 0.1;
+  static SEEK_COOLDOWN_MS = 500;
+
   static get supported() {
     return typeof globalThis.JMuxer === 'function'
       && mediaSourceAvailable()
@@ -23,6 +27,8 @@ export class MseH264Player {
     this.muxer = null;
     this.frameCallback = null;
     this.eventFrameHandler = null;
+    this.latencyTimer = null;
+    this.lastCatchUpAt = -Infinity;
     this.decodedFrames = 0;
     this.lastMetricAt = 0;
     this.lastMetricFrames = 0;
@@ -44,6 +50,13 @@ export class MseH264Player {
         return;
       }
 
+      // With flushingTime=0 the bundled muxer appends/cleans on feed, but checks
+      // live latency only once per second. Replace that timer, keeping immediate
+      // appends and allowing a short buffer after each catch-up seek.
+      this.muxer.stopInterval();
+      this.latencyTimer = setInterval(() => {
+        if (this.controller === controller) this.catchUp();
+      }, MseH264Player.LATENCY_CHECK_MS);
       this.watchFrames(controller);
       const play = this.video.play();
       play?.catch?.(() => {});
@@ -92,6 +105,26 @@ export class MseH264Player {
             code: 'transport',
           }));
       }
+    }
+  }
+
+  catchUp() {
+    const { buffered, currentTime, seeking, readyState } = this.video;
+    const now = performance.now();
+    if (!buffered?.length || seeking || readyState < 2
+      || now - this.lastCatchUpAt < MseH264Player.SEEK_COOLDOWN_MS) return;
+    const lastRange = buffered.length - 1;
+    const end = buffered.end(lastRange);
+    if (end - currentTime <= MseH264Player.MAX_DELAY_SECONDS) return;
+    // Leave 50 ms of playable video so seeking does not repeatedly land on an
+    // exhausted buffer. Use the newest range if a discontinuity created a gap.
+    const target = Math.max(buffered.start(lastRange), end - 0.05);
+    try {
+      this.video.currentTime = target;
+      this.lastCatchUpAt = now;
+      if (this.video.paused) this.video.play()?.catch?.(() => {});
+    } catch {
+      // A buffer eviction or source transition can invalidate a seek target.
     }
   }
 
@@ -201,6 +234,9 @@ export class MseH264Player {
   }
 
   stop() {
+    clearInterval(this.latencyTimer);
+    this.latencyTimer = null;
+    this.lastCatchUpAt = -Infinity;
     if (this.controller) {
       this.controller.abort();
       this.controller = null;

@@ -41,7 +41,14 @@ export class H264Player {
 
     this.controller = null;
     this.decoder = null;
-    this.parser = new AnnexBParser((nal) => this.pushNal(nal));
+    this.decoderConfig = null;
+    this.sps = null;
+    this.pps = null;
+    this.parser = new AnnexBParser(
+      (nal) => this.pushNal(nal),
+      AnnexBParser.PENDING_LIMIT,
+      (type, firstSlice) => this.beginNal(type, firstSlice),
+    );
     this.accessUnit = [];
     this.accessUnitHasVcl = false;
     this.accessUnitKey = false;
@@ -142,6 +149,9 @@ export class H264Player {
     }
 
     this.parser.reset();
+    this.decoderConfig = null;
+    this.sps = null;
+    this.pps = null;
     this.accessUnit = [];
     this.accessUnitHasVcl = false;
     this.accessUnitKey = false;
@@ -165,6 +175,8 @@ export class H264Player {
 
   pushNal(nal) {
     const type = nal[0] & 0x1f;
+    if (type === NAL_TYPE.SPS) this.sps = nal;
+    if (type === NAL_TYPE.PPS) this.pps = nal;
     if (type === NAL_TYPE.SPS && !this.decoder) {
       this.configure(nal);
     }
@@ -185,20 +197,22 @@ export class H264Player {
       }
     }
 
-    // WebCodecs requires one complete picture per EncodedVideoChunk. x264 sliced
-    // threading emits several VCL NAL units for a picture, so a first slice (or
-    // parameter data ahead of the next keyframe) closes the preceding access unit.
-    if (this.accessUnitHasVcl && (!vcl || firstSlice)) {
-      this.emit(this.accessUnitKey);
-      if (!this.decoder) {
-        return;
-      }
-    }
+    this.beginNal(type, firstSlice);
+    if (!this.decoder) return;
 
     this.accessUnit.push(nal);
     if (vcl) {
       this.accessUnitHasVcl = true;
       this.accessUnitKey ||= type === NAL_TYPE.IDR;
+    }
+  }
+
+  beginNal(type, firstSlice) {
+    // Close the preceding picture as soon as the next NAL's header arrives,
+    // without waiting for its payload. Subsequent slices still share one chunk.
+    const vcl = type === NAL_TYPE.SLICE || type === NAL_TYPE.IDR;
+    if (this.decoder && this.accessUnitHasVcl && (!vcl || firstSlice)) {
+      this.emit(this.accessUnitKey);
     }
   }
 
@@ -217,7 +231,8 @@ export class H264Player {
         },
       });
       // Omitting description explicitly selects Annex-B for AVC in WebCodecs.
-      this.decoder.configure({ codec, optimizeForLatency: true });
+      this.decoderConfig = { codec, optimizeForLatency: true };
+      this.decoder.configure(this.decoderConfig);
     } catch (error) {
       this.decoder = null;
       throw new H264PlayerError(`This browser cannot decode ${codec}`, {
@@ -232,8 +247,22 @@ export class H264Player {
     if (queued > H264Player.QUEUE_LIMIT && !this.resyncing) {
       try {
         this.decoder.reset();
-      } catch {
-        // Dropping until IDR still bounds latency if reset is unavailable.
+        this.decoder.configure(this.decoderConfig);
+      } catch (error) {
+        this.fail(new H264PlayerError('Could not recover the H.264 decoder', {
+          cause: error,
+          code: 'decoder',
+        }));
+        return;
+      }
+      if (this.paintRequest !== null) {
+        this.cancelFrame(this.paintRequest);
+        this.paintRequest = null;
+      }
+      if (this.pendingFrame) {
+        this.pendingFrame.close();
+        this.pendingFrame = null;
+        this.droppedFrames += 1;
       }
       this.resyncing = true;
       this.droppedFrames += queued;
@@ -246,8 +275,14 @@ export class H264Player {
       this.droppedFrames += 1;
       return;
     }
+    if (this.resyncing) {
+      // A reset also discards codec parameter sets. Some streams do not repeat
+      // them on every IDR, so supply the latest sets with the recovery keyframe.
+      this.accessUnit = [this.sps, this.pps].filter(Boolean).concat(
+        this.accessUnit.filter((nal) => ![NAL_TYPE.SPS, NAL_TYPE.PPS].includes(nal[0] & 0x1f)),
+      );
+    }
     this.resyncing = false;
-
     const data = joinAnnexB(this.accessUnit);
     this.accessUnit = [];
     this.accessUnitHasVcl = false;

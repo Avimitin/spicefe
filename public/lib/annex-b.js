@@ -66,14 +66,37 @@ export function startCodeLength(data, offset) {
 export class AnnexBParser {
   static PENDING_LIMIT = 4 * 1024 * 1024;
 
-  constructor(onNal, pendingLimit = AnnexBParser.PENDING_LIMIT) {
+  constructor(onNal, pendingLimit = AnnexBParser.PENDING_LIMIT, onNalHeader = () => {}) {
     this.onNal = onNal;
+    this.onNalHeader = onNalHeader;
     this.pendingLimit = pendingLimit;
-    this.pending = new Uint8Array(0);
+    this.generation = 0;
+    this.reset();
   }
 
   reset() {
-    this.pending = new Uint8Array(0);
+    this.generation += 1;
+    this.buffer = new Uint8Array(0);
+    this.length = 0;
+    this.scanOffset = 0;
+    this.prefixStart = 0;
+    this.nalStart = null;
+    this.headerReported = false;
+  }
+
+  reportHeader() {
+    if (this.headerReported || this.nalStart === null || this.nalStart >= this.length) {
+      return;
+    }
+    const type = this.buffer[this.nalStart] & 0x1f;
+    const vcl = type === NAL_TYPE.SLICE || type === NAL_TYPE.IDR;
+    if (vcl && this.nalStart + 1 >= this.length) {
+      return;
+    }
+    this.headerReported = true;
+    // An Exp-Golomb value is zero iff its first bit is one. No complete slice
+    // payload is needed to identify the first slice of the following picture.
+    this.onNalHeader(type, vcl && (this.buffer[this.nalStart + 1] & 0x80) !== 0);
   }
 
   push(chunk) {
@@ -81,31 +104,57 @@ export class AnnexBParser {
       return;
     }
 
-    const merged = new Uint8Array(this.pending.length + chunk.length);
-    merged.set(this.pending);
-    merged.set(chunk, this.pending.length);
+    const generation = this.generation;
+    const required = this.length + chunk.length;
+    if (required > this.buffer.length) {
+      const grown = new Uint8Array(Math.max(required, this.buffer.length * 2, 4096));
+      grown.set(this.buffer.subarray(0, this.length));
+      this.buffer = grown;
+    }
+    this.buffer.set(chunk, this.length);
+    this.length = required;
+    this.reportHeader();
+    if (generation !== this.generation) return;
 
-    const marks = [];
-    for (let offset = 0; offset + 2 < merged.length; offset += 1) {
-      const length = startCodeLength(merged, offset);
+    const data = this.buffer.subarray(0, this.length);
+    let offset = this.scanOffset;
+    while (offset + 2 < data.length) {
+      const length = startCodeLength(data, offset);
       if (length > 0) {
-        marks.push({ begin: offset, payload: offset + length });
-        offset += length - 1;
+        if (offset - this.prefixStart > this.pendingLimit) {
+          throw new Error('H.264 NAL unit exceeded the safety limit');
+        }
+        if (this.nalStart !== null && offset > this.nalStart) {
+          // Consumers retain NALs until the picture is complete. Give them owned
+          // bytes so compaction and buffer reuse cannot overwrite earlier slices.
+          this.onNal(this.buffer.slice(this.nalStart, offset));
+          if (generation !== this.generation) return;
+        }
+        this.prefixStart = offset;
+        this.nalStart = offset + length;
+        this.headerReported = false;
+        offset += length;
+        this.reportHeader();
+        if (generation !== this.generation) return;
+      } else {
+        // Preserve an incomplete four-byte start code across network chunks.
+        if (offset + 3 === data.length
+          && data[offset] === 0
+          && data[offset + 1] === 0
+          && data[offset + 2] === 0) break;
+        offset += 1;
       }
     }
+    this.scanOffset = offset;
 
-    for (let index = 0; index + 1 < marks.length; index += 1) {
-      const nal = merged.subarray(marks[index].payload, marks[index + 1].begin);
-      if (nal.length > 0) {
-        this.onNal(nal);
-      }
+    if (this.prefixStart > 0) {
+      this.buffer.copyWithin(0, this.prefixStart, this.length);
+      this.length -= this.prefixStart;
+      this.scanOffset -= this.prefixStart;
+      this.nalStart -= this.prefixStart;
+      this.prefixStart = 0;
     }
-
-    this.pending = marks.length > 0
-      ? merged.slice(marks.at(-1).begin)
-      : merged;
-
-    if (this.pending.length > this.pendingLimit) {
+    if (this.length > this.pendingLimit) {
       throw new Error('H.264 NAL unit exceeded the safety limit');
     }
   }

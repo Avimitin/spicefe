@@ -69,6 +69,10 @@ class FakeMuxer {
     this.fed.push(data);
   }
 
+  stopInterval() {
+    this.intervalStopped = true;
+  }
+
   destroy() {
     this.destroyed = true;
   }
@@ -118,6 +122,7 @@ test('feeds the response to a low-latency video-only MSE muxer', async () => {
   assert.equal(muxer.options.fps, 60);
   assert.equal(muxer.options.flushingTime, 0);
   assert.equal(muxer.options.maxDelay, 100);
+  assert.equal(muxer.intervalStopped, true);
   assert.equal(responses.length, 1);
   assert.deepEqual(muxer.fed[0].video, Uint8Array.of(0, 0, 1, 0x67));
 
@@ -133,6 +138,60 @@ test('feeds the response to a low-latency video-only MSE muxer', async () => {
   player.stop();
   assert.equal(muxer.destroyed, true);
   assert.equal(video.cancelledFrame, 17);
+  assert.equal(player.latencyTimer, null);
+});
+
+test('checks live delay at 100 ms and bounds repeated seeks while preserving a buffer', async (t) => {
+  t.mock.timers.enable({ apis: ['setInterval'] });
+  let now = 0;
+  t.mock.method(performance, 'now', () => now);
+  const video = new FakeVideo();
+  video.currentTime = 0;
+  video.seeking = false;
+  video.buffered = { length: 1, start: () => 0, end: () => 1 };
+  const player = new MseH264Player(video, {
+    JMuxerImpl: FakeMuxer, fetchImpl: async () => streamingResponse(),
+  });
+  t.after(() => player.stop());
+  void player.start('http://192.168.1.2:1339/stream.h264', 30);
+  await turn();
+  t.mock.timers.tick(99);
+  assert.equal(video.currentTime, 0);
+  now = 100;
+  t.mock.timers.tick(1);
+  assert.equal(video.currentTime, 0.95);
+  video.currentTime = 0;
+  now = 200;
+  t.mock.timers.tick(100);
+  assert.equal(video.currentTime, 0, 'cooldown prevents repeated seeks');
+  now = 600;
+  video.seeking = true;
+  t.mock.timers.tick(400);
+  assert.equal(video.currentTime, 0, 'do not interrupt a pending seek');
+  video.seeking = false;
+  now = 700;
+  t.mock.timers.tick(100);
+  assert.equal(video.currentTime, 0.95);
+  player.stop();
+  video.currentTime = 0;
+  now = 2000;
+  t.mock.timers.tick(1300);
+  assert.equal(video.currentTime, 0, 'stop clears the latency timer');
+});
+
+test('live catch-up handles healthy latency, empty buffers and discontinuous ranges', () => {
+  const video = new FakeVideo();
+  const player = new MseH264Player(video);
+  video.currentTime = 0.92;
+  video.buffered = { length: 1, start: () => 0, end: () => 1 };
+  player.catchUp();
+  assert.equal(video.currentTime, 0.92);
+  video.currentTime = 0;
+  video.buffered = { length: 0 };
+  assert.doesNotThrow(() => player.catchUp());
+  video.buffered = { length: 2, start: (i) => i === 0 ? 0 : 5, end: (i) => i === 0 ? 1 : 5.02 };
+  player.catchUp();
+  assert.equal(video.currentTime, 5, 'target stays inside the newest buffered range');
 });
 
 test('reports an unsupported MSE codec and tears down playback', async () => {

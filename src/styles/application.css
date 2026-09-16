@@ -1674,6 +1674,8 @@ code {
 
 .touch-marker {
   position: fixed;
+  left: 0;
+  top: 0;
   z-index: 7;
   width: 42px;
   height: 42px;
