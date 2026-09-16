@@ -47,6 +47,15 @@ The deployable site includes `jmuxer@2.1.1` from
 licensed under the MIT License, Copyright (c) 2018 Samir Das. The complete
 license ships with the browser asset as `public/vendor/jmuxer.LICENSE.txt`.
 
+## NoSleep.js
+
+The screen wake-lock fallback uses the silent WebM and MP4 clips from
+[`richtr/NoSleep.js`](https://github.com/richtr/NoSleep.js), version `v0.12.0`,
+revision `07fcee254724ab1b79076fbc22f3dd447649a2eb`, and adapts its video playback
+and MP4 seek behavior. It is licensed under the MIT License, Copyright (c)
+Rich Tibbett. The complete license, source record, and media checksums ship in
+`public/vendor/nosleep/`.
+
 ## qrcode-generator
 
 The server-profile sharing dialog uses `qrcode-generator@2.0.4` from

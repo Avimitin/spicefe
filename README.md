@@ -55,6 +55,9 @@ the LAN.
 
 - H.264 video with WebCodecs first and a Media Source Extensions fallback
 - automatic MJPEG fallback when H.264 is unavailable
+- automatically keeps the visible stream session awake, using the browser's
+  screen wake lock or a local silent-video fallback on HTTP; disconnecting,
+  stream errors, or hiding the page releases it (subject to browser power policies)
 - an optional, responsive red-on-black nine-character display for older
   beatmania IIDX releases, read through spice2x `iidx.ticker_get()` without
   opening the video endpoint

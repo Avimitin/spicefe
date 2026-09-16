@@ -78,6 +78,7 @@ import {
   REACHABILITY_INTERVAL_MS,
 } from '../public/lib/reachability.js';
 import { SpiceSession } from '../public/lib/spice-session.js';
+import { ScreenWakeLock } from '../public/lib/screen-wake-lock.js';
 import {
   LATEST_SPICE2X_RELEASE_URL,
   MINIMUM_SPICE2X_BUILD,
@@ -1233,6 +1234,7 @@ function renderControlPopups(snapshot: SessionSnapshot) {
 }
 
 const session: any = new (SpiceSession as any)(canvas, video, image);
+const screenWakeLock = new ScreenWakeLock();
 const touch: any = new (TouchController as any)(stage, {
   activeView: () => {
     if (!canvas.hidden) return canvas;
@@ -1928,6 +1930,7 @@ function renderConnectionButton() {
 }
 
 function renderSnapshot(snapshot: SessionSnapshot, announce = true) {
+  screenWakeLock.update(snapshot);
   recordSessionReachability(snapshot);
   renderVersionWarning(snapshot);
   renderConnectionButton();
