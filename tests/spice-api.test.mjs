@@ -292,6 +292,28 @@ test('uses native keypad writes and named button press and release requests', as
   api.close();
 });
 
+test('addresses Player 1 and Player 2 independently in native keypad requests', async () => {
+  const api = new SpiceApi(profile(), { WebSocketImpl: FakeWebSocket, requestTimeout: 1000 });
+  api.connect();
+  const socket = FakeWebSocket.instances.at(-1);
+  socket.open();
+
+  for (const keypad of [0, 1]) {
+    for (const key of ['1', 'A']) {
+      const pending = api.writeKeypad(keypad, key);
+      const request = JSON.parse(new TextDecoder().decode(socket.sent.at(-1)));
+      assert.equal(request.module, 'keypads');
+      assert.equal(request.function, 'write');
+      assert.deepEqual(request.params, [keypad, key]);
+      socket.receive(new TextEncoder().encode(JSON.stringify({
+        id: request.id, errors: [], data: [],
+      }) + '\0'));
+      await pending;
+    }
+  }
+  api.close();
+});
+
 test('discovers game button names and validates keypad input locally', async () => {
   const api = new SpiceApi(profile(), { WebSocketImpl: FakeWebSocket, requestTimeout: 1000 });
   api.connect();

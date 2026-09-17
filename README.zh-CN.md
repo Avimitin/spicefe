@@ -33,7 +33,7 @@
 
 **顶栏街机数字键盘**
 
-[![spicefe 街机数字键盘弹出面板，包含 0 至 9、00、开始与帮助键](./public/assets/showcase/keypad.png)](./public/assets/showcase/keypad.png)
+[![spicefe 街机数字键盘，包含玩家 1 / 玩家 2 选择器，当前选中玩家 2，以及 0 至 9、00、开始与帮助键](./public/assets/showcase/keypad.png)](./public/assets/showcase/keypad.png)
 
 **旧版 beatmania IIDX 米字屏——最新录制**
 
@@ -158,8 +158,8 @@ WebP 文件。spicefe 会在本设备上取图片中央最大的正方形，并�
 在连接配置中选择**仅使用 API 控制**，即可在不打开副屏视频流的情况下连接。
 此方式与米字屏是互斥的显示模式；两者都会隐藏视频画质设置，并且只连接 spice2x 控制 API。
 
-仅使用 API 控制或米字屏时，点击顶栏的数字键盘图标，即可打开玩家 1 的
-0–9、独立 `00` 键、开始与帮助键。`00` 键会通过 `keypads.write()` 发送 spice2x
+仅使用 API 控制或米字屏时，点击顶栏的数字键盘图标，选择玩家 1 或玩家 2，即可使用对应玩家的
+0–9、独立 `00` 键、开始与帮助键。所选玩家不支持的控制键会保持禁用。`00` 键会通过 `keypads.write()` 发送 spice2x
 原生的 `A` 键码；开始与帮助会使用 `buttons.read()` 返回的匹配名称。
 
 测试与服务键不会出现在数字键盘中。它们放在独立的系统控制弹出面板，并使用自己的

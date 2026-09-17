@@ -269,6 +269,8 @@ test('preflights the launcher version and prepares keypad button mappings', asyn
       'Test',
       'Guitar P1 Start',
       'Guitar P1 Help',
+      'Guitar P2 Start',
+      'Guitar P2 Help',
     ],
     releaseButtons: async (names) => { released = names; },
   };
@@ -283,17 +285,24 @@ test('preflights the launcher version and prepares keypad button mappings', asyn
   assert.equal(session.snapshot.videoResponded, true);
   assert.equal(session.snapshot.versionCompatibility.supported, true);
   assert.equal(session.snapshot.versionCompatibility.minimumBuild, '2026-09-01');
-  assert.deepEqual(session.snapshot.keypadButtons, {
+  assert.deepEqual(session.snapshot.keypadButtons, [{
     start: 'Guitar P1 Start',
     help: 'Guitar P1 Help',
     test: 'Test',
     service: 'Service',
-  });
+  }, {
+    start: 'Guitar P2 Start',
+    help: 'Guitar P2 Help',
+    test: 'Test',
+    service: 'Service',
+  }]);
   assert.deepEqual(released, [
     'Guitar P1 Start',
     'Guitar P1 Help',
     'Test',
     'Service',
+    'Guitar P2 Start',
+    'Guitar P2 Help',
   ]);
 });
 
@@ -320,10 +329,30 @@ test('prepares Test and Service controls for video and segment sessions', async 
     await session.verifyApi(api);
 
     assert.equal(session.snapshot.apiState, 'live');
-    assert.equal(session.snapshot.keypadButtons.test, 'Test');
-    assert.equal(session.snapshot.keypadButtons.service, 'Service');
+    assert.equal(session.snapshot.keypadButtons[0].test, 'Test');
+    assert.equal(session.snapshot.keypadButtons[0].service, 'Service');
     assert.deepEqual(released, ['Test', 'Service']);
   }
+});
+
+test('disconnect releases both players before closing the API and clears their mappings', async () => {
+  const session = new SpiceSession(new FakeCanvas(), new FakeVideo(), new FakeImage());
+  const calls = [];
+  session.keypadButtons = [
+    { start: 'P1 Start', help: null, test: 'Test', service: 'Service' },
+    { start: 'P2 Start', help: 'P2 Help', test: 'Test', service: 'Service' },
+  ];
+  session.snapshot.keypadButtons[1].start = 'changed snapshot';
+  session.api = {
+    releaseButtons: async (names) => { calls.push(names); },
+    close: () => { calls.push('closed'); },
+  };
+
+  session.disconnect();
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.deepEqual(calls, [['P1 Start', 'Test', 'Service', 'P2 Start', 'P2 Help'], 'closed']);
+  assert.equal(session.snapshot.keypadButtons, null);
 });
 
 test('marks an older launcher build for a non-blocking compatibility warning', async () => {

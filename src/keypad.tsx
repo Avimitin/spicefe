@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Radio, RadioGroup } from 'react-aria-components';
 
 type ControlKey = 'start' | 'help' | 'test' | 'service';
+export type KeypadButtons = Record<ControlKey, string | null>;
 
 interface KeypadApi {
   writeKeypad: (keypad: number, key: string) => Promise<unknown>;
@@ -20,7 +22,7 @@ interface KeypadLabels {
 
 interface ArcadePadProps {
   api: KeypadApi | null;
-  buttonNames: Record<ControlKey, string | null> | null;
+  buttonNames: KeypadButtons | null;
   enabled: boolean;
   labels: KeypadLabels;
   onError: (error: unknown) => void;
@@ -128,12 +130,11 @@ function ArcadePad({
   enabled,
   labels,
   onError,
+  keypad = 0,
   service = false,
-}: ArcadePadProps & { service?: boolean }) {
+}: ArcadePadProps & { keypad?: number; service?: boolean }) {
   const [pressed, setPressed] = useState<Set<string>>(() => new Set());
   const activeSources = useRef(new Map<string, string>());
-  const pressedRef = useRef(pressed);
-  pressedRef.current = pressed;
 
   const report = useCallback((operation: Promise<unknown>) => {
     void operation.catch(onError);
@@ -178,7 +179,7 @@ function ArcadePad({
     setPressed((current) => new Set(current).add(code));
 
     if (KEYPAD_INPUT_CODES.has(code)) {
-      report(api.writeKeypad(0, code));
+      report(api.writeKeypad(keypad, code));
       return;
     }
 
@@ -186,7 +187,7 @@ function ArcadePad({
     if (name) {
       report(api.setButton(name, true));
     }
-  }, [api, buttonNames, enabled, report]);
+  }, [api, buttonNames, enabled, keypad, report]);
 
   useEffect(() => {
     if (!enabled) {
@@ -289,8 +290,33 @@ function ArcadePad({
   );
 }
 
-export function ArcadeKeypad(props: ArcadePadProps) {
-  return <ArcadePad {...props} />;
+export function ArcadeKeypad({ buttonNames, labels, ...props }: Omit<ArcadePadProps, 'buttonNames' | 'labels'> & {
+  buttonNames: KeypadButtons[] | null;
+  labels: KeypadLabels & { player: string; player1: string; player2: string };
+}) {
+  const [keypad, setKeypad] = useState(0);
+
+  return (
+    <>
+      <RadioGroup
+        className="keypad-player-picker"
+        aria-label={labels.player}
+        orientation="horizontal"
+        value={String(keypad)}
+        onChange={(value) => setKeypad(Number(value))}
+      >
+        <Radio className="keypad-player-option" value="0">{labels.player1}</Radio>
+        <Radio className="keypad-player-option" value="1">{labels.player2}</Radio>
+      </RadioGroup>
+      <ArcadePad
+        {...props}
+        key={keypad}
+        keypad={keypad}
+        buttonNames={buttonNames?.[keypad] ?? null}
+        labels={labels}
+      />
+    </>
+  );
 }
 
 export function ServiceKeypad(props: ArcadePadProps) {

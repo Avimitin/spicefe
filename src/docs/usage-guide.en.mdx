@@ -42,7 +42,7 @@ Next choose a game icon and one connection style: **Subscreen stream**, **Segmen
 
 Choose **API-only controls** in the saved server's display options when no subscreen video is needed. This style and the 16-segment display are mutually exclusive, and stream-quality settings are hidden because neither opens a video connection.
 
-During an API-only control or segment-display session, select the keypad icon in the top bar to open Player 1 digits 0–9, the dedicated `00` key, Start, and Help. The `00` button maps to spice2x's native `A` keypad code; numeric input uses `keypads.write()`, while Start and Help use press and release overrides for the names reported by `buttons.read()`.
+During an API-only control or segment-display session, select the keypad icon in the top bar, then choose Player 1 or Player 2 for digits 0–9, the dedicated `00` key, Start, and Help. Input goes to the selected player's keypad and buttons; controls unavailable for that player stay disabled. The `00` button maps to spice2x's native `A` keypad code; numeric input uses `keypads.write()`, while Start and Help use press and release overrides for the names reported by `buttons.read()`.
 
 Test and Service are isolated from the numeric keypad to prevent accidental activation. Open them from their own system-controls button in the top bar. This separate popup is available during subscreen video, segment-display, and API-only control sessions.
 

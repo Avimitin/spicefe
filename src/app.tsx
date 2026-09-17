@@ -12,7 +12,7 @@ import {
   StreamCardList,
 } from './components';
 import { Documentation } from './documentation';
-import { ArcadeKeypad, ServiceKeypad } from './keypad';
+import { ArcadeKeypad, ServiceKeypad, type KeypadButtons } from './keypad';
 import {
   ServerSetupWizard,
   type ServerSetupDraft,
@@ -132,7 +132,7 @@ interface SessionSnapshot {
   touchCanvas?: { width: number; height: number } | null;
   displayMode?: 'video' | 'ticker' | 'keypad';
   tickerText?: string;
-  keypadButtons?: Record<'start' | 'help' | 'test' | 'service', string | null> | null;
+  keypadButtons?: KeypadButtons[] | null;
   versionCompatibility?: {
     version: string;
     buildDate: string | null;
@@ -1203,6 +1203,9 @@ function renderControlPopups(snapshot: SessionSnapshot) {
   const keypadReady = apiReady && profileUsesApiOnlyDisplay(snapshot.profile);
   const labels = {
     aria: t('keypad.aria'),
+    player: t('keypad.player'),
+    player1: t('keypad.player1'),
+    player2: t('keypad.player2'),
     numberPad: t('keypad.numberPad'),
     cabinetControls: t('keypad.cabinetControls'),
     start: t('keypad.start'),
@@ -1215,6 +1218,7 @@ function renderControlPopups(snapshot: SessionSnapshot) {
   serviceMenuApiNote.hidden = apiReady;
   renderReact(reactRoots.keypadMenu, (
     <ArcadeKeypad
+      key={snapshot.profile?.id}
       api={session.api}
       buttonNames={snapshot.keypadButtons ?? null}
       enabled={keypadReady}
@@ -1225,7 +1229,7 @@ function renderControlPopups(snapshot: SessionSnapshot) {
   renderReact(reactRoots.serviceMenu, (
     <ServiceKeypad
       api={session.api}
-      buttonNames={snapshot.keypadButtons ?? null}
+      buttonNames={snapshot.keypadButtons?.[0] ?? null}
       enabled={apiReady}
       labels={{ ...labels, aria: t('service.aria') }}
       onError={handleKeypadError}

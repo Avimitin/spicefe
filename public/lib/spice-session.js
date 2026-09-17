@@ -115,7 +115,7 @@ export class SpiceSession {
       touchCanvas: this.touchCanvas ? { ...this.touchCanvas } : null,
       displayMode: displayModeForProfile(this.profile),
       tickerText: this.tickerText,
-      keypadButtons: this.keypadButtons ? { ...this.keypadButtons } : null,
+      keypadButtons: this.keypadButtons?.map((buttons) => ({ ...buttons })) ?? null,
       connected: this.videoState === 'live' && this.apiState === 'live',
     };
   }
@@ -164,7 +164,7 @@ export class SpiceSession {
     this.stopH264();
     this.stopMjpeg();
     const api = this.api;
-    const keypadButtonNames = resolvedKeypadButtonNames(this.keypadButtons);
+    const keypadButtonNames = resolvedKeypadButtonNames(...(this.keypadButtons ?? []));
     this.api = null;
     this.onapi(null);
     if (api && keypadButtonNames.length > 0 && typeof api.releaseButtons === 'function') {
@@ -570,8 +570,8 @@ export class SpiceSession {
         if (this.api !== api || !this.wanted) {
           return;
         }
-        this.keypadButtons = resolveKeypadButtons(names);
-        await api.releaseButtons(resolvedKeypadButtonNames(this.keypadButtons));
+        this.keypadButtons = [0, 1].map((keypad) => resolveKeypadButtons(names, keypad));
+        await api.releaseButtons(resolvedKeypadButtonNames(...this.keypadButtons));
         if (this.api !== api || !this.wanted) {
           return;
         }

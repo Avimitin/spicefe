@@ -35,7 +35,7 @@
 
 **Top-bar arcade keypad**
 
-[![spicefe arcade keypad popup with 0 through 9, double zero, Start, and Help controls](./public/assets/showcase/keypad.png)](./public/assets/showcase/keypad.png)
+[![spicefe arcade keypad with a Player 1 / Player 2 selector, Player 2 selected, digits 0–9, double zero, Start, and Help](./public/assets/showcase/keypad.png)](./public/assets/showcase/keypad.png)
 
 **Old beatmania IIDX 16-segment display — updated recording**
 
@@ -190,7 +190,9 @@ display styles; both hide stream-quality settings and connect only to the
 spice2x control API.
 
 For API-only controls and the segment display, select the keypad icon in the
-top bar to open Player 1 digits 0–9, the dedicated `00` key, Start, and Help.
+top bar, then choose Player 1 or Player 2 for digits 0–9, the dedicated `00`
+key, Start, and Help. The selection routes input to that player's keypad and
+buttons; controls unavailable for that player stay disabled.
 The `00` key sends spice2x's native `A` key code through `keypads.write()`;
 Start and Help use the matching names reported by `buttons.read()`.
 

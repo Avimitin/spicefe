@@ -706,6 +706,10 @@
   max-height: calc(100dvh - 72px - env(safe-area-inset-top));
 }
 
+.card-menu.keypad-menu {
+  overflow-y: auto;
+}
+
 .card-menu.service-menu {
   width: min(420px, calc(100vw - 16px));
 }
@@ -731,7 +735,7 @@
   position: relative;
   display: grid;
   width: 100%;
-  height: min(560px, calc(100dvh - 150px - env(safe-area-inset-top)));
+  height: min(560px, calc(100dvh - 198px - env(safe-area-inset-top)));
   min-height: 430px;
   margin: 0 auto;
   padding: 12px;
@@ -1017,7 +1021,7 @@
   }
 
   .arcade-keypad-deck {
-    height: calc(100dvh - 150px - env(safe-area-inset-top));
+    height: calc(100dvh - 198px - env(safe-area-inset-top));
     min-height: 360px;
   }
 }
@@ -1071,8 +1075,8 @@
   }
 
   .arcade-keypad-deck {
-    height: calc(100dvh - 122px - env(safe-area-inset-top));
-    min-height: 245px;
+    height: calc(100dvh - 202px - env(safe-area-inset-top));
+    min-height: 180px;
     padding: 8px;
     gap: 8px;
     grid-template-columns: minmax(0, 3fr) minmax(120px, 1fr);
@@ -3897,7 +3901,8 @@ body {
   stroke-linejoin: round;
 }
 
-.card-reader-picker {
+.card-reader-picker,
+.keypad-player-picker {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 2px;
@@ -3908,7 +3913,8 @@ body {
   background: #262626;
 }
 
-.card-reader-option {
+.card-reader-option,
+.keypad-player-option {
   min-height: 30px;
   border-radius: 6px;
   background: transparent;
@@ -3918,7 +3924,18 @@ body {
   font-weight: 400;
 }
 
-.card-reader-option[aria-checked="true"] {
+.keypad-player-option {
+  display: grid;
+  place-items: center;
+}
+
+.keypad-player-option[data-focus-visible] {
+  outline: 2px solid #9e77ed;
+  outline-offset: 2px;
+}
+
+.card-reader-option[aria-checked="true"],
+.keypad-player-option[data-selected] {
   background: #525252;
   box-shadow: var(--shadow-xs);
   color: #ffffff;
