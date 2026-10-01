@@ -17,6 +17,7 @@
   "dependencies": {
     "embla-carousel-react": "8.6.0",
     "jmuxer": "2.1.1",
+    "jsqr": "1.4.0",
     "qrcode-generator": "2.0.4",
     "react": "19.2.8",
     "react-aria-components": "1.20.0",

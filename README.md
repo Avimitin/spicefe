@@ -156,6 +156,14 @@ not encrypted. If it contains a password, anyone with the link can recover that
 password, and the initial request URL may appear in static-host or browser
 records. Use this convenience only between trusted devices on the trusted LAN.
 
+The guided **Add server** flow can also import a shared code directly: on the
+address page, **Scan QR code** opens this device's camera, decodes the code
+locally with the vendored `jsqr` decoder, and fills the host, API port, and
+password fields for the usual connection test. Camera frames never leave the
+device. The remaining guided pages (icon, connection style, stream quality,
+name) still apply, so the imported connection is reviewed and verified exactly
+like a manually entered one.
+
 ## Old IIDX 16-segment display
 
 When creating or editing a connection, enable **Enable 16 Segment Display** for
@@ -508,9 +516,10 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
 
 The direct browser dependencies are pure-JavaScript packages: `react@19.2.8`,
 `react-dom@19.2.8`, `react-aria-components@1.20.0`,
-`embla-carousel-react@8.6.0`, `tailwind-merge@3.6.0`, `jmuxer@2.1.1`, and
-`qrcode-generator@2.0.4`. Direct and transitive packages are exact-version
-locked with npm integrity metadata, and install lifecycle scripts are disabled.
+`embla-carousel-react@8.6.0`, `tailwind-merge@3.6.0`, `jmuxer@2.1.1`,
+`qrcode-generator@2.0.4`, and `jsqr@1.4.0`. Direct and transitive packages are
+exact-version locked with npm integrity metadata, and install lifecycle scripts
+are disabled.
 `@mdx-js/mdx@3.1.1` is a pure-JavaScript build-time dependency used to compile
 the maintained guide sources.
 TypeScript, esbuild, and Tailwind CSS 4.3.3 come from pinned Nixpkgs instead of

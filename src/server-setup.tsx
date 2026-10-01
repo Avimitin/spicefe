@@ -1,10 +1,16 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   nextServerSetupStep,
   previousServerSetupStep,
   serverSetupSequence,
 } from '../public/lib/server-setup.js';
+import {
+  addressFromScannedProfile,
+  parseScannedProfile,
+  QrCameraScanner,
+  QrScanError,
+} from '../public/lib/qr-scanner.js';
 
 type SetupStep = 'address' | 'icon' | 'style' | 'stream' | 'name';
 export type ServerSetupStyle = 'video' | 'ticker' | 'keypad';
@@ -103,6 +109,14 @@ function CheckIcon() {
   );
 }
 
+function QrScanIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path d="M4 4h5v5H4zM15 4h5v5h-5zM4 15h5v5H4zM15 15h2v2h-2zM19 15h1v1h-1zM15 19h1v1h-1zM18 18h2v2h-2z" />
+    </svg>
+  );
+}
+
 function OutputIcon({ style }: { style: ServerSetupStyle }) {
   if (style === 'ticker') {
     return (
@@ -176,6 +190,101 @@ function BackButton({ t, onBack }: { t: Translate; onBack: () => void }) {
   );
 }
 
+interface AddressQrScannerProps {
+  t: Translate;
+  onApply: (address: { host: string; apiPort: number; password: string }) => void;
+  onClose: () => void;
+}
+
+function AddressQrScanner({ t, onApply, onClose }: AddressQrScannerProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [scanState, setScanState] = useState<'starting' | 'scanning' | 'failed'>('starting');
+  const [scanError, setScanError] = useState('');
+
+  useEffect(() => {
+    if (!QrCameraScanner.supported) {
+      setScanState('failed');
+      setScanError(t('setup.scanUnsupported'));
+      return;
+    }
+    const scanner = new QrCameraScanner({
+      video: videoRef.current,
+      ondecoded: (text: string) => {
+        let profile;
+        try {
+          profile = parseScannedProfile(text);
+        } catch (error) {
+          setScanState('failed');
+          setScanError(error instanceof QrScanError
+            ? error.message
+            : t('setup.scanInvalid'));
+          return;
+        }
+        if (!profile) {
+          setScanState('failed');
+          setScanError(t('setup.scanNotShared'));
+          return;
+        }
+        let address;
+        try {
+          address = addressFromScannedProfile(profile);
+        } catch (error) {
+          setScanState('failed');
+          setScanError(error instanceof QrScanError
+            ? error.message
+            : t('setup.scanInvalid'));
+          return;
+        }
+        scanner.stop();
+        onApply(address);
+      },
+      onerror: (error: QrScanError) => {
+        setScanState('failed');
+        setScanError(error.code === 'denied'
+          ? t('setup.scanDenied')
+          : error.code === 'camera' && error.message === 'No camera is available on this device'
+            ? t('setup.scanNoCamera')
+            : t('setup.scanCameraError'));
+      },
+    });
+    void scanner.start().then(() => {
+      if (scanner.running) {
+        setScanState('scanning');
+      }
+    });
+    return () => {
+      scanner.stop();
+    };
+    // The panel mounts once per open; the captured translations stay valid
+    // for its lifetime because the wizard is keyed per open as well.
+  }, []);
+
+  return (
+    <div className="server-setup-qr-panel" data-state={scanState}>
+      <div className="server-setup-qr-frame">
+        <video ref={videoRef} playsInline muted aria-hidden="true" />
+        {scanState === 'scanning' && (
+          <span className="server-setup-qr-hint" aria-hidden="true">
+            {t('setup.scanHint')}
+          </span>
+        )}
+        {scanState === 'starting' && (
+          <span className="server-setup-qr-status">{t('setup.scanStarting')}</span>
+        )}
+        {scanState === 'failed' && (
+          <div className="server-setup-qr-error" role="alert">
+            <span className="server-setup-error-icon" aria-hidden="true">!</span>
+            <p>{scanError}</p>
+          </div>
+        )}
+      </div>
+      <button className="secondary-button" type="button" onClick={onClose}>
+        {t('setup.scanClose')}
+      </button>
+    </div>
+  );
+}
+
 export function ServerSetupWizard({
   initialProfile,
   iconGroups,
@@ -201,6 +310,7 @@ export function ServerSetupWizard({
   const [connectionState, setConnectionState] = useState<'idle' | 'checking' | 'failed'>('idle');
   const [connectionError, setConnectionError] = useState('');
   const [apiVerified, setApiVerified] = useState(false);
+  const [qrScanning, setQrScanning] = useState(false);
   const checkAttempt = useRef(0);
   const nameInput = useRef<HTMLInputElement>(null);
 
@@ -267,6 +377,16 @@ export function ServerSetupWizard({
     setConnectionError(result.message || t('setup.connectionFailedCopy'));
   };
 
+  const applyScannedAddress = (address: { host: string; apiPort: number; password: string }) => {
+    setQrScanning(false);
+    setHost(address.host);
+    setApiPort(String(address.apiPort));
+    setPassword(address.password);
+    setApiVerified(false);
+    setConnectionState('idle');
+    setConnectionError('');
+  };
+
   const chooseStyle = (nextStyle: ServerSetupStyle) => {
     setStyle(nextStyle);
     const next = nextServerSetupStep('style', nextStyle) as SetupStep | null;
@@ -314,68 +434,90 @@ export function ServerSetupWizard({
           onSubmit={testAddress}
         >
           <div className="server-setup-body server-setup-address-body">
-            <p className="server-setup-intro">{t('setup.addressCopy')}</p>
-            <div className="server-setup-address-grid">
-              <label className="field server-setup-host-field">
-                <span>{t('settings.host')}</span>
-                <input
-                  value={host}
-                  type="text"
-                  inputMode="url"
-                  autoComplete="off"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  required
-                  autoFocus
-                  disabled={connectionState === 'checking'}
-                  placeholder="192.168.1.100"
-                  onChange={(event) => {
-                    setHost(event.target.value);
-                    setApiVerified(false);
-                  }}
-                />
-                <small>{t('settings.hostHelp')}</small>
-              </label>
-              <label className="field server-setup-port-field">
-                <span>{t('settings.apiPort')}</span>
-                <input
-                  value={apiPort}
-                  type="number"
-                  inputMode="numeric"
-                  min="1"
-                  max="65533"
-                  required
-                  disabled={connectionState === 'checking'}
-                  onChange={(event) => {
-                    setApiPort(event.target.value);
-                    setApiVerified(false);
-                  }}
-                />
-              </label>
-              <label className="field server-setup-password-field">
-                <span>{t('settings.password')}</span>
-                <input
-                  value={password}
-                  type="password"
-                  autoComplete="off"
-                  disabled={connectionState === 'checking'}
-                  placeholder={t('settings.passwordPlaceholder')}
-                  onChange={(event) => {
-                    setPassword(event.target.value);
-                    setApiVerified(false);
-                  }}
-                />
-                <small>{t('setup.passwordHelp')}</small>
-              </label>
-            </div>
-            {connectionState === 'failed' && (
-              <div className="server-setup-error" role="alert">
-                <span className="server-setup-error-icon" aria-hidden="true">!</span>
-                <div>
-                  <strong>{t('setup.connectionFailedTitle')}</strong>
-                  <p>{connectionError}</p>
+            {qrScanning ? (
+              <AddressQrScanner
+                t={t}
+                onApply={applyScannedAddress}
+                onClose={() => setQrScanning(false)}
+              />
+            ) : (
+              <>
+                <p className="server-setup-intro">{t('setup.addressCopy')}</p>
+                <div className="server-setup-address-grid">
+                  <label className="field server-setup-host-field">
+                    <span>{t('settings.host')}</span>
+                    <input
+                      value={host}
+                      type="text"
+                      inputMode="url"
+                      autoComplete="off"
+                      autoCapitalize="none"
+                      spellCheck={false}
+                      required
+                      autoFocus
+                      disabled={connectionState === 'checking'}
+                      placeholder="192.168.1.100"
+                      onChange={(event) => {
+                        setHost(event.target.value);
+                        setApiVerified(false);
+                      }}
+                    />
+                    <small>{t('settings.hostHelp')}</small>
+                  </label>
+                  <label className="field server-setup-port-field">
+                    <span>{t('settings.apiPort')}</span>
+                    <input
+                      value={apiPort}
+                      type="number"
+                      inputMode="numeric"
+                      min="1"
+                      max="65533"
+                      required
+                      disabled={connectionState === 'checking'}
+                      onChange={(event) => {
+                        setApiPort(event.target.value);
+                        setApiVerified(false);
+                      }}
+                    />
+                  </label>
+                  <label className="field server-setup-password-field">
+                    <span>{t('settings.password')}</span>
+                    <input
+                      value={password}
+                      type="password"
+                      autoComplete="off"
+                      disabled={connectionState === 'checking'}
+                      placeholder={t('settings.passwordPlaceholder')}
+                      onChange={(event) => {
+                        setPassword(event.target.value);
+                        setApiVerified(false);
+                      }}
+                    />
+                    <small>{t('setup.passwordHelp')}</small>
+                  </label>
                 </div>
-              </div>
+                <button
+                  className="secondary-button server-setup-scan-button"
+                  type="button"
+                  onClick={() => {
+                    setQrScanning(true);
+                    setConnectionState('idle');
+                    setConnectionError('');
+                  }}
+                >
+                  <QrScanIcon />
+                  {t('setup.scanButton')}
+                </button>
+                {connectionState === 'failed' && (
+                  <div className="server-setup-error" role="alert">
+                    <span className="server-setup-error-icon" aria-hidden="true">!</span>
+                    <div>
+                      <strong>{t('setup.connectionFailedTitle')}</strong>
+                      <p>{connectionError}</p>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
           <footer className="server-setup-footer">

@@ -65,6 +65,14 @@ License, Copyright (c) 2009 Kazuhiko Arase. The unmodified browser module,
 complete license, checksum, and source record ship in
 `public/vendor/qrcode-generator/`.
 
+## jsQR
+
+The server-setup camera scanner uses `jsqr@1.4.0` from
+[`cozmo/jsQR`](https://github.com/cozmo/jsQR) to decode shared-profile QR codes
+entirely in the browser. It is licensed under the Apache License 2.0. The
+unmodified browser module, complete license, checksum, and source record ship
+in `public/vendor/jsqr/`.
+
 ## React
 
 The browser application uses `react@19.2.8`, `react-dom@19.2.8`, and their

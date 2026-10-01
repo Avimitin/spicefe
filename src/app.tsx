@@ -2227,6 +2227,8 @@ function closeServerSetup() {
   if (serverSetupDialog.open) {
     serverSetupDialog.close();
   }
+  // Unmount the wizard so an active QR camera session releases its stream.
+  renderReact(reactRoots.serverSetup, null);
 }
 
 function completeServerSetup(base: Profile, draft: ServerSetupDraft) {

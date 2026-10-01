@@ -135,6 +135,12 @@ WebP 文件。spicefe 会在本设备上取图片中央最大的正方形，并�
 任何取得链接的人都能还原密码；首次打开时的完整请求地址也可能留在静态托管服务
 或浏览器记录中。请只在可信局域网内的可信设备之间使用此功能。
 
+**添加服务器**向导也可以直接导入共享二维码：在地址页面点击**扫描二维码**，
+会打开本设备摄像头，使用内置的 `jsqr` 解码器在本地完成识别，并自动填入主机地址、
+API 端口和密码，随后照常进行连接测试。摄像头画面不会离开本设备。后续的向导页面
+（图标、连接方式、串流画质、名称）仍然照常执行，因此导入的连接与手动输入一样
+需要经过确认和验证。
+
 ## 旧版 IIDX 米字屏
 
 创建或编辑连接时，如果运行的是带机台米字屏的旧版 beatmania IIDX，请启用
@@ -431,8 +437,9 @@ SPICEFE_BIND=0.0.0.0 SPICEFE_PORT=45000 nix run
 
 浏览器直接依赖均为纯 JavaScript 包：`react@19.2.8`、`react-dom@19.2.8`、
 `react-aria-components@1.20.0`、`embla-carousel-react@8.6.0`、
-`tailwind-merge@3.6.0`、`jmuxer@2.1.1` 与 `qrcode-generator@2.0.4`。npm
-完整性元数据将直接和间接依赖锁定在精确版本，并禁用安装生命周期脚本。
+`tailwind-merge@3.6.0`、`jmuxer@2.1.1`、`qrcode-generator@2.0.4` 与
+`jsqr@1.4.0`。npm 完整性元数据将直接和间接依赖锁定在精确版本，并禁用安装
+生命周期脚本。
 `@mdx-js/mdx@3.1.1` 是用于编译指南源文件的纯 JavaScript 构建时依赖。
 TypeScript、esbuild 与 Tailwind CSS 4.3.3 均由固定的 Nixpkgs 提供，而非 npm。
 完整许可证和来源记录位于 `public/vendor/`；构建不会下载或运行任何来自 npm

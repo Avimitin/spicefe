@@ -1,0 +1,5 @@
+{
+  "type": "commonjs",
+  "private": true,
+  "comment": "Module-format marker for the vendored UMD build; not an npm package."
+}

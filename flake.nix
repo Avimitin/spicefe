@@ -133,7 +133,7 @@
             pname = "spicefe";
             version = "0.1.2";
             src = self;
-            npmDepsHash = "sha256-isQ0rG6jc9IRQF/1Bxk1PRmDTmONjOfcUBc/A/OKjCE=";
+            npmDepsHash = "sha256-GcztPGXMyqiYaHa4vdrz2NKlWWBs0TNpQkOaz/ffL4s=";
             npmFlags = [ "--ignore-scripts" ];
             nativeBuildInputs = [
               pkgs.esbuild
@@ -150,6 +150,10 @@
               grep -Fx '  "version": "2.0.4",' node_modules/qrcode-generator/package.json
               grep -Fx '  "license": "MIT",' node_modules/qrcode-generator/package.json
               grep -Fx 'Copyright (c) 2009 Kazuhiko Arase' public/vendor/qrcode-generator/LICENSE.MIT.txt
+              cmp public/vendor/jsqr/jsQR.js node_modules/jsqr/dist/jsQR.js
+              grep -Fx '  "version": "1.4.0",' node_modules/jsqr/package.json
+              grep -Fx '  "license": "Apache-2.0",' node_modules/jsqr/package.json
+              cmp public/vendor/jsqr/LICENSE.Apache-2.0.txt public/vendor/react-aria/LICENSE.Apache-2.0.txt
               grep -Fx '  "version": "19.2.8",' node_modules/react/package.json
               grep -Fx '  "version": "19.2.8",' node_modules/react-dom/package.json
               grep -Fx '  "version": "0.27.0",' node_modules/scheduler/package.json
