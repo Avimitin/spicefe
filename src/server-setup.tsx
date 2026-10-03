@@ -6,8 +6,8 @@ import {
   serverSetupSequence,
 } from '../public/lib/server-setup.js';
 import {
-  addressFromScannedProfile,
   parseScannedProfile,
+  profileFromScan,
   QrCameraScanner,
   QrScanError,
 } from '../public/lib/qr-scanner.js';
@@ -190,9 +190,22 @@ function BackButton({ t, onBack }: { t: Translate; onBack: () => void }) {
   );
 }
 
+interface ScannedProfileDraft {
+  host: string;
+  apiPort: number;
+  password: string;
+  name: string;
+  iconId: string;
+  style: ServerSetupStyle;
+  format: string;
+  screen: string;
+  fps: number;
+  quality: number;
+}
+
 interface AddressQrScannerProps {
   t: Translate;
-  onApply: (address: { host: string; apiPort: number; password: string }) => void;
+  onApply: (profile: ScannedProfileDraft) => void;
   onClose: () => void;
 }
 
@@ -225,9 +238,9 @@ function AddressQrScanner({ t, onApply, onClose }: AddressQrScannerProps) {
           setScanError(t('setup.scanNotShared'));
           return;
         }
-        let address;
+        let draft;
         try {
-          address = addressFromScannedProfile(profile);
+          draft = profileFromScan(profile) as ScannedProfileDraft;
         } catch (error) {
           setScanState('failed');
           setScanError(error instanceof QrScanError
@@ -236,7 +249,7 @@ function AddressQrScanner({ t, onApply, onClose }: AddressQrScannerProps) {
           return;
         }
         scanner.stop();
-        onApply(address);
+        onApply(draft);
       },
       onerror: (error: QrScanError) => {
         setScanState('failed');
@@ -377,14 +390,28 @@ export function ServerSetupWizard({
     setConnectionError(result.message || t('setup.connectionFailedCopy'));
   };
 
-  const applyScannedAddress = (address: { host: string; apiPort: number; password: string }) => {
+  const applyScannedProfile = (draft: ScannedProfileDraft) => {
     setQrScanning(false);
-    setHost(address.host);
-    setApiPort(String(address.apiPort));
-    setPassword(address.password);
+    setHost(draft.host);
+    setApiPort(String(draft.apiPort));
+    setPassword(draft.password);
+    if (draft.name) {
+      setName(draft.name);
+    }
+    if (draft.iconId && allIcons.some((icon) => icon.id === draft.iconId)) {
+      setIconId(draft.iconId);
+    }
+    setStyle(draft.style);
+    setFormat(draft.format);
+    setScreen(draft.screen);
+    setFps(String(draft.fps));
+    setQuality(String(draft.quality));
     setApiVerified(false);
     setConnectionState('idle');
     setConnectionError('');
+    // Every portable field the code carried is now filled in; skip the
+    // manual pages and land on the review-and-save step.
+    setStep('name');
   };
 
   const chooseStyle = (nextStyle: ServerSetupStyle) => {
@@ -437,7 +464,7 @@ export function ServerSetupWizard({
             {qrScanning ? (
               <AddressQrScanner
                 t={t}
-                onApply={applyScannedAddress}
+                onApply={applyScannedProfile}
                 onClose={() => setQrScanning(false)}
               />
             ) : (
@@ -671,6 +698,20 @@ export function ServerSetupWizard({
                 <span>{t(OUTPUT_STYLE_KEYS[style].title)}</span>
               </div>
             </div>
+            {style === 'video' && (
+              <p className="server-setup-imported-settings">
+                {t('setup.importedSettings', {
+                  format: format === 'h264'
+                    ? t('settings.formatH264')
+                    : format === 'mjpg' ? 'MJPEG' : t('settings.formatAuto'),
+                  screen: screen
+                    ? t('settings.screenNumber', { screen: Number(screen) })
+                    : t('settings.screenAuto'),
+                  fps,
+                  quality,
+                })}
+              </p>
+            )}
             <label className="field server-setup-name-field">
               <span>{t('setup.serverName')}</span>
               <input

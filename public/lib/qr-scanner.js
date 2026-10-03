@@ -65,11 +65,12 @@ export function parseScannedProfile(text, options = {}) {
 }
 
 /**
- * Maps a decoded shared profile onto the server-setup address fields. The
- * wizard only consumes host, API port, and password; the remaining shared
- * settings stay untouched so the guided flow keeps its own defaults.
+ * Maps a decoded shared profile onto the complete server-setup draft. Every
+ * portable field the QR code carries is imported — address, password, name,
+ * icon, connection style, and stream settings — so a scan replicates the
+ * shared server without any further configuration.
  */
-export function addressFromScannedProfile(profile) {
+export function profileFromScan(profile) {
   if (!profile || typeof profile !== 'object') {
     throw new QrScanError('The scanned code is not a valid spicefe share code', 'invalid');
   }
@@ -86,10 +87,22 @@ export function addressFromScannedProfile(profile) {
   if (!Number.isInteger(port) || port < 1 || port > 65533) {
     throw new QrScanError('The scanned profile has an invalid API port', 'port');
   }
+
+  const style = profile.keypadEnabled === true
+    ? 'keypad'
+    : profile.tickerEnabled === true ? 'ticker' : 'video';
+
   return {
     host,
     apiPort: port,
     password: typeof profile.password === 'string' ? profile.password : '',
+    name: typeof profile.name === 'string' ? profile.name : '',
+    iconId: typeof profile.iconId === 'string' ? profile.iconId : '',
+    style,
+    format: typeof profile.format === 'string' ? profile.format : 'auto',
+    screen: typeof profile.screen === 'string' ? profile.screen : '',
+    fps: Number(profile.fps),
+    quality: Number(profile.quality),
   };
 }
 

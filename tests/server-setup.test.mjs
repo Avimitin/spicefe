@@ -74,12 +74,23 @@ test('the address page offers camera QR import that fills the connection fields'
   assert.match(styles, /\.server-setup-qr-panel/);
   assert.match(styles, /\.server-setup-qr-frame/);
 
-  // A successful scan fills host, port, and password without skipping the test.
-  assert.match(component, /applyScannedAddress[\s\S]*setHost\(address\.host\)/);
-  assert.match(component, /setApiPort\(String\(address\.apiPort\)\)/);
-  assert.match(component, /setPassword\(address\.password\)/);
+  // A successful scan imports every portable field the code carries and
+  // jumps to the final review-and-save step.
+  assert.match(component, /applyScannedProfile[\s\S]*setHost\(draft\.host\)/);
+  assert.match(component, /setApiPort\(String\(draft\.apiPort\)\)/);
+  assert.match(component, /setPassword\(draft\.password\)/);
+  assert.match(component, /setName\(draft\.name\)/);
+  assert.match(component, /setIconId\(draft\.iconId\)/);
+  assert.match(component, /setStyle\(draft\.style\)/);
+  assert.match(component, /setFormat\(draft\.format\)/);
+  assert.match(component, /setScreen\(draft\.screen\)/);
+  assert.match(component, /setFps\(String\(draft\.fps\)\)/);
+  assert.match(component, /setQuality\(String\(draft\.quality\)\)/);
+  assert.match(component, /setStep\('name'\)/);
   assert.match(component, /parseScannedProfile/);
-  assert.match(component, /addressFromScannedProfile/);
+  assert.match(component, /profileFromScan/);
+  assert.match(component, /setup\.importedSettings/);
+  assert.match(styles, /\.server-setup-imported-settings/);
 
   // The camera session is released when the panel unmounts and when the
   // setup dialog itself closes.

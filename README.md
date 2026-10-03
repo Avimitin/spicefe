@@ -157,12 +157,13 @@ password, and the initial request URL may appear in static-host or browser
 records. Use this convenience only between trusted devices on the trusted LAN.
 
 The guided **Add server** flow can also import a shared code directly: on the
-address page, **Scan QR code** opens this device's camera, decodes the code
-locally with the vendored `jsqr` decoder, and fills the host, API port, and
-password fields for the usual connection test. Camera frames never leave the
-device. The remaining guided pages (icon, connection style, stream quality,
-name) still apply, so the imported connection is reviewed and verified exactly
-like a manually entered one.
+address page, **Scan QR code** opens this device's camera and decodes the code
+locally with the vendored `jsqr` decoder. Camera frames never leave the device.
+A scan imports every portable field the code carries — address, API port,
+password, name, game icon, connection style, and stream settings — and jumps
+straight to the final review-and-save page, so the imported server is ready
+without selecting any further configuration. The back button still exposes the
+icon, style, and stream pages for changes.
 
 ## Old IIDX 16-segment display
 

@@ -607,6 +607,16 @@
   font-size: 12px;
 }
 
+.server-setup-imported-settings {
+  width: min(100%, 520px);
+  margin: -14px 0 26px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+}
+
 .server-setup-name-field {
   width: min(100%, 520px);
   gap: 7px;

@@ -3,9 +3,9 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import {
-  addressFromScannedProfile,
   decodeQrFrame,
   parseScannedProfile,
+  profileFromScan,
   QrCameraScanner,
   QrScanError,
   QR_SCAN_FRAME_INTERVAL_MS,
@@ -66,23 +66,48 @@ test('rejects damaged payloads with a typed error', () => {
   });
 });
 
-test('maps a decoded profile onto the wizard address fields', () => {
-  const address = addressFromScannedProfile(parseScannedProfile(encodeSharedProfile(profile())));
-  assert.deepEqual(address, {
+test('maps a decoded profile onto every wizard draft field', () => {
+  const draft = profileFromScan(parseScannedProfile(encodeSharedProfile(profile())));
+  assert.deepEqual(draft, {
     host: '192.168.8.20',
     apiPort: 55573,
     password: 'shared-secret',
+    name: 'IIDX cabinet',
+    iconId: 'ac_iidx33',
+    style: 'ticker',
+    format: 'h264',
+    screen: '1',
+    fps: 60,
+    quality: 82,
   });
+});
+
+test('maps API-only and video connection styles from the shared flags', () => {
+  const keypad = profileFromScan(parseScannedProfile(encodeSharedProfile(profile({
+    tickerEnabled: false,
+    keypadEnabled: true,
+  }))));
+  assert.equal(keypad.style, 'keypad');
+
+  const video = profileFromScan(parseScannedProfile(encodeSharedProfile(profile({
+    tickerEnabled: false,
+    keypadEnabled: false,
+  }))));
+  assert.equal(video.style, 'video');
+  assert.equal(video.format, 'h264');
+  assert.equal(video.screen, '1');
+  assert.equal(video.fps, 60);
+  assert.equal(video.quality, 82);
 });
 
 test('normalizes bracketed IPv6 hosts and rejects invalid addresses', () => {
   const encoded = encodeSharedProfile(profile({ host: '[fe80::1]' }));
-  assert.equal(addressFromScannedProfile(parseScannedProfile(encoded)).host, 'fe80::1');
+  assert.equal(profileFromScan(parseScannedProfile(encoded)).host, 'fe80::1');
 
-  assert.throws(() => addressFromScannedProfile({ host: 'a/b' }), /path/);
-  assert.throws(() => addressFromScannedProfile({ host: '' }), /no server address/);
-  assert.throws(() => addressFromScannedProfile({ host: 'pc.local', apiPort: 0 }), /API port/);
-  assert.throws(() => addressFromScannedProfile(null), /not a valid/);
+  assert.throws(() => profileFromScan({ host: 'a/b' }), /path/);
+  assert.throws(() => profileFromScan({ host: '' }), /no server address/);
+  assert.throws(() => profileFromScan({ host: 'pc.local', apiPort: 0 }), /API port/);
+  assert.throws(() => profileFromScan(null), /not a valid/);
 });
 
 test('decodes a generated QR code from a rendered frame', async () => {
