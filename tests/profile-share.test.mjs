@@ -30,7 +30,7 @@ const profile = (overrides = {}) => ({
   ...overrides,
 });
 
-test('round-trips portable fields and normalizes the retired view mode', () => {
+test('round-trips portable fields and drops the retired view mode', () => {
   const restored = decodeSharedProfile(encodeSharedProfile(profile()));
 
   assert.deepEqual(restored, {
@@ -49,6 +49,16 @@ test('round-trips portable fields and normalizes the retired view mode', () => {
   });
   assert.equal('id' in restored, false);
   assert.equal('connected' in restored, false);
+
+  // The share payload no longer carries a view-mode field at all; the
+  // restored profile still normalizes it to aspect-preserving Fit.
+  const encoded = encodeSharedProfile(profile());
+  const json = JSON.parse(new TextDecoder().decode(
+    Uint8Array.from(atob(encoded.replaceAll('-', '+').replaceAll('_', '/')
+      + '='.repeat((4 - encoded.length % 4) % 4)), (c) => c.charCodeAt(0)),
+  ));
+  assert.equal('m' in json, false);
+  assert.equal(Object.keys(json).includes('m'), false);
 });
 
 test('round-trips API-only control mode and keeps it exclusive with the ticker', () => {
@@ -76,13 +86,10 @@ test('builds a versioned query link and consumes it without leaving the secret p
   const url = new URL(link);
   assert.equal(url.protocol, 'http:');
   assert.equal(url.searchParams.get('page'), 'library');
-  assert.equal(url.searchParams.get(PROFILE_SHARE_HOST_QUERY_PARAMETER), '192.168.8.20');
-  assert.equal(url.searchParams.get(PROFILE_SHARE_PORT_QUERY_PARAMETER), '55573');
+  assert.equal(url.searchParams.has(PROFILE_SHARE_HOST_QUERY_PARAMETER), false);
+  assert.equal(url.searchParams.has(PROFILE_SHARE_PORT_QUERY_PARAMETER), false);
   assert.ok(url.searchParams.has(PROFILE_SHARE_QUERY_PARAMETER));
-  assert.match(
-    link,
-    /\?spicefe-host=192\.168\.8\.20&spicefe-port=55573&page=library&spicefe-profile=/,
-  );
+  assert.match(link, /\?page=library&spicefe-profile=/);
   assert.equal(link.includes('局域网-secret'), false);
   assert.equal(url.hash, '');
 
@@ -94,7 +101,7 @@ test('builds a versioned query link and consumes it without leaving the secret p
   assert.equal(extracted.cleanPath, '/?page=library');
 });
 
-test('keeps older payload-only links compatible and rejects misleading address hints', () => {
+test('keeps older payload-only and hint-carrying links compatible', () => {
   const encoded = encodeSharedProfile(profile());
   const legacy = extractSharedProfile(
     `https://example.test/?${PROFILE_SHARE_QUERY_PARAMETER}=${encoded}`,
@@ -102,15 +109,19 @@ test('keeps older payload-only links compatible and rejects misleading address h
   assert.equal(legacy.error, null);
   assert.equal(legacy.profile.host, '192.168.8.20');
 
-  const misleading = new URL(sharedProfileUrl(profile(), 'https://example.test/'));
-  misleading.searchParams.set(PROFILE_SHARE_HOST_QUERY_PARAMETER, '192.168.8.99');
-  const extracted = extractSharedProfile(misleading);
-  assert.equal(extracted.profile, null);
-  assert.equal(extracted.error.code, 'invalid');
-  assert.equal(extracted.cleanPath, '/?page=library');
+  // Links from releases that emitted readable hints still import; the
+  // stale hints are ignored and stripped from the cleaned path.
+  const hinted = extractSharedProfile(
+    `https://example.test/?${PROFILE_SHARE_HOST_QUERY_PARAMETER}=192.168.8.99`
+    + `&${PROFILE_SHARE_PORT_QUERY_PARAMETER}=55573&page=library`
+    + `&${PROFILE_SHARE_QUERY_PARAMETER}=${encoded}`,
+  );
+  assert.equal(hinted.error, null);
+  assert.equal(hinted.profile.host, '192.168.8.20');
+  assert.equal(hinted.cleanPath, '/?page=library');
 });
 
-test('changes the readable address, payload, and complete link after an address edit', () => {
+test('changes the payload and complete link after an address edit', () => {
   const before = new URL(sharedProfileUrl(profile(), 'http://spicefe.local/'));
   const after = new URL(sharedProfileUrl(profile({
     host: '10.20.30.40',
@@ -118,8 +129,6 @@ test('changes the readable address, payload, and complete link after an address 
   }), 'http://spicefe.local/'));
 
   assert.equal(before.origin, after.origin);
-  assert.equal(before.searchParams.get(PROFILE_SHARE_HOST_QUERY_PARAMETER), '192.168.8.20');
-  assert.equal(after.searchParams.get(PROFILE_SHARE_HOST_QUERY_PARAMETER), '10.20.30.40');
   assert.notEqual(
     before.searchParams.get(PROFILE_SHARE_QUERY_PARAMETER),
     after.searchParams.get(PROFILE_SHARE_QUERY_PARAMETER),

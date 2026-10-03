@@ -24,7 +24,6 @@ const profile = (overrides = {}) => ({
   screen: '1',
   fps: 60,
   quality: 82,
-  viewMode: 'cover',
   tickerEnabled: true,
   keypadEnabled: false,
   ...overrides,

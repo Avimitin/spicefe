@@ -137,7 +137,7 @@ referenced it display the default spice2x icon instead.
 
 Select the QR button on a saved-server card to create a scannable code and a
 direct link. The portable profile includes its name, host, API port, API
-password, built-in game icon, video settings, view mode, IIDX ticker mode, and
+password, built-in game icon, video settings, IIDX ticker mode, and
 API-only control mode.
 Browser-local uploaded icon artwork is deliberately excluded; the receiving
 device uses the default spice2x icon instead.
@@ -146,11 +146,6 @@ Opening the link reads the versioned `spicefe-profile` query parameter, removes
 it from the visible address immediately, and presents the decoded settings for
 confirmation. **Save server** adds the profile, or updates an existing profile
 with the same host and API port. It never starts a connection automatically.
-The readable `spicefe-host` and `spicefe-port` parameters identify which
-spice2x connection is inside the link; the page address at the beginning still
-identifies the static spicefe host and therefore does not change when editing a
-gaming PC. Receiving clients reject links whose readable address disagrees with
-the encoded profile.
 The payload is validated before it can be stored, but it is Base64URL-encoded,
 not encrypted. If it contains a password, anyone with the link can recover that
 password, and the initial request URL may appear in static-host or browser

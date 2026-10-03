@@ -12,7 +12,6 @@ export const PROFILE_SHARE_MAX_LENGTH = 8192;
 
 const FORMATS = new Set(['auto', 'h264', 'mjpg']);
 const SCREENS = new Set(['', '0', '1', '2', '3']);
-const VIEW_MODES = new Set(['contain', 'cover', 'fill']);
 const BASE64URL_PATTERN = /^[A-Za-z0-9_-]+$/;
 
 export class ProfileShareError extends Error {
@@ -109,7 +108,6 @@ function validatePayload(payload) {
     || !SCREENS.has(payload.s)
     || !expectInteger(payload.r, 1, 60)
     || !expectInteger(payload.q, 1, 100)
-    || !VIEW_MODES.has(payload.m)
     || (payload.t !== 0 && payload.t !== 1)
     || (payload.k !== undefined && payload.k !== 0 && payload.k !== 1)) {
     throw new ProfileShareError('Invalid shared profile fields', 'invalid');
@@ -138,7 +136,6 @@ export function encodeSharedProfile(candidate) {
     s: profile.screen,
     r: profile.fps,
     q: profile.quality,
-    m: profile.viewMode,
     t: profile.tickerEnabled ? 1 : 0,
     k: profile.keypadEnabled ? 1 : 0,
   };
@@ -166,7 +163,6 @@ export function decodeSharedProfile(encoded) {
       screen: payload.s,
       fps: payload.r,
       quality: payload.q,
-      viewMode: payload.m,
       tickerEnabled: payload.t === 1,
       keypadEnabled: payload.k === 1,
     });
@@ -181,14 +177,8 @@ export function decodeSharedProfile(encoded) {
 export function sharedProfileUrl(profile, currentUrl) {
   const url = new URL(currentUrl);
   const encoded = encodeSharedProfile(profile);
-  const portableProfile = decodeSharedProfile(encoded);
   url.search = '';
   url.hash = '';
-  url.searchParams.set(PROFILE_SHARE_HOST_QUERY_PARAMETER, portableProfile.host);
-  url.searchParams.set(
-    PROFILE_SHARE_PORT_QUERY_PARAMETER,
-    String(portableProfile.apiPort),
-  );
   url.searchParams.set('page', 'library');
   url.searchParams.set(PROFILE_SHARE_QUERY_PARAMETER, encoded);
   return url.toString();
@@ -206,8 +196,9 @@ export function extractSharedProfile(currentUrl) {
     };
   }
 
-  const hostHints = url.searchParams.getAll(PROFILE_SHARE_HOST_QUERY_PARAMETER);
-  const portHints = url.searchParams.getAll(PROFILE_SHARE_PORT_QUERY_PARAMETER);
+  // Legacy links carry readable spicefe-host/spicefe-port hints. They are
+  // no longer emitted and never validated; they are only removed so old
+  // bookmarks and history entries clean themselves up.
   url.searchParams.delete(PROFILE_SHARE_QUERY_PARAMETER);
   url.searchParams.delete(PROFILE_SHARE_HOST_QUERY_PARAMETER);
   url.searchParams.delete(PROFILE_SHARE_PORT_QUERY_PARAMETER);
@@ -222,13 +213,6 @@ export function extractSharedProfile(currentUrl) {
       throw new ProfileShareError('More than one shared profile was provided', 'invalid');
     }
     result.profile = decodeSharedProfile(values[0]);
-    const hasHints = hostHints.length > 0 || portHints.length > 0;
-    if (hasHints && (hostHints.length !== 1
-      || portHints.length !== 1
-      || hostHints[0] !== result.profile.host
-      || portHints[0] !== String(result.profile.apiPort))) {
-      throw new ProfileShareError('Shared profile address does not match its link', 'invalid');
-    }
   } catch (error) {
     result.profile = null;
     result.error = error instanceof ProfileShareError
